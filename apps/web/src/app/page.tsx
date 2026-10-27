@@ -96,7 +96,9 @@ function MenuCard({ item, canOrder }: { item: MenuItem; canOrder: boolean }) {
         .filter((g) => g.options.length > 0)
         .map((g) => (
           <p key={g.id} className="text-xs text-stone-500">
-            {g.name}: {g.options.map((o) => (o.priceDelta > 0 ? `${o.name} +${peso(o.priceDelta)}` : o.name)).join(" · ")}
+            {g.name}
+            {g.showWhenModifierId && ` (with ${item.groups.flatMap((x) => x.options).find((o) => o.id === g.showWhenModifierId)?.name ?? "add-on"})`}
+            : {g.options.map((o) => (o.priceDelta > 0 ? `${o.name} +${peso(o.priceDelta)}` : o.name)).join(" · ")}
           </p>
         ))}
       <AddToCart item={item} canOrder={canOrder} />

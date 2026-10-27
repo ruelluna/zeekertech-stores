@@ -82,3 +82,22 @@ export async function resetStaffPassword(_prev: ActionState, formData: FormData)
   if (error) return fail(error.message);
   return ok("Password changed");
 }
+
+/** Marks all of a rider's delivered, unpaid trips as paid out (the owner hands over the money). */
+export async function markRiderPaidOut(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const riderId = z.uuid().safeParse(formData.get("riderId"));
+  if (!riderId.success) return fail("Invalid rider");
+  await requireOwner();
+
+  const { data, error } = await createSupabaseAdminClient()
+    .schema("ops")
+    .from("orders")
+    .update({ rider_paid_out_at: new Date().toISOString() })
+    .eq("rider_id", riderId.data)
+    .eq("status", "delivered")
+    .is("rider_paid_out_at", null)
+    .select("id");
+  if (error) return fail(error.message);
+  refresh();
+  return ok(`Marked ${data.length} deliver${data.length === 1 ? "y" : "ies"} as paid out`);
+}

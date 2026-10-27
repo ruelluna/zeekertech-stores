@@ -104,6 +104,7 @@ type OpsOrderRow = {
   customer_decision: string | null;
   total: number;
   flags: string[] | null;
+  parent_order_id: string | null;
 };
 
 /**
@@ -124,7 +125,7 @@ export function LiveOrders({ known }: { known: Record<string, KnownOrder> }) {
           const label = `${o.queue_code}`;
           if (change.eventType === "INSERT") {
             toast({
-              title: `New order ${label}`,
+              title: o.parent_order_id ? `Add-on order ${label}` : `New order ${label}`,
               body: `${o.fulfillment === "delivery" ? "Delivery" : "Pickup"} · ${o.customer_name ?? "Walk-in"} · ${peso(o.total)}`,
             });
             chime();
@@ -144,9 +145,7 @@ export function LiveOrders({ known }: { known: Record<string, KnownOrder> }) {
           const reachedKitchen =
             o?.status === "queued" && (change.eventType === "INSERT" || (change.eventType === "UPDATE" && before && before.status !== "queued"));
           if (reachedKitchen) {
-            const prefs = parseAutoPrint(autoPrintRaw());
-            if (prefs.tickets) printOrder(o.id, "ticket");
-            if (prefs.labels) setTimeout(() => printOrder(o.id, "labels"), prefs.tickets ? 4000 : 0);
+            if (parseAutoPrint(autoPrintRaw()).labels) printOrder(o.id, "labels");
           }
           if (o?.id) {
             seen.current = { ...seen.current, [o.id]: { status: o.status, paymentStatus: o.payment_status, flags: o.flags ?? [] } };
@@ -156,6 +155,37 @@ export function LiveOrders({ known }: { known: Record<string, KnownOrder> }) {
         .on("postgres_changes", { event: "*", schema: "ops", table: "order_item_availability" }, onChange);
       // Row-level security checks the staff login, so attach it before subscribing (otherwise events
       // arrive as the anonymous role, without the order's details).
+      void supabase.auth.getSession().then(async ({ data }) => {
+        if (data.session) await supabase.realtime.setAuth(data.session.access_token);
+        channel.subscribe();
+      });
+      return channel;
+    },
+    60_000,
+  );
+  return null;
+}
+
+/**
+ * Rider's page: live via their own orders (row-level security: only deliveries assigned to them),
+ * with a toast and chime when a new one is assigned.
+ */
+export function LiveDeliveries({ known }: { known: Record<string, string> }) {
+  const seen = useLatest(known);
+  useLiveRefresh(
+    true,
+    (onChange) => {
+      const supabase = getSupabaseBrowserClient();
+      const channel = supabase.channel("rider-deliveries").on("postgres_changes", { event: "*", schema: "ops", table: "orders" }, (change) => {
+        const o = change.new as { id?: string; queue_code?: string; status?: string; barangay?: string | null };
+        if (o?.id && o.status === "out_for_delivery" && seen.current[o.id] !== "out_for_delivery") {
+          toast({ title: `New delivery ${o.queue_code}`, body: o.barangay ? `To ${o.barangay}` : undefined });
+          chime();
+        }
+        if (o?.id && o.status) seen.current = { ...seen.current, [o.id]: o.status };
+        onChange();
+      });
+      // Attach the rider's login first so row-level security sends their deliveries.
       void supabase.auth.getSession().then(async ({ data }) => {
         if (data.session) await supabase.realtime.setAuth(data.session.access_token);
         channel.subscribe();

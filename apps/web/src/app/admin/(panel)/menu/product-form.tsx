@@ -9,9 +9,11 @@ export interface ProductFormData {
   product: Product | null;
   categories: { id: string; name: string }[];
   ingredients: { id: string; name: string; availability_mode: string }[];
-  groups: { id: string; name: string; modifiers: { name: string; price_delta: number | null }[] }[];
+  groups: { id: string; name: string; modifiers: { id: string; name: string; price_delta: number | null }[] }[];
   linkedIngredientIds: string[];
   linkedGroupIds: string[];
+  /** For linked groups: the option that must be picked for the group to show (null = always). */
+  showWhen: Record<string, string | null>;
 }
 
 const TYPE_LABELS = {
@@ -21,7 +23,7 @@ const TYPE_LABELS = {
   bundle: "Bundle",
 } as const;
 
-export function ProductForm({ product: p, categories, ingredients, groups, linkedIngredientIds, linkedGroupIds }: ProductFormData) {
+export function ProductForm({ product: p, categories, ingredients, groups, linkedIngredientIds, linkedGroupIds, showWhen }: ProductFormData) {
   return (
     <ActionForm action={saveProduct} submitLabel={p ? "Save product" : "Create product"} className="flex flex-col">
       {p && <input type="hidden" name="id" value={p.id} />}
@@ -116,16 +118,39 @@ export function ProductForm({ product: p, categories, ingredients, groups, linke
         </div>
       </Card>
 
-      <Card title="Add-on groups" description="Prices for add-ons and cooking fees are set on the Add-ons page.">
-        <div className="grid gap-2 sm:grid-cols-2">
+      <Card
+        title="Add-on groups"
+        description="Prices for add-ons and cooking fees are set on the Add-ons page. “Show” lets a group appear only after another option is picked, e.g. Egg style only when Add egg is ticked."
+      >
+        <div className="flex flex-col gap-3">
           {groups.map((g) => (
-            <Checkbox
-              key={g.id}
-              name="group_ids"
-              value={g.id}
-              label={`${g.name}: ${g.modifiers.map((m) => `${m.name}${m.price_delta ? ` +${peso(m.price_delta)}` : ""}`).join(", ")}`}
-              defaultChecked={linkedGroupIds.includes(g.id)}
-            />
+            <div key={g.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-stone-100 p-2 dark:border-stone-800">
+              <Checkbox
+                name="group_ids"
+                value={g.id}
+                label={`${g.name}: ${g.modifiers.map((m) => `${m.name}${m.price_delta ? ` +${peso(m.price_delta)}` : ""}`).join(", ")}`}
+                defaultChecked={linkedGroupIds.includes(g.id)}
+              />
+              <label className="flex items-center gap-2 text-xs text-stone-500">
+                Show
+                <select
+                  name={`show_when_${g.id}`}
+                  defaultValue={showWhen[g.id] ?? ""}
+                  className="rounded-lg border border-stone-300 bg-white px-2 py-1 text-xs dark:border-stone-700 dark:bg-stone-950"
+                >
+                  <option value="">always</option>
+                  {groups
+                    .filter((other) => other.id !== g.id)
+                    .flatMap((other) =>
+                      other.modifiers.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          only with {other.name}: {m.name}
+                        </option>
+                      )),
+                    )}
+                </select>
+              </label>
+            </div>
           ))}
         </div>
       </Card>

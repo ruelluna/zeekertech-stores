@@ -59,7 +59,7 @@ export async function fetchCatalog(): Promise<Catalog> {
         `id, sku, name, description, category_id, type, price_mode, sold_by, price, estimated_price, weight_options_kg,
          prep_minutes, stock_tracked, stock_qty, sold_out, active, image_url, sort_order,
          product_ingredients(is_key, ingredients(id, availability_mode, default_wait_minutes)),
-         product_modifier_groups(sort_order, modifier_groups(id, name, required, min_select, max_select,
+         product_modifier_groups(sort_order, show_when_modifier_id, modifier_groups(id, name, required, min_select, max_select,
            modifiers(id, name, price_delta, requires_cooking, active, sort_order)))`,
       )
       .eq("active", true)
@@ -124,6 +124,7 @@ export async function fetchCatalog(): Promise<Catalog> {
               required: g.required,
               minSelect: g.min_select,
               maxSelect: g.max_select,
+              showWhenModifierId: l.show_when_modifier_id,
               modifiers: [...g.modifiers]
                 .sort((a, b) => a.sort_order - b.sort_order)
                 .map((m) => ({

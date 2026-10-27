@@ -51,7 +51,7 @@ async function Print({ params, searchParams }: { params: PageProps<"/admin/print
       .from("orders")
       .select(
         `id, queue_code, external_id, source, fulfillment, scheduled_for, customer_name, customer_phone, address, barangay,
-         delivery_fee, discount_amount, total, payment_method, payment_status, flags, notes, rider_name,
+         delivery_fee, discount_amount, total, payment_method, payment_status, flags, notes, rider_name, parent_order_id,
          order_items(id, name, qty, weight_kg, modifiers, notes, item_status, requires_cooking, sort_order, order_item_availability(status))`,
       )
       .eq("id", id)
@@ -59,6 +59,11 @@ async function Print({ params, searchParams }: { params: PageProps<"/admin/print
     supabase.schema("store").from("store_settings").select("print_ticket_width_mm, print_label_width_mm, print_label_height_mm, print_labels_per_unit").eq("id", true).single(),
   ]);
   if (!order || !settings) notFound();
+
+  // Add-on orders print "ADD-ON to A-006" so they go in the same bag as the original.
+  const parentCode = order.parent_order_id
+    ? ((await supabase.schema("ops").from("orders").select("queue_code").eq("id", order.parent_order_id).maybeSingle()).data?.queue_code ?? null)
+    : null;
 
   const items = (order.order_items as Item[])
     .filter((i) => i.item_status !== "removed" && i.order_item_availability?.status !== "cant_source")
@@ -151,8 +156,11 @@ async function Print({ params, searchParams }: { params: PageProps<"/admin/print
                 <div key={`${i.id}-${n}`} className="label">
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", fontWeight: 700 }}>
                     <span style={{ fontSize: "12pt" }}>{order.queue_code}</span>
-                    <span>{delivery ? "DELIVERY" : "PICKUP"}</span>
+                    <span>
+                      {delivery ? "DELIVERY" : "PICKUP"} · {paid ? "PAID" : order.flags.includes("collect_payment") ? `COLLECT ${peso(order.total)}` : "NOT PAID"}
+                    </span>
                   </div>
+                  {parentCode && <div style={{ fontWeight: 700, fontSize: "8pt" }}>ADD-ON to {parentCode}</div>}
                   <div style={{ fontWeight: 700, fontSize: "9pt", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{order.customer_name ?? ""}</div>
                   <div style={{ fontWeight: 700, fontSize: "10pt" }}>
                     {settings.print_labels_per_unit ? "" : `${i.qty}× `}

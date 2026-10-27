@@ -347,6 +347,7 @@ export type Database = {
           lng: number | null;
           notes: string | null;
           out_for_delivery_at: string | null;
+          parent_order_id: string | null;
           payment_amount_claimed: number | null;
           payment_method: Database["ops"]["Enums"]["payment_method"] | null;
           payment_proof_path: string | null;
@@ -356,7 +357,10 @@ export type Database = {
           promotion_ref: string | null;
           queue_code: string;
           queue_date: string;
+          rider_id: string | null;
           rider_name: string | null;
+          rider_paid_out_at: string | null;
+          rider_pay: number | null;
           scheduled_for: string;
           source: Database["ops"]["Enums"]["order_source"];
           status: Database["ops"]["Enums"]["order_status"];
@@ -396,6 +400,7 @@ export type Database = {
           lng?: number | null;
           notes?: string | null;
           out_for_delivery_at?: string | null;
+          parent_order_id?: string | null;
           payment_amount_claimed?: number | null;
           payment_method?: Database["ops"]["Enums"]["payment_method"] | null;
           payment_proof_path?: string | null;
@@ -405,7 +410,10 @@ export type Database = {
           promotion_ref?: string | null;
           queue_code?: string;
           queue_date?: string;
+          rider_id?: string | null;
           rider_name?: string | null;
+          rider_paid_out_at?: string | null;
+          rider_pay?: number | null;
           scheduled_for: string;
           source: Database["ops"]["Enums"]["order_source"];
           status?: Database["ops"]["Enums"]["order_status"];
@@ -444,6 +452,7 @@ export type Database = {
           lng?: number | null;
           notes?: string | null;
           out_for_delivery_at?: string | null;
+          parent_order_id?: string | null;
           payment_amount_claimed?: number | null;
           payment_method?: Database["ops"]["Enums"]["payment_method"] | null;
           payment_proof_path?: string | null;
@@ -453,7 +462,10 @@ export type Database = {
           promotion_ref?: string | null;
           queue_code?: string;
           queue_date?: string;
+          rider_id?: string | null;
           rider_name?: string | null;
+          rider_paid_out_at?: string | null;
+          rider_pay?: number | null;
           scheduled_for?: string;
           source?: Database["ops"]["Enums"]["order_source"];
           status?: Database["ops"]["Enums"]["order_status"];
@@ -462,7 +474,15 @@ export type Database = {
           travel_minutes?: number | null;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "orders_parent_order_id_fkey";
+            columns: ["parent_order_id"];
+            isOneToOne: false;
+            referencedRelation: "orders";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       payment_verifications: {
         Row: {
@@ -836,7 +856,7 @@ export type Database = {
       price_mode: "fixed" | "market";
       printer_connection: "lan" | "bluetooth" | "usb";
       printer_language: "escpos" | "tspl" | "zpl";
-      staff_role: "owner" | "verifier" | "kitchen" | "counter";
+      staff_role: "owner" | "verifier" | "kitchen" | "counter" | "rider";
       stock_reason: "sale" | "restock" | "correction" | "cancel_return";
       webhook_status: "pending" | "sent" | "failed";
     };
@@ -1051,6 +1071,8 @@ export type Database = {
           max_km: number;
           min_fee: number;
           per_km: number;
+          rider_min_pay: number;
+          rider_share_percent: number;
           round_to: number;
           service_area_geojson: Json | null;
           updated_at: string;
@@ -1068,6 +1090,8 @@ export type Database = {
           max_km?: number;
           min_fee?: number;
           per_km?: number;
+          rider_min_pay?: number;
+          rider_share_percent?: number;
           round_to?: number;
           service_area_geojson?: Json | null;
           updated_at?: string;
@@ -1084,6 +1108,8 @@ export type Database = {
           max_km?: number;
           min_fee?: number;
           per_km?: number;
+          rider_min_pay?: number;
+          rider_share_percent?: number;
           round_to?: number;
           service_area_geojson?: Json | null;
           updated_at?: string;
@@ -1277,17 +1303,20 @@ export type Database = {
         Row: {
           group_id: string;
           product_id: string;
+          show_when_modifier_id: string | null;
           sort_order: number;
         };
         ComputedFields: never;
         Insert: {
           group_id: string;
           product_id: string;
+          show_when_modifier_id?: string | null;
           sort_order?: number;
         };
         Update: {
           group_id?: string;
           product_id?: string;
+          show_when_modifier_id?: string | null;
           sort_order?: number;
         };
         Relationships: [
@@ -1303,6 +1332,13 @@ export type Database = {
             columns: ["product_id"];
             isOneToOne: false;
             referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "product_modifier_groups_show_when_modifier_id_fkey";
+            columns: ["show_when_modifier_id"];
+            isOneToOne: false;
+            referencedRelation: "modifiers";
             referencedColumns: ["id"];
           },
         ];
@@ -1654,6 +1690,7 @@ export type Database = {
           order_code: string;
           payment_status: Database["store"]["Enums"]["payment_status"];
           payment_submission: Json | null;
+          rider_name: string | null;
           scheduled_for: string;
           status: Database["store"]["Enums"]["order_status"];
           status_note: string | null;
@@ -1677,6 +1714,7 @@ export type Database = {
           order_code?: string;
           payment_status?: Database["store"]["Enums"]["payment_status"];
           payment_submission?: Json | null;
+          rider_name?: string | null;
           scheduled_for: string;
           status?: Database["store"]["Enums"]["order_status"];
           status_note?: string | null;
@@ -1699,6 +1737,7 @@ export type Database = {
           order_code?: string;
           payment_status?: Database["store"]["Enums"]["payment_status"];
           payment_submission?: Json | null;
+          rider_name?: string | null;
           scheduled_for?: string;
           status?: Database["store"]["Enums"]["order_status"];
           status_note?: string | null;
@@ -2003,7 +2042,7 @@ export const Constants = {
       price_mode: ["fixed", "market"],
       printer_connection: ["lan", "bluetooth", "usb"],
       printer_language: ["escpos", "tspl", "zpl"],
-      staff_role: ["owner", "verifier", "kitchen", "counter"],
+      staff_role: ["owner", "verifier", "kitchen", "counter", "rider"],
       stock_reason: ["sale", "restock", "correction", "cancel_return"],
       webhook_status: ["pending", "sent", "failed"],
     },

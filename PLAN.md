@@ -13,7 +13,7 @@ An online storefront plus an Android staff app for **Weekend Food Hub**, a food 
 | Web app | Built from scratch in **Next.js**. It **owns the menu**, ingredients, delivery areas, fees, promotions and customer accounts |
 | Staff app | **Web admin for now** (decided 2026-10-27): staff use Orders and Inventory in the browser on a phone, tablet or PC. The Android app (Expo) stays in the repo for later, for offline walk-ins and native printing |
 | Backend | **Supabase** (Postgres, Auth, Realtime, Storage), **self-hosted**. One project, separate `store` and `ops` schemas that talk only through webhooks/API |
-| Hosting | **₱0 to start:** one Oracle Cloud Always Free VM (Singapore) running **Coolify**, which hosts self-hosted Supabase, the Next.js site and any future apps in Docker, each on its own domain with automatic HTTPS (§17) |
+| Hosting | One **Hostinger VPS** (8 GB RAM or more) running **Coolify**, which hosts self-hosted Supabase, the Next.js site and any other web apps you add later in Docker, each on its own domain with automatic HTTPS (§17) |
 | Payment | **GCash QR** (owner's account). A person manually confirms payment in the app. Cash allowed for walk-in orders |
 | Pay timing | Customer pays **only after** availability and price are confirmed, so there are no GCash refunds |
 | Customer login | **Facebook Login** (no SMS). Guest checkout still allowed |
@@ -570,7 +570,7 @@ _(Prices and coordinates above are placeholders.)_
 | **6. Native printing** ⏸ deferred | ESC/POS + TSPL drivers for direct Bluetooth/LAN printing from the Android app. Browser printing (3e) covers it for now |
 | **7. Polish** | Coping with weak Wi-Fi (local cache, retry queue), Today summary/reports, timer tuning |
 | **8. Later** | Messenger updates via the Weekend Food Hub Page, scheduled/advance orders, inventory, Google login |
-| **Deploy** (alongside Phase 2) | Oracle VM + Coolify, self-hosted Supabase, Next.js Docker image, domains and HTTPS, nightly off-site backups (§17). Needed early because Facebook Login only works over HTTPS |
+| **Deploy** (alongside Phase 2) | Hostinger VPS + Coolify, self-hosted Supabase, Next.js Docker image, domains and HTTPS, nightly off-site backups (§17). Needed early because Facebook Login only works over HTTPS |
 
 ---
 
@@ -601,16 +601,19 @@ _(Prices and coordinates above are placeholders.)_
 
 ---
 
-## 17. Deployment (₱0 to start)
+## 17. Deployment (Hostinger VPS + Coolify)
 
 ### 17.1 The server
-- **Oracle Cloud Always Free**, home region **Singapore** (closest to Cebu).
-  - One Ampere A1 VM: up to **4 ARM cores, 24 GB RAM**, 200 GB disk, Ubuntu. That's plenty for Supabase, the website and several more apps.
-  - Signing up needs a card for identity checks only. Always Free resources aren't charged.
-- **Coolify** (free, open-source) runs on the VM as a mini Heroku/Vercel:
+- **Hostinger VPS**, KVM 2 or larger: at least **2 vCPU and 8 GB RAM**, Ubuntu 24.04 LTS.
+  - Self-hosted Supabase alone runs about 10 containers. With Coolify and Next.js on top, 4 GB (KVM 1) is too tight.
+  - Pick the data center closest to the Philippines that Hostinger offers at checkout.
+  - Regular x86 processor, so any Docker image works.
+  - Paid monthly (roughly $5–12/mo depending on plan and promo). Move up a plan in Hostinger's panel if you add many apps.
+- **Coolify** (free, open-source) runs on the VPS as a mini Heroku/Vercel. Use Hostinger's Coolify template when creating the VPS, or install it on plain Ubuntu.
   - Deploy Docker apps, or straight from GitHub on every push.
-  - Give each app its own domain. HTTPS certificates (Let's Encrypt) are issued and renewed automatically.
+  - **Host as many web apps as the server's memory allows**, each with its own domain or subdomain. HTTPS certificates (Let's Encrypt) are issued and renewed automatically.
   - One-click **Supabase** template, scheduled database backups to S3-compatible storage, logs and restarts.
+  - Coolify shows each app's memory and CPU use, so you can see when the VPS needs an upgrade.
 
 ### 17.2 What runs on it
 
@@ -630,7 +633,7 @@ The staff app isn't hosted. It's an Android APK installed on the devices and poi
   - Porkbun is a cheap alternative.
   - A `.com` is cheaper and more familiar than `.ph` or `.com.ph`.
 - **DNS at Cloudflare (free):**
-  - An `A` record for the root domain pointing to the Oracle VM's public IP.
+  - An `A` record for the root domain pointing to the VPS's public IP.
   - A **wildcard** `*` record pointing to the same IP. Every subdomain (`api`, `studio`, `deploy`, future apps) then works without new DNS entries.
   - Records are set to "DNS only" (grey cloud) at first, so Coolify can issue HTTPS certificates directly. Cloudflare's proxy can be turned on later.
 - **The same domain is used for:**
@@ -646,7 +649,7 @@ The staff app isn't hosted. It's an Android APK installed on the devices and poi
 - **Facebook Login:** the Meta app ID and secret go in the Supabase Auth environment variables in Coolify.
 
 ### 17.5 Backups (the one non-negotiable)
-- **Nightly database backup** from Coolify to **Cloudflare R2** (free up to 10 GB), kept off the Oracle server.
+- **Nightly database backup** from Coolify to **Cloudflare R2** (free up to 10 GB), kept off the VPS. Hostinger's own backup add-on is a bonus, not a replacement.
 - **Storage files** (payment screenshots, product photos) synced to R2 nightly.
 - **Monthly test restore** to a local Supabase (`pnpm db:start`) to prove backups work.
 
@@ -669,11 +672,10 @@ The staff app isn't hosted. It's an Android APK installed on the devices and poi
 | Customer login | Facebook Login | Free |
 | HTTPS | Let's Encrypt (via Coolify) | Free |
 
-### 17.8 Risks of the free setup
-- **"Out of capacity" when creating the VM:** Oracle's free ARM machines in popular regions are sometimes full. Retry at different times of day.
-- **Idle reclamation:** Oracle may reclaim Always Free VMs that sit nearly idle for a week. Upgrading the account to Pay As You Go stops that, and Always Free resources stay free. Set a ₱1 budget alert so any accidental charge is caught.
-- **ARM processor:** Supabase, Next.js and Coolify all publish ARM images. Check this for any extra app added later.
-- **One server = one point of failure:** off-site backups make it recoverable. If the business outgrows it, the same Docker setup moves to a paid VPS or Supabase Cloud without code changes.
+### 17.8 Risks and limits
+- **Memory is shared by every app.** Supabase uses the most. Keep an eye on Coolify's resource view and upgrade the plan before adding heavy apps.
+- **One server = one point of failure:** off-site backups to R2 make it recoverable. If the business outgrows it, the same Docker setup moves to a bigger VPS or to Supabase Cloud without code changes.
+- **You maintain it:** monthly Ubuntu, Coolify and Supabase updates, and a check that backups are still running.
 
 ---
 
@@ -703,15 +705,34 @@ The staff app isn't hosted. It's an Android APK installed on the devices and poi
 
 ---
 
-## 19. Printing (browser)
+## 19. Printing (browser) and add-on orders
 
-- **Kitchen ticket** (`/admin/print/[id]?type=ticket`):
-  - Queue code, pickup/delivery and time, customer, address and rider notes.
-  - Items with options and notes, totals, and PAID / NOT PAID / COLLECT ₱.
-  - Paper width 58 or 80 mm.
-- **Item labels** (`?type=labels`): queue code, pickup/delivery, customer name, product, options, notes, time and "1 of N". Label size and one-per-piece vs one-per-line are set in Admin → Hours & settings → Printing.
-- **How it prints:** the page uses CSS `@page` sizes and the browser's print dialog, so any printer the phone, tablet or PC can print to works:
-  - USB or network receipt and label printers installed on the PC
-  - Android print services for Bluetooth/Wi-Fi printers
-- **Print buttons** on every order. **Auto-print** is a per-device setting on the Orders page: tickets and/or labels print when an order reaches the kitchen queue.
-- **Silent printing** (no dialog): run Chrome on the kitchen PC with `--kiosk-printing`, with the receipt printer as the default printer.
+- **Item labels are the only printout** (decided 2026-10-28). One label per piece (or per order line), and they double as the kitchen ticket. Each shows:
+  - order code, pickup/delivery and **PAID / NOT PAID / COLLECT ₱**
+  - "ADD-ON to A-006" for add-on orders
+  - customer name, product, options, notes, time and "1 of N"
+- **Settings:** label size and per-piece vs per-line in Admin → Hours & settings → Printing.
+- **How it prints:** CSS `@page` sizes through the browser's print dialog, so any printer the device can print to works: USB or network label printers on a PC, or Android print services for Bluetooth/Wi-Fi.
+- **"🏷 Print labels"** on every order. **Auto-print labels** is a per-device setting on the Orders page and fires when an order reaches the kitchen queue.
+- **Silent printing** (no dialog): run Chrome on the kitchen PC with `--kiosk-printing`, with the label printer as the default printer.
+- The receipt-style ticket view (`?type=ticket`) is kept in the code but not used.
+- **Add-on orders** for items a customer adds after ordering, e.g. by phone while it's being prepared:
+  - **"+ Add items"** on any order not yet out for delivery or handed over opens New order in add-on mode.
+  - It creates a linked order with the **same customer, pickup/delivery, address and time**, **no second delivery fee**, its **own payment**, and labels marked "ADD-ON to A-006".
+  - The cards show the link both ways. The original order's payment and total are never changed.
+
+---
+
+## 20. Riders and rider pay
+
+- **Rider role:** riders sign in at /admin and see only **Deliveries**, meaning their own assigned orders.
+  - Each card has Call, Directions, rider notes, the items, "Collect ₱" or Paid, their pay for the trip, and a **Delivered** button (it also records cash collected).
+  - The page also shows **Earned today** and **Not paid out yet**, and updates live with a toast and chime when a delivery is assigned.
+  - Row-level security limits riders to orders where `rider_id` is them: no customers, payments or inventory.
+- **Dispatch:** "Out for delivery" picks a rider from the list of active rider accounts, or "Someone else" with a typed name.
+- **Rider pay:** set in Admin → Delivery → Rider pay.
+  - **Rider share of the delivery fee** (default 70%; the store keeps the rest) and an optional **minimum rider pay** per delivery, which also covers waived fees.
+  - Pay is fixed per order when it goes out (`rider_pay`), so changing the share only affects new deliveries. Add-on orders on the same trip earn nothing extra.
+- **Payouts:** Admin → Staff → Rider pay lists each rider's delivered, not-yet-paid trips and total. **Mark paid out** stamps them (`rider_paid_out_at`).
+- **Customer side:** the order page shows "Your rider: Name is on the way", and the push notification says the same.
+- **One rider per order** (decided 2026-10-28).

@@ -114,7 +114,6 @@ export async function uploadGcashQr(_prev: ActionState, formData: FormData): Pro
 }
 
 const PrintInput = z.object({
-  print_ticket_width_mm: z.coerce.number().pipe(z.union([z.literal(58), z.literal(80)])),
   print_label_width_mm: z.coerce.number().min(20).max(120),
   print_label_height_mm: z.coerce.number().min(15).max(120),
   print_labels_per_unit: form.bool,

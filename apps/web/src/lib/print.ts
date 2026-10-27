@@ -24,7 +24,6 @@ export function printOrder(orderId: string, kind: PrintKind): void {
 }
 
 export interface AutoPrintPrefs {
-  tickets: boolean;
   labels: boolean;
 }
 
@@ -42,9 +41,9 @@ export function autoPrintRaw(): string {
 export function parseAutoPrint(raw: string): AutoPrintPrefs {
   try {
     const p = JSON.parse(raw) as Partial<AutoPrintPrefs>;
-    return { tickets: Boolean(p.tickets), labels: Boolean(p.labels) };
+    return { labels: Boolean(p.labels) };
   } catch {
-    return { tickets: false, labels: false };
+    return { labels: false };
   }
 }
 

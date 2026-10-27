@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { TrackVisitor } from "@/components/presence";
 import { Toaster } from "@/components/toaster";
 
 const geistSans = Geist({
@@ -27,6 +29,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         {children}
         <Toaster />
+        <Suspense>
+          <TrackVisitor />
+        </Suspense>
       </body>
     </html>
   );

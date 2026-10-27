@@ -71,7 +71,7 @@ export type ItemAvailability = z.infer<typeof ItemAvailability>;
 export const ItemStatus = z.enum(["pending", "queued", "ready", "handed_over", "removed"]);
 export type ItemStatus = z.infer<typeof ItemStatus>;
 
-export const StaffRole = z.enum(["owner", "verifier", "kitchen", "counter"]);
+export const StaffRole = z.enum(["owner", "verifier", "kitchen", "counter", "rider"]);
 export type StaffRole = z.infer<typeof StaffRole>;
 
 export const DistanceMethod = z.enum(["road", "straight_line"]);

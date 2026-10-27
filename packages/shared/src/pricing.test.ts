@@ -132,6 +132,46 @@ describe("priceLine", () => {
   });
 });
 
+describe("conditional groups (Egg style only with Add egg)", () => {
+  const chaofan: PricingProduct = {
+    ...silog,
+    id: id(4),
+    sku: "CHF-SIOMAI",
+    name: "Siomai Chaofan",
+    price: 89,
+    groups: [
+      {
+        id: id(40),
+        name: "Add-ons",
+        required: false,
+        minSelect: 0,
+        maxSelect: 2,
+        modifiers: [{ id: id(41), name: "Add egg", priceDelta: 15, requiresCooking: false, active: true }],
+      },
+      { ...silog.groups[0]!, showWhenModifierId: id(41) },
+    ],
+  };
+
+  it("doesn't ask for egg style without an egg", () => {
+    const r = priceLine(chaofan, line(chaofan.id));
+    expect(r.ok && r.line.item.unitPrice).toBe(89);
+  });
+
+  it("requires egg style once Add egg is picked", () => {
+    expect(priceLine(chaofan, line(chaofan.id, { modifierIds: [id(41)] }))).toEqual({
+      ok: false,
+      error: "Choose egg style for Siomai Chaofan",
+    });
+    const r = priceLine(chaofan, line(chaofan.id, { modifierIds: [id(41), id(12)] }));
+    expect(r.ok && [r.line.item.unitPrice, r.line.item.modifiers.map((m) => m.option)]).toEqual([104, ["Add egg", "Scrambled"]]);
+  });
+
+  it("drops an egg style picked without the egg", () => {
+    const r = priceLine(chaofan, line(chaofan.id, { modifierIds: [id(12)] }));
+    expect(r.ok && r.line.item.modifiers).toEqual([]);
+  });
+});
+
 describe("priceCart", () => {
   const products = new Map([silog, crab, lumpia].map((p) => [p.id, p]));
 

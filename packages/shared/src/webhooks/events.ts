@@ -99,6 +99,8 @@ export const OrderStatusChanged = z.object({
   status: OrderStatus,
   scheduledFor: z.iso.datetime({ offset: true }).nullable(),
   note: z.string().nullable(),
+  /** Who is delivering, once the order is out for delivery. Optional for events sent before this field existed. */
+  riderName: z.string().nullable().optional(),
 });
 
 export const OrderDeliveryFeeChanged = z.object({

@@ -17,6 +17,8 @@ export interface MenuGroup {
   required: boolean;
   minSelect: number;
   maxSelect: number;
+  /** Only shown (and required) once this option is picked, e.g. Egg style after Add egg. */
+  showWhenModifierId: string | null;
   /** Priced, active options only (unpriced ones aren't offered yet). */
   options: MenuOption[];
 }
@@ -81,6 +83,7 @@ export async function getPublicMenu(): Promise<PublicMenu> {
         required: g.required,
         minSelect: g.minSelect,
         maxSelect: g.maxSelect,
+        showWhenModifierId: g.showWhenModifierId ?? null,
         options: g.modifiers
           .filter((m) => m.active && m.priceDelta !== null)
           .map((m) => ({ id: m.id, name: m.name, priceDelta: m.priceDelta!, requiresCooking: m.requiresCooking })),

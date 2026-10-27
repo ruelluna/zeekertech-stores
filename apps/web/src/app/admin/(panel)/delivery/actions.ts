@@ -19,6 +19,8 @@ const SettingsInput = z.object({
   min_fee: requiredPeso,
   max_km: form.num.pipe(z.number().positive({ message: "Must be more than 0" })),
   free_delivery_threshold: peso,
+  rider_share_percent: form.num.pipe(z.number().min(0, "0–100%").max(100, "0–100%")),
+  rider_min_pay: requiredPeso,
 });
 
 export async function saveDeliverySettings(_prev: ActionState, formData: FormData): Promise<ActionState> {

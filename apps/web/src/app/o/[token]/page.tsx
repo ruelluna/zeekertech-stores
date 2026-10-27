@@ -65,6 +65,15 @@ async function Order({ params }: { params: PageProps<"/o/[token]">["params"] }) 
           {status === "awaiting_availability" && order.confirmWaitMinutes ? `Usually within ~${order.confirmWaitMinutes} minutes. ` : ""}
           {text.body}
         </p>
+        {row.rider_name && ["out_for_delivery", "delivered"].includes(status) && (
+          <p className="mt-3 flex items-center gap-2 rounded-lg bg-green-50 p-3 text-sm text-green-900 dark:bg-green-950 dark:text-green-200">
+            <span aria-hidden="true">🛵</span>
+            <span>
+              Your rider: <strong>{row.rider_name}</strong>
+              {status === "out_for_delivery" ? " is on the way." : ""}
+            </span>
+          </p>
+        )}
         {row.status_note && <p className="mt-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200">{row.status_note}</p>}
       </div>
 

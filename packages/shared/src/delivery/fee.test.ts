@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateDeliveryFee, DEFAULT_DELIVERY_SETTINGS as settings } from "./fee";
+import { calculateDeliveryFee, DEFAULT_DELIVERY_SETTINGS as settings, riderPay } from "./fee";
 
 const fee = (distanceKm: number, extra: Partial<Parameters<typeof calculateDeliveryFee>[0]> = {}) =>
   calculateDeliveryFee({ settings, distanceKm, subtotal: 300, ...extra });
@@ -47,5 +47,21 @@ describe("calculateDeliveryFee", () => {
     const withFree = { ...settings, freeDeliveryThreshold: 1000 };
     expect(fee(6.4, { settings: withFree, subtotal: 1000 })).toMatchObject({ ok: true, fee: 0, source: "free_threshold" });
     expect(fee(6.4, { settings: withFree, subtotal: 999 })).toMatchObject({ ok: true, fee: 75 });
+  });
+});
+
+describe("riderPay", () => {
+  it("gives the rider their share of the fee (70% by default)", () => {
+    expect(riderPay({ deliveryFee: 75, sharePercent: 70, minPay: 0 })).toBe(52.5);
+    expect(riderPay({ deliveryFee: 30, sharePercent: 80, minPay: 0 })).toBe(24);
+  });
+
+  it("never pays below the minimum, even when the fee was waived", () => {
+    expect(riderPay({ deliveryFee: 30, sharePercent: 70, minPay: 25 })).toBe(25);
+    expect(riderPay({ deliveryFee: 0, sharePercent: 70, minPay: 20 })).toBe(20);
+  });
+
+  it("pays nothing extra for an add-on to another delivery", () => {
+    expect(riderPay({ deliveryFee: 0, sharePercent: 70, minPay: 20, addOn: true })).toBe(0);
   });
 });

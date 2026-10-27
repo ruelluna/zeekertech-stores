@@ -91,3 +91,13 @@ export function haversineKm(a: { lat: number; lng: number }, b: { lat: number; l
 export function estimateRoadKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
   return haversineKm(a, b) * STRAIGHT_LINE_ROAD_FACTOR;
 }
+
+/**
+ * What the rider earns for one delivery: a share of the delivery fee charged, never below the minimum.
+ * Add-on orders ride along with another delivery, so they earn nothing extra.
+ */
+export function riderPay(input: { deliveryFee: number; sharePercent: number; minPay: number; addOn?: boolean }): number {
+  if (input.addOn) return 0;
+  const share = Math.round(input.deliveryFee * input.sharePercent) / 100;
+  return Math.max(input.minPay, share);
+}

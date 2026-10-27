@@ -11,10 +11,10 @@ export async function loadProductForm(productId: string | null): Promise<Product
   const [categories, ingredients, groups, product, links, groupLinks] = await Promise.all([
     store.from("categories").select("id, name").order("sort_order"),
     store.from("ingredients").select("id, name, availability_mode").order("name"),
-    store.from("modifier_groups").select("id, name, modifiers(name, price_delta, sort_order)").order("name"),
+    store.from("modifier_groups").select("id, name, modifiers(id, name, price_delta, sort_order)").order("name"),
     productId ? store.from("products").select("*").eq("id", productId).maybeSingle() : null,
     productId ? store.from("product_ingredients").select("ingredient_id").eq("product_id", productId) : null,
-    productId ? store.from("product_modifier_groups").select("group_id").eq("product_id", productId) : null,
+    productId ? store.from("product_modifier_groups").select("group_id, show_when_modifier_id").eq("product_id", productId) : null,
   ]);
 
   for (const r of [categories, ingredients, groups, product, links, groupLinks]) if (r?.error) throw r.error;
@@ -31,5 +31,6 @@ export async function loadProductForm(productId: string | null): Promise<Product
     })),
     linkedIngredientIds: links?.data?.map((l) => l.ingredient_id) ?? [],
     linkedGroupIds: groupLinks?.data?.map((l) => l.group_id) ?? [],
+    showWhen: Object.fromEntries((groupLinks?.data ?? []).map((l) => [l.group_id, l.show_when_modifier_id])),
   };
 }

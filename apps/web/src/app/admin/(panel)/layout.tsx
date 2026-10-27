@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
+import { LiveVisitors } from "@/components/presence";
 import { ROLE_PAGES, currentStaffRole } from "@/lib/auth";
 import { signOut } from "../login/actions";
 
@@ -8,6 +9,7 @@ export const metadata = { title: "Admin · Weekend Food Hub" };
 const NAV = [
   { page: "orders", label: "Orders" },
   { page: "inventory", label: "Inventory" },
+  { page: "deliveries", label: "Deliveries" },
   { page: "menu", label: "Menu & prices" },
   { page: "add-ons", label: "Add-ons" },
   { page: "ingredients", label: "Ingredients" },
@@ -17,7 +19,7 @@ const NAV = [
   { page: "staff", label: "Staff" },
 ];
 
-const ROLE_LABEL = { owner: "Owner", verifier: "Payments", kitchen: "Kitchen", counter: "Counter" } as const;
+const ROLE_LABEL = { owner: "Owner", verifier: "Payments", kitchen: "Kitchen", counter: "Counter", rider: "Rider" } as const;
 
 // The chrome is static; only the nav (which depends on the signed-in role) waits for the session.
 export default function AdminLayout({ children }: { children: ReactNode }) {
@@ -32,6 +34,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             <RoleNav />
           </Suspense>
           <div className="flex items-center gap-3 text-sm">
+            <LiveVisitors />
             <Link href="/" className="text-stone-500 hover:text-orange-700">
               View menu
             </Link>

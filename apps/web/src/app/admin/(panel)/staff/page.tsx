@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import { ActionForm } from "@/components/action-form";
-import { Badge, Card, Checkbox, Field, Input, Loading, PageHeader, Select } from "@/components/ui";
+import { Badge, Card, Checkbox, Field, Input, Loading, PageHeader, Select, peso } from "@/components/ui";
 import { requireOwner } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { addStaff, resetStaffPassword, updateStaff } from "./actions";
+import { addStaff, markRiderPaidOut, resetStaffPassword, updateStaff } from "./actions";
 
 export default function StaffPage() {
   return (
@@ -20,7 +20,8 @@ const ROLES = [
   { value: "kitchen", label: "Kitchen", description: "Orders (seafood check, cooking, dispatch, printing, walk-in orders, cash) and inventory." },
   { value: "verifier", label: "Payments", description: "Everything Kitchen does, plus confirming GCash payments and cancelling orders." },
   { value: "counter", label: "Counter", description: "Everything Kitchen does, plus cancelling orders. Can't confirm GCash payments." },
-  { value: "owner", label: "Owner", description: "Everything, including menu, prices, delivery, hours, promotions and staff." },
+  { value: "rider", label: "Rider", description: "Only their own deliveries: address, map, customer number, amount to collect, Delivered, and their earnings." },
+  { value: "owner", label: "Owner", description: "Everything, including menu, prices, delivery, hours, promotions, staff and rider payouts." },
 ] as const;
 
 function RoleSelect({ value }: { value?: string }) {
@@ -44,6 +45,22 @@ async function Staff() {
   if (error) throw error;
   const emails = new Map((users?.users ?? []).map((u) => [u.id, u.email ?? ""]));
 
+  // Rider pay not yet handed over, per rider account.
+  const riders = staff.filter((s) => s.role === "rider");
+  const { data: unpaidTrips } = riders.length
+    ? await supabase
+        .schema("ops")
+        .from("orders")
+        .select("rider_id, rider_pay, completed_at")
+        .in("rider_id", riders.map((r) => r.user_id))
+        .eq("status", "delivered")
+        .is("rider_paid_out_at", null)
+    : { data: [] };
+  const owed = (riderId: string) => {
+    const trips = (unpaidTrips ?? []).filter((t) => t.rider_id === riderId);
+    return { count: trips.length, total: trips.reduce((s, t) => s + Number(t.rider_pay ?? 0), 0) };
+  };
+
   return (
     <>
       <Card title="What each role can do">
@@ -55,6 +72,34 @@ async function Staff() {
           ))}
         </ul>
       </Card>
+
+      {riders.length > 0 && (
+        <Card title="Rider pay" description="Earnings from delivered trips that haven’t been handed over yet. Mark paid out once you’ve paid the rider.">
+          <ul className="divide-y divide-stone-100 dark:divide-stone-800">
+            {riders.map((r) => {
+              const o = owed(r.user_id);
+              return (
+                <li key={r.user_id} className="flex flex-wrap items-center justify-between gap-3 py-2 text-sm">
+                  <span>
+                    <strong>{r.display_name}</strong>{" "}
+                    <span className="text-stone-500">
+                      · {o.count} deliver{o.count === 1 ? "y" : "ies"} unpaid
+                    </span>
+                  </span>
+                  <span className="flex items-center gap-3">
+                    <strong className="text-base">{peso(o.total)}</strong>
+                    {o.count > 0 && (
+                      <ActionForm action={markRiderPaidOut} submitLabel="Mark paid out" className="flex items-center gap-2">
+                        <input type="hidden" name="riderId" value={r.user_id} />
+                      </ActionForm>
+                    )}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </Card>
+      )}
 
       <Card title={`Team (${staff.length})`}>
         <div className="flex flex-col gap-3">

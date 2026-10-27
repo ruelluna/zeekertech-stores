@@ -30,6 +30,15 @@ export interface PricingGroup {
   minSelect: number;
   maxSelect: number;
   modifiers: PricingModifier[];
+  /** For this product, the group only applies when this option is picked (e.g. Egg style ← Add egg). */
+  showWhenModifierId?: string | null;
+}
+
+/** Whether a group applies given the options picked so far. */
+export function groupApplies(group: Pick<PricingGroup, "showWhenModifierId">, pickedIds: Iterable<string>): boolean {
+  if (!group.showWhenModifierId) return true;
+  for (const id of pickedIds) if (id === group.showWhenModifierId) return true;
+  return false;
 }
 
 export interface PricingProduct {
@@ -81,6 +90,8 @@ export function priceLine(product: PricingProduct, line: CartLine): PriceLineRes
   for (const group of product.groups) {
     const picks = group.modifiers.filter((m) => remaining.has(m.id));
     for (const m of picks) remaining.delete(m.id);
+    // A conditional group that doesn't apply is skipped: its picks are dropped, its minimum ignored.
+    if (!groupApplies(group, line.modifierIds)) continue;
     const min = group.required ? Math.max(1, group.minSelect) : group.minSelect;
     if (picks.length < min) return { ok: false, error: `Choose ${group.name.toLowerCase()} for ${product.name}` };
     if (picks.length > group.maxSelect) {

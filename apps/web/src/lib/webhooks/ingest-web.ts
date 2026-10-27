@@ -46,9 +46,11 @@ export async function ingestOpsEvent(event: OpsToWebEvent): Promise<void> {
           status: event.status,
           ...(event.status === "pending_payment" ? { payment_status: "awaiting_payment" as const } : {}),
           ...(event.note ? { status_note: event.note } : {}),
+          ...(event.riderName ? { rider_name: event.riderName } : {}),
         });
         const text = STATUS_TEXT[event.status];
-        await notifyOrder(o.id, o.customer_id, { ...text, url: `${siteUrl}/o/${o.access_token}` });
+        const body = event.status === "out_for_delivery" && event.riderName ? `${event.riderName} is on the way with your order.` : text.body;
+        await notifyOrder(o.id, o.customer_id, { title: text.title, body, url: `${siteUrl}/o/${o.access_token}` });
         break;
       }
       case "order.payment_confirmed": {

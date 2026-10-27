@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { groupApplies } from "@wfh/shared";
 import { cart, type CartEntry } from "@/lib/cart-store";
 import type { MenuItem } from "@/lib/menu";
 import { peso } from "@/components/ui";
@@ -35,7 +36,10 @@ export function OptionsSheet({ item, onClose, onAdd }: { item: MenuItem; onClose
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const selected = item.groups.flatMap((g) => g.options.filter((o) => picked[g.id]?.includes(o.id)));
+  // Conditional groups (e.g. Egg style after Add egg) show only once their option is picked.
+  const allPicked = Object.values(picked).flat();
+  const visibleGroups = item.groups.filter((g) => g.options.length > 0 && groupApplies(g, allPicked));
+  const selected = visibleGroups.flatMap((g) => g.options.filter((o) => picked[g.id]?.includes(o.id)));
   const deltas = selected.reduce((s, o) => s + o.priceDelta, 0);
   const market = item.priceMode === "market";
   const basis = market ? (item.price ?? item.estimatedPrice ?? 0) : (item.price ?? 0);
@@ -52,7 +56,7 @@ export function OptionsSheet({ item, onClose, onAdd }: { item: MenuItem; onClose
   }
 
   function add() {
-    for (const g of item.groups) {
+    for (const g of visibleGroups) {
       const count = picked[g.id]?.length ?? 0;
       const min = g.required ? Math.max(1, g.minSelect) : g.minSelect;
       if (count < min) return setError(`Choose ${g.name.toLowerCase()}`);
@@ -112,7 +116,8 @@ export function OptionsSheet({ item, onClose, onAdd }: { item: MenuItem; onClose
           </fieldset>
         )}
 
-        {item.groups.map((g) => (
+        {/* Groups with no priced options (nothing to pick yet) and unmet conditions stay hidden. */}
+        {visibleGroups.map((g) => (
           <fieldset key={g.id} className="mb-4">
             <legend className="mb-2 text-sm font-medium">
               {g.name}
@@ -150,7 +155,6 @@ export function OptionsSheet({ item, onClose, onAdd }: { item: MenuItem; onClose
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             maxLength={200}
-            placeholder="e.g. less spicy"
             className="rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-700 dark:bg-stone-950"
           />
         </label>

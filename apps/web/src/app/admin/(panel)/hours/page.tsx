@@ -119,20 +119,10 @@ async function HoursContent() {
 
       <Card
         title="Printing"
-        description="Kitchen tickets and item labels print from the browser to any printer the device has. In the print dialog, choose the printer, turn off headers/footers and set margins to none."
+        description="Item labels are the kitchen printout: one per item, showing the order code, customer, product, options, notes and payment. They print from the browser to any printer the device has. In the print dialog, choose the label printer, turn off headers/footers and set margins to none."
       >
         <ActionForm action={savePrintSettings} className="flex flex-col gap-4">
-          <div className="grid gap-4 sm:grid-cols-4">
-            <Field label="Ticket paper width">
-              <select
-                name="print_ticket_width_mm"
-                defaultValue={String(s.print_ticket_width_mm)}
-                className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm dark:border-stone-700 dark:bg-stone-950"
-              >
-                <option value="80">80 mm (standard receipt)</option>
-                <option value="58">58 mm (small receipt)</option>
-              </select>
-            </Field>
+          <div className="grid gap-4 sm:grid-cols-3">
             <Field label="Label width (mm)">
               <Input name="print_label_width_mm" type="number" step="0.5" min="20" max="120" defaultValue={s.print_label_width_mm} />
             </Field>

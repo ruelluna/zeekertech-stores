@@ -90,7 +90,13 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
   if (groupIds.data.length) {
     const { error: e } = await store
       .from("product_modifier_groups")
-      .insert(groupIds.data.map((group_id, i) => ({ product_id: productId, group_id, sort_order: i + 1 })));
+      .insert(
+        groupIds.data.map((group_id, i) => {
+          // Optional condition: show this group only when an option from another linked group is picked.
+          const showWhen = z.uuid().safeParse(formData.get(`show_when_${group_id}`));
+          return { product_id: productId, group_id, sort_order: i + 1, show_when_modifier_id: showWhen.success ? showWhen.data : null };
+        }),
+      );
     if (e) return fail(e.message);
   }
 

@@ -60,6 +60,20 @@ async function DeliveryContent() {
             </Field>
           </div>
 
+          <h3 className="mt-2 font-medium">Rider pay</h3>
+          <p className="-mt-2 text-sm text-stone-600 dark:text-stone-400">
+            Riders earn a share of each delivery fee; the rest stays with the store. Pay is fixed when an order goes out for delivery, so
+            changes apply to new deliveries only. Add-on orders on the same trip earn nothing extra.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Field label="Rider share of the delivery fee (%)" hint={`Store keeps ${100 - Number(s.rider_share_percent)}%`}>
+              <Input name="rider_share_percent" type="number" step="1" min="0" max="100" defaultValue={s.rider_share_percent} required />
+            </Field>
+            <Field label="Minimum rider pay per delivery" hint="Also applies when the delivery fee is waived. 0 = off.">
+              <PesoInput name="rider_min_pay" defaultValue={s.rider_min_pay} required />
+            </Field>
+          </div>
+
           <h3 className="mt-2 font-medium">Kitchen location</h3>
           <p className="-mt-2 text-sm text-stone-600 dark:text-stone-400">Distances are measured from here. Tap the map on the kitchen, or paste the numbers from Google Maps.</p>
           <div className="grid gap-4 sm:grid-cols-3">

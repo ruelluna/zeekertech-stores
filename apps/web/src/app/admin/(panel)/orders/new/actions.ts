@@ -2,7 +2,7 @@
 
 import { refresh } from "next/cache";
 import { z } from "zod";
-import { CartLine, Fulfillment, normalizePhMobile, priceLine, type OrderItem, type PricingProduct } from "@wfh/shared";
+import { CartLine, Fulfillment, normalizePhMobile, priceLine, type Json, type OrderItem, type PricingProduct } from "@wfh/shared";
 import { requireStaff } from "@/lib/auth";
 import { fetchCatalog } from "@/lib/catalog";
 import { quoteDelivery } from "@/lib/delivery";
@@ -36,7 +36,12 @@ const ManualOrderInput = z.object({
   referenceNo: z.string().trim().max(30),
   notes: z.string().trim().max(300),
   lines: z.array(ManualLine).min(1, "Add at least one item").max(40),
+  /** Items added to an existing order: customer, pickup/delivery, address and time come from it. */
+  parentOrderId: z.uuid().nullable().optional(),
 });
+
+/** Orders past this point can't take add-ons (already handed over or on the way). */
+const CLOSED_FOR_ADDONS = ["out_for_delivery", "delivered", "picked_up", "completed", "denied", "rejected", "cancelled", "expired"];
 
 export type ManualOrderResult = { ok: true; queueCode: string; change: number | null } | { ok: false; errors: string[] };
 
@@ -52,12 +57,50 @@ export async function createManualOrder(raw: unknown): Promise<ManualOrderResult
   const input = parsed.data;
   const { userId } = await requireStaff();
 
+  const ops = createSupabaseAdminClient().schema("ops");
   const errors: string[] = [];
-  const phone = input.phone ? normalizePhMobile(input.phone) : null;
-  if (input.phone && !phone) errors.push("Enter a valid mobile number, e.g. 0917 123 4567");
-  if (!phone && (input.fulfillment === "delivery" || input.source !== "walk_in")) errors.push("Add the customer's mobile number");
-  const name = input.customerName || (input.source === "walk_in" ? "Walk-in" : "");
-  if (!name) errors.push("Add the customer's name");
+
+  // Add-on: copy the original order's customer, pickup/delivery, address and time.
+  let parent: {
+    id: string;
+    queue_code: string;
+    status: string;
+    customer_name: string | null;
+    customer_phone: string | null;
+    fulfillment: "pickup" | "delivery";
+    scheduled_for: string;
+    address: unknown;
+    barangay: string | null;
+    lat: number | null;
+    lng: number | null;
+  } | null = null;
+  if (input.parentOrderId) {
+    const { data } = await ops
+      .from("orders")
+      .select("id, queue_code, status, customer_name, customer_phone, fulfillment, scheduled_for, address, barangay, lat, lng")
+      .eq("id", input.parentOrderId)
+      .maybeSingle();
+    if (!data) return { ok: false, errors: ["The original order wasn't found"] };
+    if (CLOSED_FOR_ADDONS.includes(data.status)) {
+      return { ok: false, errors: [`${data.queue_code} is already ${data.status.replaceAll("_", " ")}. Create a new order instead.`] };
+    }
+    parent = data;
+  }
+  const fulfillment = parent?.fulfillment ?? input.fulfillment;
+  const scheduledFor = parent?.scheduled_for ?? input.scheduledFor;
+
+  let phone: string | null;
+  let name: string;
+  if (parent) {
+    phone = parent.customer_phone;
+    name = parent.customer_name ?? "Customer";
+  } else {
+    phone = input.phone ? normalizePhMobile(input.phone) : null;
+    if (input.phone && !phone) errors.push("Enter a valid mobile number, e.g. 0917 123 4567");
+    if (!phone && (input.fulfillment === "delivery" || input.source !== "walk_in")) errors.push("Add the customer's mobile number");
+    name = input.customerName || (input.source === "walk_in" ? "Walk-in" : "");
+    if (!name) errors.push("Add the customer's name");
+  }
 
   // Price every line against the current menu. Uncertain items count as confirmed (staff can check now).
   const catalog = await fetchCatalog();
@@ -91,7 +134,7 @@ export async function createManualOrder(raw: unknown): Promise<ManualOrderResult
   let barangay: string | null = null;
   let distance: { km: number; method: "road" | "straight_line"; minutes: number | null } | null = null;
   let feeSource: "formula" | "manual" = "manual";
-  if (input.fulfillment === "delivery") {
+  if (!parent && input.fulfillment === "delivery") {
     if (!input.address) errors.push("Add the delivery address");
     else {
       barangay = catalog.barangays.find((b) => b.id === input.address!.barangayId)?.name ?? null;
@@ -114,29 +157,33 @@ export async function createManualOrder(raw: unknown): Promise<ManualOrderResult
   if (errors.length) return { ok: false, errors };
 
   const subtotal = round2(items.reduce((s, i) => s + (i.unitPrice ?? 0) * i.qty, 0));
-  const deliveryFee = input.fulfillment === "delivery" ? input.deliveryFee : 0;
+  // Add-ons ride along with the original delivery, so no second fee.
+  const deliveryFee = !parent && fulfillment === "delivery" ? input.deliveryFee : 0;
   const total = round2(subtotal + deliveryFee);
 
   const paidNow = input.payment === "cash_now" || input.payment === "gcash_now";
   if (input.payment === "cash_now" && (input.amountReceived ?? 0) < total) {
     return { ok: false, errors: [`Cash received is less than the total (₱${total})`] };
   }
-  const handedOverNow = paidNow && input.source === "walk_in" && input.fulfillment === "pickup" && items.every((i) => !i.requiresCooking);
+  const handedOverNow =
+    !parent && paidNow && input.source === "walk_in" && fulfillment === "pickup" && items.every((i) => !i.requiresCooking);
   const status = handedOverNow ? "completed" : input.payment === "gcash_later" ? "pending_payment" : "queued";
   const now = new Date().toISOString();
+  const newDelivery = !parent && fulfillment === "delivery";
 
-  const ops = createSupabaseAdminClient().schema("ops");
   const { data: order, error } = await ops
     .from("orders")
     .insert({
       source: input.source,
       client_id: crypto.randomUUID(),
+      parent_order_id: parent?.id ?? null,
       customer_name: name,
       customer_phone: phone,
-      fulfillment: input.fulfillment,
-      scheduled_for: input.scheduledFor,
-      address:
-        input.fulfillment === "delivery" && input.address
+      fulfillment,
+      scheduled_for: scheduledFor,
+      address: parent
+        ? (parent.address as Json)
+        : newDelivery && input.address
           ? {
               barangay,
               streetPurok: input.address.streetPurok,
@@ -145,16 +192,16 @@ export async function createManualOrder(raw: unknown): Promise<ManualOrderResult
               ...(input.address.lat !== null ? { lat: input.address.lat, lng: input.address.lng } : {}),
             }
           : null,
-      barangay,
-      lat: input.address?.lat ?? null,
-      lng: input.address?.lng ?? null,
+      barangay: parent ? parent.barangay : barangay,
+      lat: parent ? parent.lat : (input.address?.lat ?? null),
+      lng: parent ? parent.lng : (input.address?.lng ?? null),
       distance_km: distance?.km ?? null,
       distance_method: distance?.method ?? null,
       travel_minutes: distance?.minutes ?? null,
       delivery_fee: deliveryFee,
-      fee_source: input.fulfillment === "delivery" ? feeSource : null,
-      fee_overridden_by: feeSource === "manual" && input.fulfillment === "delivery" ? userId : null,
-      fee_override_reason: feeSource === "manual" && input.fulfillment === "delivery" ? input.feeReason : null,
+      fee_source: newDelivery ? feeSource : null,
+      fee_overridden_by: feeSource === "manual" && newDelivery ? userId : null,
+      fee_override_reason: feeSource === "manual" && newDelivery ? input.feeReason : null,
       subtotal,
       total,
       status,
