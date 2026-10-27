@@ -3,12 +3,13 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import type { Database } from "@wfh/shared";
-import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "./env";
+import { supabaseConfig } from "./env";
 
 /** Per-request client that acts as the signed-in user (reads the auth cookies). */
 export async function createSupabaseServerClient() {
   const cookieStore = await cookies();
-  return createServerClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  const { url, key } = supabaseConfig();
+  return createServerClient<Database>(url, key, {
     cookies: {
       getAll: () => cookieStore.getAll(),
       setAll(cookiesToSet) {
@@ -24,7 +25,8 @@ export async function createSupabaseServerClient() {
 
 /** Anonymous client with no cookies, safe inside `use cache` (public menu, store hours). */
 export function createSupabasePublicClient() {
-  return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  const { url, key } = supabaseConfig();
+  return createClient<Database>(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }

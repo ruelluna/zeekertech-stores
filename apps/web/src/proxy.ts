@@ -1,13 +1,14 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/lib/supabase/env";
+import { supabaseConfig } from "@/lib/supabase/env";
 
 // Refreshes the Supabase session cookie on every page, and does an optimistic sign-in check for the admin.
 // Real authorization happens in requireOwner() and in row-level security.
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
-  const supabase = createServerClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  const { url, key } = supabaseConfig();
+  const supabase = createServerClient(url, key, {
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll(cookiesToSet, headers) {
@@ -34,5 +35,5 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // Every page except static files, images and webhooks (which don't use sessions).
-  matcher: ["/((?!_next/static|_next/image|api/webhooks|favicon.ico|sw.js|.*\\.(?:png|jpg|jpeg|svg|webp|ico)$).*)"],
+  matcher: ["/((?!_next/static|_next/image|api/webhooks|runtime-env|favicon.ico|sw.js|.*\\.(?:png|jpg|jpeg|svg|webp|ico)$).*)"],
 };

@@ -7,14 +7,8 @@ WORKDIR /app
 
 FROM base AS build
 COPY . .
-# NEXT_PUBLIC_* values are baked into the browser bundle at build time, so Coolify must pass them
-# as build variables too. Server-only secrets are read at runtime and don't need to be here.
-ARG NEXT_PUBLIC_SUPABASE_URL
-ARG NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-ARG NEXT_PUBLIC_VAPID_PUBLIC_KEY
-ARG NEXT_PUBLIC_MAP_TILE_URL
-ARG NEXT_PUBLIC_MAP_ATTRIBUTION
-ARG NEXT_PUBLIC_FACEBOOK_LOGIN
+# No build variables needed: every setting, NEXT_PUBLIC_* included, is read when the container starts
+# (see apps/web/src/lib/supabase/env.ts). Set them as runtime variables in Coolify.
 # Only the website and the shared package; the Expo staff app isn't needed on the server.
 RUN pnpm install --frozen-lockfile --filter "@wfh/web..."
 RUN pnpm --filter @wfh/web build

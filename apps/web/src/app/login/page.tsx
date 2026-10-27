@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { ActionForm } from "@/components/action-form";
 import { Field, Input } from "@/components/ui";
 import { devSignIn, signInWithFacebook } from "./actions";
+import { readServerPublicEnv } from "@/lib/supabase/env";
 
 export const metadata = { title: "Log in · Weekend Food Hub" };
 
@@ -28,7 +29,7 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
 async function LoginOptions({ searchParams }: { searchParams: PageProps<"/login">["searchParams"] }) {
   const params = await searchParams;
   const next = typeof params.next === "string" ? params.next : "/account";
-  const facebook = process.env.NEXT_PUBLIC_FACEBOOK_LOGIN === "on";
+  const facebook = readServerPublicEnv().facebookLogin;
   const dev = process.env.NODE_ENV !== "production";
 
   return (

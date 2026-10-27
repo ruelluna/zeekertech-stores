@@ -26,6 +26,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        {/* Public config (Supabase URL, push key…) read at runtime, so the Docker image needs no build variables. */}
+        {/* eslint-disable-next-line @next/next/no-sync-scripts -- must run before the app's own scripts */}
+        <script src="/runtime-env" />
+      </head>
       <body className="min-h-full flex flex-col">
         {children}
         <Toaster />

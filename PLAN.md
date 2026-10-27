@@ -625,7 +625,7 @@ _(Prices and coordinates above are placeholders.)_
 
 | App | Example domain | How it's deployed |
 |---|---|---|
-| Website (Next.js) | `weekendfoodhub.com`, `www.weekendfoodhub.com` | Docker image built from `apps/web` (Next.js standalone output), auto-deploy from GitHub |
+| Website (Next.js) | `weekendfoodhub.com`, `www.weekendfoodhub.com` | `Dockerfile` at the repo root, auto-deploy from GitHub. Needs **no build variables**: all settings are read when the container starts (§17.6) |
 | Supabase API (Auth, REST, Realtime, Storage) | `api.weekendfoodhub.com` | Coolify Supabase template |
 | Supabase Studio (admin dashboard) | `studio.weekendfoodhub.com` | Same template, behind a password |
 | Coolify dashboard | `deploy.weekendfoodhub.com` | Installed with Coolify, behind a strong password |
@@ -653,6 +653,16 @@ The staff app isn't hosted. It's an Android APK installed on the devices and poi
 - **Webhook receivers and outbox sender:** Next.js API routes (`/api/webhooks/web`, `/api/webhooks/ops`) instead of Supabase Edge Functions, so there's one thing to deploy.
 - **Retries and timers** (outbox, availability/decision/unpaid timers): `pg_cron` jobs inside Postgres, included in the Supabase image.
 - **Facebook Login:** the Meta app ID and secret go in the Supabase Auth environment variables in Coolify.
+
+### 17.6 Deploy order (Coolify)
+1. **Supabase first:** add the Coolify Supabase template on `api.<domain>` (Studio on `studio.<domain>`). From its environment, note the **public API URL**, the **anon/publishable key** and the **service role/secret key**.
+2. **Database:** push the migrations, then the seed, to the new database: `supabase db push --db-url <server database URL>` through an SSH tunnel.
+3. **Website:** add the GitHub repo as a Dockerfile app on `<domain>`, Ports Exposes `3000`. Set these as **runtime** variables (no "build variable" tick needed):
+   - `NEXT_PUBLIC_SUPABASE_URL` (the public `https://api.<domain>`, since browsers connect to it directly), `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`
+   - `SITE_URL=https://<domain>`, a new `WEBHOOK_SIGNING_SECRET`, a new VAPID pair (`npx web-push generate-vapid-keys`): `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`
+   - Optional: `SMS_PROVIDER` and `TEXTBEE_API_KEY`, `OPENROUTESERVICE_API_KEY`, `NEXT_PUBLIC_FACEBOOK_LOGIN`, map tile settings
+4. **Changing a setting later** only needs a restart, not a rebuild. The browser gets its public settings from `/runtime-env` at page load.
+5. **Owner login:** create the owner account in Studio (Auth) and give it the owner role in `ops.staff_users`.
 
 ### 17.5 Backups (the one non-negotiable)
 - **Nightly database backup** from Coolify to **Cloudflare R2** (free up to 10 GB), kept off the VPS. Hostinger's own backup add-on is a bonus, not a replacement.

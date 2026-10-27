@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { serviceAreaCenter } from "@wfh/shared";
 import { Loading } from "@/components/ui";
@@ -7,6 +8,7 @@ import { getCurrentCustomer } from "@/lib/customer";
 import { welcomeOfferFor } from "@/lib/discounts";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { CheckoutForm, type CheckoutData } from "./checkout-form";
+import { readServerPublicEnv } from "@/lib/supabase/env";
 
 export const metadata = { title: "Checkout · Weekend Food Hub" };
 
@@ -25,6 +27,8 @@ export default function CheckoutPage() {
 }
 
 async function Checkout() {
+  // Request time only: the build must not reach Supabase (the Docker image is built without its address).
+  await connection();
   const [catalog, customer] = await Promise.all([fetchCatalog(), getCurrentCustomer()]);
   const offer = await welcomeOfferFor(customer);
 
@@ -50,7 +54,7 @@ async function Checkout() {
 
   const data: CheckoutData = {
     customer: customer ? { name: customer.name, phone: customer.phone } : null,
-    facebookLogin: process.env.NEXT_PUBLIC_FACEBOOK_LOGIN === "on",
+    facebookLogin: readServerPublicEnv().facebookLogin,
     offer,
     savedAddresses,
     barangays: catalog.barangays.map((b) => ({ id: b.id, name: b.name, center: b.center })),

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { isStaffPushOn, removeStaffPush, saveStaffPush } from "@/app/admin/(panel)/push-actions";
 import { urlBase64ToUint8Array } from "@/components/live";
+import { publicEnv } from "@/lib/supabase/env";
 
 /**
  * Turns on push alerts for this device (new orders needing a seafood check, payments to verify).
@@ -12,7 +13,7 @@ export function PhoneAlerts() {
   const [state, setState] = useState<"unsupported" | "off" | "on" | "denied" | "working">(
     "unsupported",
   );
-  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const publicKey = publicEnv().vapidPublicKey;
 
   useEffect(() => {
     if (!publicKey || !("serviceWorker" in navigator) || !("PushManager" in window)) return;

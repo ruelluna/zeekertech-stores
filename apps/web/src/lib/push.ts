@@ -2,12 +2,13 @@ import "server-only";
 import webpush from "web-push";
 import type { StaffRole } from "@wfh/shared";
 import { createSupabaseAdminClient } from "./supabase/admin";
+import { readServerPublicEnv } from "./supabase/env";
 
 let configured: boolean | null = null;
 
 function configure(): boolean {
   if (configured !== null) return configured;
-  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const publicKey = readServerPublicEnv().vapidPublicKey;
   const privateKey = process.env.VAPID_PRIVATE_KEY;
   configured = Boolean(publicKey && privateKey);
   if (configured) webpush.setVapidDetails(process.env.VAPID_SUBJECT ?? "mailto:owner@example.com", publicKey!, privateKey!);

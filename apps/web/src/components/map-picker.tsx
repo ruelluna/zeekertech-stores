@@ -3,11 +3,10 @@
 import { useEffect, useRef } from "react";
 import type { Map as LeafletMap, Marker } from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { publicEnv } from "@/lib/supabase/env";
 
 type LatLng = { lat: number; lng: number };
 
-const TILE_URL = process.env.NEXT_PUBLIC_MAP_TILE_URL ?? "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
-const ATTRIBUTION = process.env.NEXT_PUBLIC_MAP_ATTRIBUTION ?? "&copy; OpenStreetMap contributors";
 
 /**
  * Tap or drag to place a pin. Leaflet is loaded in the browser only. `focus` recenters the map
@@ -51,7 +50,8 @@ export function MapPicker({
       if (cancelled || !container.current || map.current) return;
       leaflet.current = L;
       const m = L.map(container.current, { zoomControl: true }).setView([focus.lat, focus.lng], value ? 16 : 14);
-      L.tileLayer(TILE_URL, { attribution: ATTRIBUTION, maxZoom: 19 }).addTo(m);
+      const { mapTileUrl, mapAttribution } = publicEnv();
+      L.tileLayer(mapTileUrl, { attribution: mapAttribution, maxZoom: 19 }).addTo(m);
       if (kitchen) {
         L.circleMarker([kitchen.lat, kitchen.lng], { radius: 6, color: "#57534e", fillOpacity: 0.8 })
           .addTo(m)

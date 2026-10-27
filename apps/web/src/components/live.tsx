@@ -8,6 +8,7 @@ import { savePushSubscription } from "@/app/o/[token]/actions";
 import { peso } from "@/components/ui";
 import { STATUS_TEXT } from "@/lib/order-status";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { publicEnv } from "@/lib/supabase/env";
 import { autoPrintRaw, parseAutoPrint, printOrder } from "@/lib/print";
 import { chime, toast, type ToastTone } from "@/lib/toast";
 
@@ -206,7 +207,7 @@ export function urlBase64ToUint8Array(base64: string) {
 /** "Notify me" for browser push. Hidden where push isn't supported or not configured. */
 export function NotifyButton({ token }: { token: string }) {
   const [state, setState] = useState<"unsupported" | "idle" | "on" | "denied" | "working">("unsupported");
-  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const publicKey = publicEnv().vapidPublicKey;
 
   useEffect(() => {
     if (!publicKey || !("serviceWorker" in navigator) || !("PushManager" in window)) return;
