@@ -1,0 +1,11 @@
+.git
+**/node_modules
+**/.next
+**/.turbo
+**/.expo
+**/.env
+**/.env.*
+!**/.env.example
+docs
+supabase/.temp
+supabase/.branches
