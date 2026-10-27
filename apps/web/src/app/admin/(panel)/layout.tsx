@@ -5,6 +5,8 @@ import { signOut } from "../login/actions";
 export const metadata = { title: "Admin · Weekend Food Hub" };
 
 const NAV = [
+  { href: "/admin/orders", label: "Orders" },
+  { href: "/admin/inventory", label: "Inventory" },
   { href: "/admin/menu", label: "Menu & prices" },
   { href: "/admin/add-ons", label: "Add-ons" },
   { href: "/admin/ingredients", label: "Ingredients" },

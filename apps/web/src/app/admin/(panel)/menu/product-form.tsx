@@ -78,7 +78,7 @@ export function ProductForm({ product: p, categories, ingredients, groups, linke
           <Field label="Price" hint="Fixed price, or today's price per kg for market items">
             <PesoInput name="price" defaultValue={p?.price ?? null} />
           </Field>
-          <Field label="Estimated price" hint="Market items only: shown as “~₱___”">
+          <Field label="Estimated price" hint="Market items only, per kg when sold by weight: shown as “~₱___”">
             <PesoInput name="estimated_price" defaultValue={p?.estimated_price ?? null} />
           </Field>
         </div>

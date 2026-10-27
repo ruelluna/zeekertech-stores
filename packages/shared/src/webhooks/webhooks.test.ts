@@ -76,9 +76,13 @@ describe("order.created payload", () => {
         modifiers: [{ group: "Spice level", option: "Spicy", priceDelta: 0, requiresCooking: false }],
         notes: "",
         needsAvailability: true,
+        requiresCooking: true,
+        prepMinutes: 40,
       },
     ],
     needsAvailability: true,
+    confirmWaitMinutes: 20,
+    flags: [],
     totals: { subtotal: 650, discount: null, deliveryFee: 75, total: 725, isEstimate: true },
     payment: { method: "gcash", status: "not_requested" },
   };

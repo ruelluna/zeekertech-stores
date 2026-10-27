@@ -4,6 +4,7 @@ import { z } from "zod";
 import { fail, form, formObject, ok, zodMessage, type ActionState } from "@/lib/action-state";
 import { requireOwner } from "@/lib/auth";
 import { menuChanged } from "@/lib/menu-tag";
+import { uploadPublicImage } from "@/lib/uploads";
 
 const time = z.string().regex(/^\d{2}:\d{2}$/, "Use HH:MM");
 
@@ -94,3 +95,16 @@ export async function saveStoreSettings(_prev: ActionState, formData: FormData):
 }
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+export async function uploadGcashQr(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const { supabase } = await requireOwner();
+  const file = formData.get("qr");
+  if (!(file instanceof File)) return fail("Choose the QR image");
+  const uploaded = await uploadPublicImage(file, "gcash");
+  if (!uploaded.ok) return fail(uploaded.error);
+
+  const { error } = await supabase.schema("store").from("store_settings").update({ gcash_qr_url: uploaded.url }).eq("id", true);
+  if (error) return fail(error.message);
+  menuChanged();
+  return ok("QR code uploaded");
+}

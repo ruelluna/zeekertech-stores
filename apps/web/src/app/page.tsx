@@ -2,13 +2,21 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { Badge, peso } from "@/components/ui";
 import { getPublicMenu, type MenuItem } from "@/lib/menu";
+import Link from "next/link";
+import { AddToCart } from "./add-to-cart";
+import { CartBar } from "./cart-bar";
 import { StoreStatusPill } from "./store-status";
 
 export default function Home() {
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-16 pt-10">
       <header className="mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight">Weekend Food Hub</h1>
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="text-3xl font-semibold tracking-tight">Weekend Food Hub</h1>
+          <Link href="/account" className="mt-2 shrink-0 text-sm text-stone-600 hover:text-orange-700 dark:text-stone-400">
+            My orders
+          </Link>
+        </div>
         <p className="mt-1 text-stone-600 dark:text-stone-400">Chaofan, silog, paluto and frozen food · Tapilon, Daanbantayan</p>
       </header>
       <Suspense fallback={<p className="text-sm text-stone-500">Loading the menu…</p>}>
@@ -28,7 +36,8 @@ async function Menu() {
       <div className="mb-6 flex flex-col gap-3">
         <StoreStatusPill hours={menu.hours} closures={menu.closures} paused={menu.orderingPaused} />
         <p className="rounded-lg bg-orange-50 p-3 text-sm text-orange-900 dark:bg-orange-950 dark:text-orange-200">
-          Online ordering is coming soon. Pickup in Tapilon, or delivery anywhere in mainland Daanbantayan from {peso(menu.baseDeliveryFee)}.
+          Pickup in Tapilon, or delivery anywhere in mainland Daanbantayan from {peso(menu.baseDeliveryFee)}.
+          {menu.allowPreorders ? " Closed? You can still pre-order for later." : ""}
         </p>
       </div>
 
@@ -45,7 +54,7 @@ async function Menu() {
           <h2 className="mb-3 text-xl font-semibold">{c.name}</h2>
           <ul className="grid gap-3 sm:grid-cols-2">
             {c.items.map((item) => (
-              <MenuCard key={item.id} item={item} />
+              <MenuCard key={item.id} item={item} canOrder={!menu.orderingPaused} />
             ))}
           </ul>
         </section>
@@ -53,12 +62,19 @@ async function Menu() {
 
       <footer className="border-t border-stone-200 pt-6 text-sm text-stone-500 dark:border-stone-800">
         <p>🟡 “Subject to availability” dishes use seasonal seafood. We confirm before you pay.</p>
+        <p className="mt-2">
+          <Link href="/privacy" className="hover:text-orange-700">Privacy</Link> ·{" "}
+          <Link href="/terms" className="hover:text-orange-700">Terms</Link> ·{" "}
+          <Link href="/data-deletion" className="hover:text-orange-700">Data deletion</Link>
+        </p>
       </footer>
+      <div className="h-20" />
+      <CartBar />
     </>
   );
 }
 
-function MenuCard({ item }: { item: MenuItem }) {
+function MenuCard({ item, canOrder }: { item: MenuItem; canOrder: boolean }) {
   const dimmed = item.badge === "sold_out" || item.badge === "unavailable";
   return (
     <li
@@ -76,11 +92,14 @@ function MenuCard({ item }: { item: MenuItem }) {
       {item.soldBy === "weight" && item.weightOptionsKg.length > 0 && (
         <p className="text-xs text-stone-500">Sizes: {item.weightOptionsKg.map((kg) => `${kg} kg`).join(" · ")}</p>
       )}
-      {item.addOns.map((g) => (
-        <p key={g.group} className="text-xs text-stone-500">
-          {g.group}: {g.options.map((o) => (o.priceDelta > 0 ? `${o.name} +${peso(o.priceDelta)}` : o.name)).join(" · ")}
-        </p>
-      ))}
+      {item.groups
+        .filter((g) => g.options.length > 0)
+        .map((g) => (
+          <p key={g.id} className="text-xs text-stone-500">
+            {g.name}: {g.options.map((o) => (o.priceDelta > 0 ? `${o.name} +${peso(o.priceDelta)}` : o.name)).join(" · ")}
+          </p>
+        ))}
+      <AddToCart item={item} canOrder={canOrder} />
     </li>
   );
 }
@@ -90,10 +109,14 @@ function PriceTag({ item }: { item: MenuItem }) {
   if (item.priceMode === "market") {
     return (
       <span className="shrink-0 text-right text-sm">
-        {item.estimatedPrice !== null && <span className="block font-semibold">~{peso(item.estimatedPrice)}</span>}
-        <span className="block text-xs text-stone-500">
-          {item.price !== null && item.soldBy === "weight" ? `${peso(item.price)}/kg today · ` : ""}market price
-        </span>
+        {(item.price ?? item.estimatedPrice) !== null && (
+          <span className="block font-semibold">
+            {item.price !== null ? "" : "~"}
+            {peso(item.price ?? item.estimatedPrice)}
+            {item.soldBy === "weight" ? "/kg" : ""}
+          </span>
+        )}
+        <span className="block text-xs text-stone-500">{item.price !== null ? "today · " : ""}market price</span>
       </span>
     );
   }

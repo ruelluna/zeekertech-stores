@@ -12,7 +12,9 @@
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript --local --schema store,ops > packages/shared/src/database.types.ts",
-    "dev:owner": "node --env-file=apps/web/.env.local scripts/dev-owner.mjs"
+    "dev:owner": "node --env-file=apps/web/.env.local scripts/dev-owner.mjs",
+    "dev:customer": "node --env-file=apps/web/.env.local scripts/dev-customer.mjs",
+    "import:service-area": "node --env-file=apps/web/.env.local scripts/import-service-area.mjs"
   },
   "devDependencies": {
     "prettier": "^3.9.10",

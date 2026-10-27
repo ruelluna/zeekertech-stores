@@ -34,6 +34,94 @@ export type Database = {
         };
         Relationships: [];
       };
+      inventory_counts: {
+        Row: {
+          beginning: number | null;
+          counted_by: string | null;
+          date: string;
+          ending: number | null;
+          item_id: string;
+          received: number;
+          updated_at: string;
+          wasted: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          beginning?: number | null;
+          counted_by?: string | null;
+          date: string;
+          ending?: number | null;
+          item_id: string;
+          received?: number;
+          updated_at?: string;
+          wasted?: number;
+        };
+        Update: {
+          beginning?: number | null;
+          counted_by?: string | null;
+          date?: string;
+          ending?: number | null;
+          item_id?: string;
+          received?: number;
+          updated_at?: string;
+          wasted?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "inventory_counts_item_id_fkey";
+            columns: ["item_id"];
+            isOneToOne: false;
+            referencedRelation: "inventory_items";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      inventory_items: {
+        Row: {
+          active: boolean;
+          buy_for_days: number;
+          category: string;
+          created_at: string;
+          id: string;
+          name: string;
+          notes: string | null;
+          par_level: number | null;
+          reorder_point: number | null;
+          sort_order: number;
+          unit: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          active?: boolean;
+          buy_for_days?: number;
+          category?: string;
+          created_at?: string;
+          id?: string;
+          name: string;
+          notes?: string | null;
+          par_level?: number | null;
+          reorder_point?: number | null;
+          sort_order?: number;
+          unit?: string;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          buy_for_days?: number;
+          category?: string;
+          created_at?: string;
+          id?: string;
+          name?: string;
+          notes?: string | null;
+          par_level?: number | null;
+          reorder_point?: number | null;
+          sort_order?: number;
+          unit?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       label_templates: {
         Row: {
           created_at: string;
@@ -315,8 +403,8 @@ export type Database = {
           payment_sender_name?: string | null;
           payment_status?: Database["ops"]["Enums"]["payment_status"];
           promotion_ref?: string | null;
-          queue_code: string;
-          queue_date: string;
+          queue_code?: string;
+          queue_date?: string;
           rider_name?: string | null;
           scheduled_for: string;
           source: Database["ops"]["Enums"]["order_source"];
@@ -692,13 +780,28 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      complete_availability_check: {
+        Args: { p_decision_minutes?: number; p_order_id: string };
+        Returns: Database["ops"]["Enums"]["order_status"];
+      };
       current_staff_role: {
         Args: Record<PropertyKey, never>;
         Returns: Database["ops"]["Enums"]["staff_role"];
       };
+      enqueue_web_event: { Args: { p_event: string; p_payload: Json }; Returns: undefined };
       has_role: { Args: { roles: Database["ops"]["Enums"]["staff_role"][] }; Returns: boolean };
       is_staff: { Args: Record<PropertyKey, never>; Returns: boolean };
       next_queue_code: { Args: { p_date: string }; Returns: string };
+      review_payment: {
+        Args: {
+          p_amount_received?: number;
+          p_decision: Database["ops"]["Enums"]["payment_decision"];
+          p_order_id: string;
+          p_reason?: string;
+        };
+        Returns: undefined;
+      };
+      run_timers: { Args: { p_unpaid_flag_minutes?: number }; Returns: undefined };
     };
     Enums: {
       customer_decision: "continue" | "cancel" | "expired";
@@ -938,6 +1041,7 @@ export type Database = {
       delivery_settings: {
         Row: {
           base_fee: number;
+          excluded_areas_geojson: Json | null;
           free_delivery_threshold: number | null;
           id: boolean;
           included_km: number;
@@ -954,6 +1058,7 @@ export type Database = {
         ComputedFields: never;
         Insert: {
           base_fee?: number;
+          excluded_areas_geojson?: Json | null;
           free_delivery_threshold?: number | null;
           id?: boolean;
           included_km?: number;
@@ -969,6 +1074,7 @@ export type Database = {
         };
         Update: {
           base_fee?: number;
+          excluded_areas_geojson?: Json | null;
           free_delivery_threshold?: number | null;
           id?: boolean;
           included_km?: number;
@@ -1388,27 +1494,30 @@ export type Database = {
         Row: {
           auth: string;
           created_at: string;
-          customer_id: string;
+          customer_id: string | null;
           endpoint: string;
           id: string;
           p256dh: string;
+          web_order_id: string | null;
         };
         ComputedFields: never;
         Insert: {
           auth: string;
           created_at?: string;
-          customer_id: string;
+          customer_id?: string | null;
           endpoint: string;
           id?: string;
           p256dh: string;
+          web_order_id?: string | null;
         };
         Update: {
           auth?: string;
           created_at?: string;
-          customer_id?: string;
+          customer_id?: string | null;
           endpoint?: string;
           id?: string;
           p256dh?: string;
+          web_order_id?: string | null;
         };
         Relationships: [
           {
@@ -1416,6 +1525,13 @@ export type Database = {
             columns: ["customer_id"];
             isOneToOne: false;
             referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "push_subscriptions_web_order_id_fkey";
+            columns: ["web_order_id"];
+            isOneToOne: false;
+            referencedRelation: "web_orders";
             referencedColumns: ["id"];
           },
         ];

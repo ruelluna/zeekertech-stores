@@ -237,7 +237,12 @@ Any open state ─▶ CANCELLED (staff, with reason)
 ## 6. Delivery
 
 ### 6.1 Service area
-- **Mainland Daanbantayan only.** Polygon = municipal boundary (OpenStreetMap) **minus all islands**.
+- **Mainland Daanbantayan only.** Checked in layers:
+  - **Boundary polygon** (mainland only), if OpenStreetMap ever has one. As of 2026-10-27 it only has the town's center point, so this layer is empty.
+  - **Excluded areas**: a box around Malapascua (`delivery_settings.excluded_areas_geojson`).
+  - **Maximum distance** (25 km), which rules out Carnaza (about 30 km away).
+  - **No road route** from OpenRouteService, once its key is set.
+  - `pnpm import:service-area` loads barangay center points for the checkout map, and the boundary if one appears later.
 - Barangays (19): Aguho, Bagay, Bakhawan, Bateria, Bitoon, Calape, Dalingding, Lanao, Logon (mainland only), Malbago, Malingin, Maya, Pajo, Paypay, Poblacion, Talisay, Tapilon, Tinubdan, Tominjao. Each can be paused in the admin.
 - **Excluded:** Carnaza (barangay removed) and Malapascua (blocked by the polygon even though it belongs to Logon). Message: *"Sorry, we can't deliver to the islands."*
 - No road route found → treated as outside the service area (never given an estimated fee).
@@ -554,8 +559,10 @@ _(Prices and coordinates above are placeholders.)_
 |---|---|
 | **0. Setup** ✅ done 2026-10-27 | Monorepo, Supabase project, `store`/`ops` schemas, shared zod schemas, staff auth and roles, CI |
 | **1. Web admin + menu** ✅ done 2026-10-27 | Categories, products, modifiers, ingredients, price modes, barangays, delivery settings (kitchen pin as lat/lng), promotions, store hours and closures, owner-only sign-in. Seeded launch menu (§7.1). Public menu with badges and open/closed status. **Moved to Phase 2:** service-area polygon import, map pin picker, GCash QR upload, product photos |
-| **2. Web ordering** | Service-area polygon import, map pin picker (kitchen + customers), GCash QR and product photo uploads, Facebook Login, mobile number and saved addresses with map pin, fee calculator, service-area check, checkout, welcome discount, GCash step, decision page, order status page, browser push, privacy and data-deletion pages, outbound webhooks |
-| **3. Ops backend** | Webhook receiver (inbox), order tables, outbox sender, menu copy, timers (availability, decision, unpaid) |
+| **2. Web ordering** ✅ done 2026-10-27 (Facebook Login built, waiting on the Meta app) | Service-area import (barangay points + Malapascua exclusion), map pin picker (kitchen + customers), GCash QR and product photo uploads, Facebook Login, mobile number and saved addresses with map pin, fee calculator, service-area check, checkout, welcome discount, GCash step, decision page, order status page, browser push, privacy and data-deletion pages, outbound webhooks |
+| **3. Ops backend** ✅ mostly done 2026-10-27 | Webhook receiver (inbox), order tables, outbox sender, timers (decision expiry, unpaid flag). Still to do: menu copy, staff alert when the availability wait passes |
+| **3b. Web admin: Orders** ✅ done 2026-10-27 (interim) | Sourcing, Payment Review, kitchen queue, dispatch and cancel in the web admin, using the same database functions the Android app will call |
+| **3c. Inventory** ✅ done 2026-10-27 | Daily beginning/received/wasted/ending counts, usage, buy list with alert (§18) |
 | **4. Android: confirmations** | Login and roles, Sourcing tab, daily availability board, Payment Review with flags, live queue board with sound, Expo push |
 | **5. Android: counter** | Walk-in quick sale (cash with change, on-the-spot GCash confirm, frozen as-is hand-over), phone/Messenger orders with customer search and fee override, **offline walk-in orders with sync**, frozen stock counts, Menu mode, Dispatch, Customers (Text/Call, merge), sold-out toggle |
 | **6. Printing** | Printer settings, ESC/POS + TSPL drivers (ZPL if needed), item label + delivery slip, auto-print/reprint |
@@ -585,6 +592,10 @@ _(Prices and coordinates above are placeholders.)_
 | Cooking fee per frozen product | ₱— each (confirmed: different per product) |
 | Prep time for cooked frozen items | 15 min (proposed) |
 | Domain name | Buying one (e.g. `weekendfoodhub.com`). Exact name and registrar to choose |
+| Meta app for Facebook Login | Not created yet. Login is built and hidden until `NEXT_PUBLIC_FACEBOOK_LOGIN=on` |
+| OpenRouteService key (road distances) | Not set: straight line × 1.3, orders flagged "estimated" |
+| Inventory targets, reorder points, buy-for days | Blank for the 17 starter items |
+| Aguho barangay map point | Not found on OpenStreetMap: map centers on the kitchen |
 
 ---
 
@@ -661,3 +672,28 @@ The staff app isn't hosted. It's an Android APK installed on the devices and poi
 - **Idle reclamation:** Oracle may reclaim Always Free VMs that sit nearly idle for a week. Upgrading the account to Pay As You Go stops that, and Always Free resources stay free. Set a ₱1 budget alert so any accidental charge is caught.
 - **ARM processor:** Supabase, Next.js and Coolify all publish ARM images. Check this for any extra app added later.
 - **One server = one point of failure:** off-site backups make it recoverable. If the business outgrows it, the same Docker setup moves to a paid VPS or Supabase Cloud without code changes.
+
+---
+
+## 18. Inventory (admin)
+
+**Goal:** see each day's beginning and ending stock, and get told what to buy for the next day(s).
+
+- **Items** (owner): name, unit (kg, pcs, pack, liter…), category, and three settings:
+  - **Target:** stock to start a day with.
+  - **Reorder at:** alert when the ending count drops to this.
+  - **Buy for:** how many days one purchase should cover.
+  - 17 starter items are seeded (seafood, meats, rice, eggs, oil, frozen packs, packaging).
+- **Daily sheet** (any staff, `/admin/inventory?date=…`): beginning, received, wasted and ending per item.
+  - Beginning is carried over from the previous day's ending.
+  - **Usage = beginning + received − wasted − ending.**
+- **Buy list**: buy when one of these is true:
+  - the latest count is at or below the reorder point;
+  - it won't cover average daily usage (last 7 counted days) × buy-for days;
+  - it's below the target.
+- **Suggested quantity:** tops up to the larger of the target and the expected usage, rounded up (whole units for pcs/packs, half units for kg/liters).
+- **Alerts:** the buy list sits at the top of the Inventory page, and a banner on the Orders page links to it.
+- **Later:**
+  - A push notification to the owner's phone (with the Android app).
+  - Linking frozen-pack counts to the online stock count.
+  - Usage estimates from orders (recipes) instead of counts only.

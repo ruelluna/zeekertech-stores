@@ -68,7 +68,7 @@ async function MenuList() {
                         <PesoInput name="price" defaultValue={p.price} />
                       </Field>
                       {market && (
-                        <Field label="Estimate shown" className="w-36">
+                        <Field label={p.sold_by === "weight" ? "Estimate per kg" : "Estimate shown"} className="w-36">
                           <PesoInput name="estimated_price" defaultValue={p.estimated_price} />
                         </Field>
                       )}

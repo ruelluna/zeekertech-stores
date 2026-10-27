@@ -6,6 +6,10 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
   // @wfh/shared ships TypeScript source, not a build.
   transpilePackages: ["@wfh/shared"],
+  experimental: {
+    // GCash screenshots (max 5 MB) and admin photo uploads go through Server Actions.
+    serverActions: { bodySizeLimit: "6mb" },
+  },
   turbopack: {
     rules: {
       "*.css": {

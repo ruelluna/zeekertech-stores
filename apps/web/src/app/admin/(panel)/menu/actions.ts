@@ -6,6 +6,7 @@ import { ProductType, PriceMode, SoldBy } from "@wfh/shared";
 import { fail, form, formObject, ok, zodMessage, type ActionState } from "@/lib/action-state";
 import { requireOwner } from "@/lib/auth";
 import { menuChanged } from "@/lib/menu-tag";
+import { uploadPublicImage } from "@/lib/uploads";
 
 const PriceInput = z.object({
   id: z.uuid(),
@@ -117,4 +118,27 @@ export async function saveCategory(_prev: ActionState, formData: FormData): Prom
 
   menuChanged();
   return ok(id ? "Saved" : "Category added");
+}
+
+export async function uploadProductPhoto(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const id = z.uuid().safeParse(formData.get("id"));
+  if (!id.success) return fail("Invalid product");
+  const { supabase } = await requireOwner();
+  const products = supabase.schema("store").from("products");
+
+  if (formData.get("remove") === "1") {
+    const { error } = await products.update({ image_url: null }).eq("id", id.data);
+    if (error) return fail(error.message);
+    menuChanged();
+    return ok("Photo removed");
+  }
+
+  const file = formData.get("photo");
+  if (!(file instanceof File)) return fail("Choose a photo");
+  const uploaded = await uploadPublicImage(file, "products");
+  if (!uploaded.ok) return fail(uploaded.error);
+  const { error } = await products.update({ image_url: uploaded.url }).eq("id", id.data);
+  if (error) return fail(error.message);
+  menuChanged();
+  return ok("Photo uploaded");
 }

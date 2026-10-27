@@ -63,6 +63,9 @@ export const OrderItem = z.object({
   modifiers: z.array(ModifierSelection),
   notes: z.string(),
   needsAvailability: z.boolean(),
+  /** False for frozen "As is" packs: they skip the kitchen queue. */
+  requiresCooking: z.boolean(),
+  prepMinutes: z.number().int().nonnegative(),
 });
 export type OrderItem = z.infer<typeof OrderItem>;
 
@@ -99,8 +102,12 @@ export const WebOrder = z
     delivery: DeliveryQuote.nullable(),
     items: z.array(OrderItem).min(1),
     needsAvailability: z.boolean(),
+    /** Longest wait to confirm uncertain items (minutes), shown to the customer and used for staff alerts. */
+    confirmWaitMinutes: z.number().int().positive().nullable(),
     totals: Totals,
     payment: PaymentInfo,
+    /** e.g. possible_duplicate_discount, estimated_distance */
+    flags: z.array(z.string()),
   })
   .refine((o) => o.fulfillment === "pickup" || (o.address !== null && o.delivery !== null), {
     message: "Delivery orders need an address and a delivery quote",

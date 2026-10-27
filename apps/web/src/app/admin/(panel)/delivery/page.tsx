@@ -4,6 +4,8 @@ import { Badge, Card, Checkbox, Field, Input, Loading, PageHeader, PesoInput } f
 import { requireOwner } from "@/lib/auth";
 import { saveBarangay, saveDeliverySettings } from "./actions";
 import { FeePreview } from "./fee-preview";
+import { KitchenPin } from "./kitchen-pin";
+import { DAANBANTAYAN_CENTER } from "@/lib/catalog";
 
 export default function DeliveryPage() {
   return (
@@ -28,10 +30,7 @@ async function DeliveryContent() {
   ]);
   if (sError || bError) throw sError ?? bError;
 
-  const mapsLink =
-    s.kitchen_lat !== null && s.kitchen_lng !== null
-      ? `https://www.openstreetmap.org/?mlat=${s.kitchen_lat}&mlon=${s.kitchen_lng}#map=17/${s.kitchen_lat}/${s.kitchen_lng}`
-      : null;
+  const hasKitchenPin = s.kitchen_lat !== null && s.kitchen_lng !== null;
 
   return (
     <>
@@ -62,29 +61,16 @@ async function DeliveryContent() {
           </div>
 
           <h3 className="mt-2 font-medium">Kitchen location</h3>
-          <p className="-mt-2 text-sm text-stone-600 dark:text-stone-400">
-            Distances are measured from here. In Google Maps, long-press the kitchen and copy the two numbers shown (latitude, longitude). A map
-            picker comes with checkout.
-          </p>
+          <p className="-mt-2 text-sm text-stone-600 dark:text-stone-400">Distances are measured from here. Tap the map on the kitchen, or paste the numbers from Google Maps.</p>
           <div className="grid gap-4 sm:grid-cols-3">
             <Field label="Address" className="sm:col-span-3">
               <Input name="kitchen_address" defaultValue={s.kitchen_address ?? ""} />
             </Field>
-            <Field label="Latitude" hint="e.g. 11.2xxxxx">
-              <Input name="kitchen_lat" type="number" step="any" defaultValue={s.kitchen_lat ?? ""} />
-            </Field>
-            <Field label="Longitude" hint="e.g. 124.0xxxxx">
-              <Input name="kitchen_lng" type="number" step="any" defaultValue={s.kitchen_lng ?? ""} />
-            </Field>
-            <div className="flex items-end pb-2 text-sm">
-              {mapsLink ? (
-                <a href={mapsLink} target="_blank" rel="noreferrer" className="text-orange-700 underline">
-                  Check the pin on a map
-                </a>
-              ) : (
-                <Badge tone="amber">Kitchen pin not set</Badge>
-              )}
-            </div>
+            <KitchenPin
+              initial={s.kitchen_lat !== null && s.kitchen_lng !== null ? { lat: s.kitchen_lat, lng: s.kitchen_lng } : null}
+              fallbackCenter={DAANBANTAYAN_CENTER}
+            />
+            {!hasKitchenPin && <Badge tone="amber">Kitchen pin not set</Badge>}
           </div>
         </ActionForm>
       </Card>

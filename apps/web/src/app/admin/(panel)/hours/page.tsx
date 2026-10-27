@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { ActionForm } from "@/components/action-form";
 import { Card, Checkbox, Field, Input, Loading, PageHeader, Textarea } from "@/components/ui";
 import { requireOwner } from "@/lib/auth";
-import { addClosure, removeClosure, saveHours, saveStoreSettings } from "./actions";
+import { addClosure, removeClosure, saveHours, saveStoreSettings, uploadGcashQr } from "./actions";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const hhmm = (t: string) => t.slice(0, 5);
@@ -107,8 +107,21 @@ async function HoursContent() {
               <Textarea name="pickup_instructions" defaultValue={s.pickup_instructions ?? ""} />
             </Field>
           </div>
-          <p className="text-xs text-stone-500">The GCash QR image upload comes with checkout (Phase 2).</p>
         </ActionForm>
+      </Card>
+
+      <Card title="GCash QR code" description="Customers scan this on their order page to pay. Use the QR from your GCash app (Receive → QR code → Save).">
+        <div className="flex flex-wrap items-start gap-6">
+          {s.gcash_qr_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={s.gcash_qr_url} alt="Current GCash QR" className="w-40 rounded-lg border border-stone-200" />
+          ) : (
+            <p className="w-40 rounded-lg bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200">No QR uploaded yet.</p>
+          )}
+          <ActionForm action={uploadGcashQr} submitLabel="Upload QR">
+            <input type="file" name="qr" accept="image/*" required className="text-sm" />
+          </ActionForm>
+        </div>
       </Card>
     </>
   );

@@ -19,3 +19,18 @@ export async function requireOwner() {
 
   return { supabase, userId: data.claims.sub, email: (data.claims.email as string | undefined) ?? null };
 }
+
+export type StaffRole = "owner" | "verifier" | "kitchen" | "counter";
+
+/** Like requireOwner, for pages any staff member uses (orders, inventory). Optionally limit roles. */
+export async function requireStaff(roles?: StaffRole[]) {
+  await connection();
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase.auth.getClaims();
+  if (!data?.claims) redirect("/admin/login");
+
+  const { data: role } = await supabase.schema("ops").rpc("current_staff_role");
+  if (!role || (roles && !roles.includes(role))) redirect("/admin/login?error=not_owner");
+
+  return { supabase, userId: data.claims.sub, role: role as StaffRole };
+}

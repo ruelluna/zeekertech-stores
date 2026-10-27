@@ -20,7 +20,8 @@ export const OrderPaymentSubmitted = z.object({
   referenceNo: z.string().min(1),
   senderName: z.string().min(1),
   amount: Peso,
-  proofUrl: z.url().nullable(),
+  /** Path in the private payment-proofs storage bucket. */
+  proofPath: z.string().nullable(),
 });
 
 export const OrderCustomerContinued = z.object({
@@ -82,7 +83,7 @@ export const OrderAvailabilityResult = z.object({
 export const OrderPaymentConfirmed = z.object({
   ...base("order.payment_confirmed"),
   orderId: z.string().min(1),
-  amountReceived: Peso,
+  amountReceived: Peso.nullable(),
   referenceNo: z.string().nullable(),
 });
 
