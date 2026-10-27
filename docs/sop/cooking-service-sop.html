@@ -1,0 +1,120 @@
+<title>Cooking & Service SOP</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: printable A4 sheets stacked on screen; each SOP starts on a new page with a sign-off box. */
+:root{
+  --bg:#f3f4f1; --paper:#ffffff; --ink:#1d2321; --muted:#5b6661; --line:#c9cfcb;
+  --accent:#b8461b; --accent-soft:#f6e3d8; --ok:#2f6b4a;
+  --display:"Archivo",system-ui,sans-serif; --body:"Source Serif 4",Georgia,serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#151918;--paper:#1e2422;--ink:#e7ebe8;--muted:#a3ada8;--line:#3a4440;--accent:#e9875c;--accent-soft:#3a2a22;--ok:#7cc29a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#151918;--paper:#1e2422;--ink:#e7ebe8;--muted:#a3ada8;--line:#3a4440;--accent:#e9875c;--accent-soft:#3a2a22;--ok:#7cc29a;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px}
+.wrap{max-width:820px;margin:0 auto;display:grid;gap:28px}
+.sheet{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:32px clamp(18px,4vw,44px);min-width:0}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.15;margin:0}
+h1{font-size:2rem;font-weight:800}
+h2{font-size:1.45rem;font-weight:800}
+h3{font-size:1.02rem;font-weight:700;margin-top:22px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent)}
+.code{font-family:var(--mono);font-size:.78rem;color:var(--muted);letter-spacing:.04em}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;border-bottom:3px solid var(--ink);padding-bottom:12px;margin-bottom:14px}
+p{margin:6px 0;max-width:68ch}
+ol,ul{margin:4px 0 4px;padding-left:0;list-style:none}
+li{display:grid;grid-template-columns:22px 1fr;gap:8px;padding:5px 0;border-bottom:1px dotted var(--line)}
+li::before{content:"";width:14px;height:14px;border:1.5px solid var(--ink);border-radius:2px;margin-top:4px}
+.note{background:var(--accent-soft);border-left:4px solid var(--accent);padding:10px 14px;margin:14px 0;font-size:.95rem}
+.temps{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:10px 0}
+.temp{border:1.5px solid var(--ink);border-radius:4px;padding:8px 10px}
+.temp b{display:block;font-family:var(--display);font-size:1.35rem;font-variant-numeric:tabular-nums}
+.temp span{font-size:.85rem;color:var(--muted)}
+.tbl{overflow-x:auto;margin:8px 0}
+table{border-collapse:collapse;width:100%;font-size:.9rem;font-variant-numeric:tabular-nums}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{font-family:var(--display);font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;background:var(--bg)}
+td.blank{min-width:60px}
+.sign{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-top:22px;border-top:2px solid var(--ink);padding-top:12px}
+.sign div{font-family:var(--display);font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.sign div::after{content:"";display:block;border-bottom:1px solid var(--ink);height:28px}
+.toc{display:grid;gap:4px;margin-top:12px}
+.toc a{color:var(--accent);font-family:var(--display);font-weight:700;text-decoration:none}
+.toc a:focus-visible{outline:2px solid var(--accent)}
+@media print{
+  body{background:#fff;color:#000;padding:0}
+  .wrap{gap:0;max-width:none}
+  .sheet{border:none;border-radius:0;padding:0 4mm;break-after:page}
+  .sheet:last-child{break-after:auto}
+  .cover-tip{display:none}
+  li,tr,.temp,.note{break-inside:avoid}
+  @page{size:A4;margin:14mm}
+}
+</style>
+
+<div class="wrap">
+
+<section class="sheet" id="cook">
+  <div class="head"><h2>SOP-02 · Cooking &amp; service</h2><span class="code">1:00 PM – 9:00 PM</span></div>
+  <h3>Key temperatures</h3>
+  <div class="temps">
+    <div class="temp"><b>≤ 5°C</b><span>Chiller: meat, seafood, cooked rice</span></div>
+    <div class="temp"><b>≤ −18°C</b><span>Freezer: frozen lumpia, sisig packs</span></div>
+    <div class="temp"><b>5–60°C</b><span>Danger zone. Max 2 hours total</span></div>
+    <div class="temp"><b>≥ 63°C</b><span>Shrimp, squid, whole pork/beef cuts</span></div>
+    <div class="temp"><b>≥ 71°C</b><span>Ground meat, siomai, longganisa, sisig</span></div>
+    <div class="temp"><b>≥ 74°C</b><span>Reheating any cooked food</span></div>
+  </div>
+
+  <h3>Taking an order</h3>
+  <ul>
+    <li>Cook only orders that show <b>Queued</b> on the kitchen tablet. Unpaid or unconfirmed orders don't appear there.</li>
+    <li>Cook in order of pickup or delivery time, not arrival. Watch the timer on each card.</li>
+    <li>Tap <b>Preparing</b> when you start, so the customer sees progress.</li>
+    <li>Read every modifier: egg style, spice level, extras, notes and allergies.</li>
+  </ul>
+
+  <h3>Portion per order</h3>
+  <ul>
+    <li><b>Rice:</b> 2 scoops (2 cups cooked, about 320 g). Day-old chilled rice for chaofan, fresh garlic rice for silog.</li>
+    <li><b>Chaofan protein:</b> 60 g meat, seafood or shrimp, or 3 siomai. <b>Silog viand:</b> 80 g sisig or tapa, 2 longganisa, or 3 siomai. 1 egg each.</li>
+  </ul>
+
+  <h3>Cooking standards</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Item</th><th>Key steps</th><th>Done when</th><th>Time</th></tr></thead>
+    <tbody>
+      <tr><td>Chaofan (siomai, pork, beef)</td><td>Very hot wok. Cook protein first, add egg, then cold rice, toss, season, spring onion.</td><td>Protein ≥ 71°C, rice steaming hot throughout</td><td>~15 min</td></tr>
+      <tr><td>Shrimp / Seafood Chaofan</td><td>Sear seafood separately, set aside, return at the end so it doesn't overcook.</td><td>Shrimp pink and opaque, ≥ 63°C</td><td>~15 min</td></tr>
+      <tr><td>Silog (sisig, tapa, longganisa, siomai)</td><td>Cook viand, fry garlic rice, cook egg to the ordered style.</td><td>Viand ≥ 71°C, egg white set</td><td>~15 min</td></tr>
+      <tr><td>Frozen, cooked (lumpia, sisig)</td><td>Fry lumpia from frozen at 170–180°C. Heat sisig pan-hot.</td><td>Golden and crisp / steaming, ≥ 74°C</td><td>~15 min</td></tr>
+    </tbody>
+  </table></div>
+
+
+  <h3>Hygiene during service</h3>
+  <ul>
+    <li>Separate tongs and boards for raw and cooked. Never put cooked food back on a raw tray.</li>
+    <li>Wipe the station with sanitizer between orders. Change the sanitizer bucket every 2 hours.</li>
+    <li>Prepped protein out of the chiller more than 2 hours total is thrown away.</li>
+    <li>Taste with a clean spoon each time. Never the cooking ladle.</li>
+  </ul>
+
+  <h3>Packing &amp; labels</h3>
+  <ul>
+    <li>Pack hot food in clean, closed containers. Sauces and chili garlic in separate cups.</li>
+    <li>Stick the printed label on each item: order code, customer name, product, modifiers.</li>
+    <li>Check the order against its label before tapping <b>Ready</b>.</li>
+    <li>Delivery orders: add the delivery slip and hand to the rider with the order code read aloud.</li>
+    <li>Frozen packs sold as-is go into the bag last, kept apart from hot food.</li>
+  </ul>
+
+  <h3>Problems during service</h3>
+  <ul>
+    <li>Ran out of an ingredient: set it to <b>Out</b> on the availability board immediately.</li>
+    <li>Order will miss its time: tell the counter, who updates the order and contacts the customer.</li>
+    <li>Burns, cuts or gas smell: stop cooking, turn off gas, get first aid. Safety before orders.</li>
+  </ul>
+
+  <div class="sign"><div>Cook on duty</div><div>Date</div><div>Orders cooked</div></div>
+</section>
+
+</div>
