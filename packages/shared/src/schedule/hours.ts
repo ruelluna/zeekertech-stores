@@ -121,6 +121,46 @@ export function checkSlot(input: {
   return { ok: true };
 }
 
+export type StoreStatus =
+  | { state: "open"; closesAt: Date }
+  | { state: "paused" }
+  | { state: "closed"; opensAt: Date | null };
+
+/** Whether ordering is open right now, and when it next opens or closes (looks ahead 14 days). */
+export function storeStatus(input: {
+  now: Date;
+  hours: StoreHoursDay[];
+  closures: string[];
+  paused: boolean;
+}): StoreStatus {
+  if (input.paused) return { state: "paused" };
+
+  const now = manilaParts(input.now);
+  for (let offset = 0; offset < 14; offset++) {
+    const dateKey = manilaParts(new Date(input.now.getTime() + offset * 86_400_000)).dateKey;
+    const dayOfWeek = (now.dayOfWeek + offset) % 7;
+    const day = input.hours.find((h) => h.dayOfWeek === dayOfWeek);
+    if (!day?.isOpen || input.closures.includes(dateKey)) continue;
+
+    const open = clockToMinutes(day.opensAt);
+    const close = clockToMinutes(day.closesAt);
+    if (offset === 0 && now.minutes >= open && now.minutes < close) {
+      return { state: "open", closesAt: manilaInstant(dateKey, close) };
+    }
+    if (offset > 0 || now.minutes < open) return { state: "closed", opensAt: manilaInstant(dateKey, open) };
+  }
+  return { state: "closed", opensAt: null };
+}
+
+/** "1:00 PM" style label for a Manila time. */
+export function formatManilaTime(instant: Date): string {
+  const { minutes } = manilaParts(instant);
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  const suffix = h >= 12 ? "PM" : "AM";
+  return `${h % 12 === 0 ? 12 : h % 12}:${String(m).padStart(2, "0")} ${suffix}`;
+}
+
 /** All bookable slots for one Manila date, every `intervalMinutes`. */
 export function listSlots(input: {
   dateKey: string;

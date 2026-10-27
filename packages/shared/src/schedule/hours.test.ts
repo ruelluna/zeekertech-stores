@@ -4,7 +4,9 @@ import {
   checkSlot,
   DEFAULT_SCHEDULE_SETTINGS,
   DEFAULT_STORE_HOURS,
+  formatManilaTime,
   listSlots,
+  storeStatus,
   manilaInstant,
   manilaParts,
   requiredLeadMinutes,
@@ -86,6 +88,35 @@ describe("checkSlot", () => {
       ok: false,
       reason: "closed_that_day",
     });
+  });
+});
+
+describe("storeStatus", () => {
+  const status = (hhmm: string, extra: { closures?: string[]; paused?: boolean } = {}) =>
+    storeStatus({ now: at(hhmm), hours: DEFAULT_STORE_HOURS, closures: extra.closures ?? [], paused: extra.paused ?? false });
+
+  it("is closed before 1 PM and says when it opens today", () => {
+    const s = status("10:00");
+    expect(s.state).toBe("closed");
+    expect(s.state === "closed" && s.opensAt && formatManilaTime(s.opensAt)).toBe("1:00 PM");
+    expect(s.state === "closed" && s.opensAt && manilaParts(s.opensAt).dateKey).toBe(DAY);
+  });
+
+  it("is open between 1 PM and 9 PM", () => {
+    const s = status("13:00");
+    expect(s.state).toBe("open");
+    expect(s.state === "open" && formatManilaTime(s.closesAt)).toBe("9:00 PM");
+  });
+
+  it("opens tomorrow after 9 PM", () => {
+    const s = status("21:00");
+    expect(s.state === "closed" && s.opensAt && manilaParts(s.opensAt).dateKey).toBe("2026-10-29");
+  });
+
+  it("skips closed dates and reports a pause", () => {
+    const s = status("15:00", { closures: [DAY, "2026-10-29"] });
+    expect(s.state === "closed" && s.opensAt && manilaParts(s.opensAt).dateKey).toBe("2026-10-30");
+    expect(status("15:00", { paused: true })).toEqual({ state: "paused" });
   });
 });
 

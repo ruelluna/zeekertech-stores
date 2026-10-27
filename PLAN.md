@@ -12,7 +12,8 @@ An online storefront plus an Android staff app for **Weekend Food Hub**, a food 
 |---|---|
 | Web app | Built from scratch in **Next.js**. It **owns the menu**, ingredients, delivery areas, fees, promotions and customer accounts |
 | Staff app | **Android only** (phones and tablets), **Expo / React Native**. Receives orders from the web app by **webhook** |
-| Backend | **Supabase** (Postgres, Auth, Realtime, Storage, Edge Functions). One account, separate `store` and `ops` schemas that talk only through webhooks/API |
+| Backend | **Supabase** (Postgres, Auth, Realtime, Storage), **self-hosted**. One project, separate `store` and `ops` schemas that talk only through webhooks/API |
+| Hosting | **₱0 to start:** one Oracle Cloud Always Free VM (Singapore) running **Coolify**, which hosts self-hosted Supabase, the Next.js site and any future apps in Docker, each on its own domain with automatic HTTPS (§17) |
 | Payment | **GCash QR** (owner's account). A person manually confirms payment in the app. Cash allowed for walk-in orders |
 | Pay timing | Customer pays **only after** availability and price are confirmed, so there are no GCash refunds |
 | Customer login | **Facebook Login** (no SMS). Guest checkout still allowed |
@@ -57,7 +58,8 @@ An online storefront plus an Android staff app for **Weekend Food Hub**, a food 
 apps/web          Next.js (App Router): storefront, checkout, customer pages, admin
 apps/staff        Expo (Android only): staff app, built as an APK with EAS
 packages/shared   zod schemas (orders, menu, webhooks), fee calculator, label templates, printer drivers
-supabase/         migrations (store + ops schemas), Edge Functions (webhook receiver, outbox sender), RLS policies
+supabase/         migrations (store + ops schemas), seed data, RLS policies
+                  (webhook receivers and the outbox sender run as Next.js API routes; retries and timers use pg_cron)
 ```
 
 ### Libraries and services
@@ -551,14 +553,15 @@ _(Prices and coordinates above are placeholders.)_
 | Phase | Scope |
 |---|---|
 | **0. Setup** ✅ done 2026-10-27 | Monorepo, Supabase project, `store`/`ops` schemas, shared zod schemas, staff auth and roles, CI |
-| **1. Web admin + menu** | Categories, products, modifiers, ingredients, price modes, barangays, delivery settings (kitchen pin), service-area polygon, promotions, store hours and closures. Seed the launch menu (§7.1). Public menu with badges and open/closed status |
-| **2. Web ordering** | Facebook Login, mobile number and saved addresses with map pin, fee calculator, service-area check, checkout, welcome discount, GCash step, decision page, order status page, browser push, privacy and data-deletion pages, outbound webhooks |
+| **1. Web admin + menu** ✅ done 2026-10-27 | Categories, products, modifiers, ingredients, price modes, barangays, delivery settings (kitchen pin as lat/lng), promotions, store hours and closures, owner-only sign-in. Seeded launch menu (§7.1). Public menu with badges and open/closed status. **Moved to Phase 2:** service-area polygon import, map pin picker, GCash QR upload, product photos |
+| **2. Web ordering** | Service-area polygon import, map pin picker (kitchen + customers), GCash QR and product photo uploads, Facebook Login, mobile number and saved addresses with map pin, fee calculator, service-area check, checkout, welcome discount, GCash step, decision page, order status page, browser push, privacy and data-deletion pages, outbound webhooks |
 | **3. Ops backend** | Webhook receiver (inbox), order tables, outbox sender, menu copy, timers (availability, decision, unpaid) |
 | **4. Android: confirmations** | Login and roles, Sourcing tab, daily availability board, Payment Review with flags, live queue board with sound, Expo push |
 | **5. Android: counter** | Walk-in quick sale (cash with change, on-the-spot GCash confirm, frozen as-is hand-over), phone/Messenger orders with customer search and fee override, **offline walk-in orders with sync**, frozen stock counts, Menu mode, Dispatch, Customers (Text/Call, merge), sold-out toggle |
 | **6. Printing** | Printer settings, ESC/POS + TSPL drivers (ZPL if needed), item label + delivery slip, auto-print/reprint |
 | **7. Polish** | Coping with weak Wi-Fi (local cache, retry queue), Today summary/reports, timer tuning |
 | **8. Later** | Messenger updates via the Weekend Food Hub Page, scheduled/advance orders, inventory, Google login |
+| **Deploy** (alongside Phase 2) | Oracle VM + Coolify, self-hosted Supabase, Next.js Docker image, domains and HTTPS, nightly off-site backups (§17). Needed early because Facebook Login only works over HTTPS |
 
 ---
 
@@ -581,3 +584,80 @@ _(Prices and coordinates above are placeholders.)_
 | Frozen pack sizes and prices (Vegetable Lumpia, Sisig) | ₱— (blank) |
 | Cooking fee per frozen product | ₱— each (confirmed: different per product) |
 | Prep time for cooked frozen items | 15 min (proposed) |
+| Domain name | Buying one (e.g. `weekendfoodhub.com`). Exact name and registrar to choose |
+
+---
+
+## 17. Deployment (₱0 to start)
+
+### 17.1 The server
+- **Oracle Cloud Always Free**, home region **Singapore** (closest to Cebu).
+  - One Ampere A1 VM: up to **4 ARM cores, 24 GB RAM**, 200 GB disk, Ubuntu. That's plenty for Supabase, the website and several more apps.
+  - Signing up needs a card for identity checks only. Always Free resources aren't charged.
+- **Coolify** (free, open-source) runs on the VM as a mini Heroku/Vercel:
+  - Deploy Docker apps, or straight from GitHub on every push.
+  - Give each app its own domain. HTTPS certificates (Let's Encrypt) are issued and renewed automatically.
+  - One-click **Supabase** template, scheduled database backups to S3-compatible storage, logs and restarts.
+
+### 17.2 What runs on it
+
+| App | Example domain | How it's deployed |
+|---|---|---|
+| Website (Next.js) | `weekendfoodhub.com`, `www.weekendfoodhub.com` | Docker image built from `apps/web` (Next.js standalone output), auto-deploy from GitHub |
+| Supabase API (Auth, REST, Realtime, Storage) | `api.weekendfoodhub.com` | Coolify Supabase template |
+| Supabase Studio (admin dashboard) | `studio.weekendfoodhub.com` | Same template, behind a password |
+| Coolify dashboard | `deploy.weekendfoodhub.com` | Installed with Coolify, behind a strong password |
+| Your other apps | `anything.weekendfoodhub.com`, or any other domain you own | Any Docker image or GitHub repo |
+
+The staff app isn't hosted. It's an Android APK installed on the devices and pointed at the API domain.
+
+### 17.3 Domain
+- **Buy one domain** for the business (e.g. `weekendfoodhub.com`, roughly $10–12/yr).
+  - **Cloudflare Registrar** sells domains at cost with no markup, and its DNS is free.
+  - Porkbun is a cheap alternative.
+  - A `.com` is cheaper and more familiar than `.ph` or `.com.ph`.
+- **DNS at Cloudflare (free):**
+  - An `A` record for the root domain pointing to the Oracle VM's public IP.
+  - A **wildcard** `*` record pointing to the same IP. Every subdomain (`api`, `studio`, `deploy`, future apps) then works without new DNS entries.
+  - Records are set to "DNS only" (grey cloud) at first, so Coolify can issue HTTPS certificates directly. Cloudflare's proxy can be turned on later.
+- **The same domain is used for:**
+  - The Facebook Login redirect URL and app domain
+  - The privacy policy and data deletion URLs required by Meta
+  - The staff app's API address
+- **Other domains you own** can point at the same server too. Add them in Coolify, app by app.
+
+### 17.4 Changes because Supabase is self-hosted
+- **Database changes:** `supabase db push --db-url <server database URL>` from a laptop or CI (port only reachable over SSH tunnel). Seed data loads once.
+- **Webhook receivers and outbox sender:** Next.js API routes (`/api/webhooks/web`, `/api/webhooks/ops`) instead of Supabase Edge Functions, so there's one thing to deploy.
+- **Retries and timers** (outbox, availability/decision/unpaid timers): `pg_cron` jobs inside Postgres, included in the Supabase image.
+- **Facebook Login:** the Meta app ID and secret go in the Supabase Auth environment variables in Coolify.
+
+### 17.5 Backups (the one non-negotiable)
+- **Nightly database backup** from Coolify to **Cloudflare R2** (free up to 10 GB), kept off the Oracle server.
+- **Storage files** (payment screenshots, product photos) synced to R2 nightly.
+- **Monthly test restore** to a local Supabase (`pnpm db:start`) to prove backups work.
+
+### 17.6 Security basics
+- Only ports 80/443 (web) and 22 (SSH, key-only) open. Postgres is never exposed to the internet.
+- Studio and the Coolify dashboard behind strong passwords (optionally Cloudflare Access later).
+- Unattended security updates on Ubuntu. Supabase and Coolify images updated monthly.
+- Free uptime monitoring (e.g. UptimeRobot) that alerts if the site or API goes down.
+
+### 17.7 Other free services used
+
+| Need | Service | Free allowance (approx., check current limits) |
+|---|---|---|
+| Code + CI | GitHub private repo + Actions | Free for private repos, with monthly CI minutes |
+| Staff app builds | Expo EAS Build free tier, or build the APK locally | Limited cloud builds per month; local builds unlimited |
+| Staff push notifications | Expo Push | Free |
+| Road distance | OpenRouteService | Free daily quota, far above our volume |
+| Map tiles | MapTiler | Free tier |
+| Email fallback | Resend | Free monthly quota |
+| Customer login | Facebook Login | Free |
+| HTTPS | Let's Encrypt (via Coolify) | Free |
+
+### 17.8 Risks of the free setup
+- **"Out of capacity" when creating the VM:** Oracle's free ARM machines in popular regions are sometimes full. Retry at different times of day.
+- **Idle reclamation:** Oracle may reclaim Always Free VMs that sit nearly idle for a week. Upgrading the account to Pay As You Go stops that, and Always Free resources stay free. Set a ₱1 budget alert so any accidental charge is caught.
+- **ARM processor:** Supabase, Next.js and Coolify all publish ARM images. Check this for any extra app added later.
+- **One server = one point of failure:** off-site backups make it recoverable. If the business outgrows it, the same Docker setup moves to a paid VPS or Supabase Cloud without code changes.

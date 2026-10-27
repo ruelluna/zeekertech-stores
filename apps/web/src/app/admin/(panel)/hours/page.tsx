@@ -1,0 +1,115 @@
+import { Suspense } from "react";
+import { ActionForm } from "@/components/action-form";
+import { Card, Checkbox, Field, Input, Loading, PageHeader, Textarea } from "@/components/ui";
+import { requireOwner } from "@/lib/auth";
+import { addClosure, removeClosure, saveHours, saveStoreSettings } from "./actions";
+
+const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const hhmm = (t: string) => t.slice(0, 5);
+
+export default function HoursPage() {
+  return (
+    <>
+      <PageHeader
+        title="Hours & settings"
+        description="Closing time is the last pickup/delivery time; same-day ordering stops early enough to finish by then."
+      />
+      <Suspense fallback={<Loading />}>
+        <HoursContent />
+      </Suspense>
+    </>
+  );
+}
+
+async function HoursContent() {
+  const { supabase } = await requireOwner();
+  const store = supabase.schema("store");
+  const [hours, closures, settings] = await Promise.all([
+    store.from("store_hours").select("*").order("day_of_week"),
+    store.from("store_closures").select("*").order("date"),
+    store.from("store_settings").select("*").eq("id", true).single(),
+  ]);
+  if (hours.error || closures.error || settings.error) throw hours.error ?? closures.error ?? settings.error;
+  const s = settings.data;
+
+  return (
+    <>
+      <Card title="Ordering hours" description="Manila time.">
+        <ActionForm action={saveHours} submitLabel="Save hours">
+          <div className="flex flex-col gap-2">
+            {DAYS.map((name, day) => {
+              const row = hours.data.find((h) => h.day_of_week === day);
+              return (
+                <div key={day} className="flex flex-wrap items-center gap-3">
+                  <div className="w-32">
+                    <Checkbox name={`is_open_${day}`} label={name} defaultChecked={row?.is_open ?? false} />
+                  </div>
+                  <Input name={`opens_at_${day}`} type="time" defaultValue={hhmm(row?.opens_at ?? "13:00")} className="w-32" aria-label={`${name} opens`} />
+                  <span className="text-sm text-stone-500">to</span>
+                  <Input name={`closes_at_${day}`} type="time" defaultValue={hhmm(row?.closes_at ?? "21:00")} className="w-32" aria-label={`${name} closes`} />
+                </div>
+              );
+            })}
+          </div>
+        </ActionForm>
+      </Card>
+
+      <Card title="Closed dates" description="Holidays and days off. The menu shows when you open next.">
+        {closures.data.length === 0 && <p className="mb-3 text-sm text-stone-500">No closed dates.</p>}
+        <ul className="mb-3 flex flex-col gap-2">
+          {closures.data.map((c) => (
+            <li key={c.date}>
+              <ActionForm action={removeClosure} submitLabel="Remove" danger className="flex flex-wrap items-center gap-3">
+                <input type="hidden" name="date" value={c.date} />
+                <span className="w-56 text-sm">
+                  <strong>{c.date}</strong> {c.reason && <span className="text-stone-500">· {c.reason}</span>}
+                </span>
+              </ActionForm>
+            </li>
+          ))}
+        </ul>
+        <ActionForm action={addClosure} submitLabel="Add closed date" className="flex flex-wrap items-end gap-3 border-t border-stone-100 pt-3 dark:border-stone-800">
+          <Field label="Date" className="w-44">
+            <Input name="date" type="date" required />
+          </Field>
+          <Field label="Reason (optional)" className="w-56">
+            <Input name="reason" placeholder="e.g. Fiesta" />
+          </Field>
+        </ActionForm>
+      </Card>
+
+      <Card title="Ordering settings">
+        <ActionForm action={saveStoreSettings}>
+          <div className="flex flex-col gap-2">
+            <Checkbox name="ordering_paused" label="Pause online ordering now (busy or short-staffed)" defaultChecked={s.ordering_paused} />
+            <Checkbox name="allow_preorders" label="Allow pre-orders outside opening hours" defaultChecked={s.allow_preorders} />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Field label="Default prep time (min)" hint="Used when a product has no prep time">
+              <Input name="prep_lead_minutes" type="number" min="0" defaultValue={s.prep_lead_minutes} />
+            </Field>
+            <Field label="Delivery buffer (min)" hint="Added to drive time for the cutoff">
+              <Input name="delivery_buffer_minutes" type="number" min="0" defaultValue={s.delivery_buffer_minutes} />
+            </Field>
+            <Field label="Crab/shrimp same-day cutoff" hint="Uncertain items after this are next-day only">
+              <Input name="uncertain_items_cutoff" type="time" defaultValue={hhmm(s.uncertain_items_cutoff)} />
+            </Field>
+            <Field label="Customer reply time (min)" hint="After availability is confirmed">
+              <Input name="customer_decision_minutes" type="number" min="0" defaultValue={s.customer_decision_minutes} />
+            </Field>
+            <Field label="Flag unpaid after (min)">
+              <Input name="unpaid_flag_minutes" type="number" min="0" defaultValue={s.unpaid_flag_minutes} />
+            </Field>
+            <Field label="GCash account name" hint="Shown next to the QR at checkout">
+              <Input name="gcash_account_name" defaultValue={s.gcash_account_name ?? ""} />
+            </Field>
+            <Field label="Pickup instructions" className="sm:col-span-3" hint="Where to pick up, landmark, parking">
+              <Textarea name="pickup_instructions" defaultValue={s.pickup_instructions ?? ""} />
+            </Field>
+          </div>
+          <p className="text-xs text-stone-500">The GCash QR image upload comes with checkout (Phase 2).</p>
+        </ActionForm>
+      </Card>
+    </>
+  );
+}

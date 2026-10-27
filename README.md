@@ -25,11 +25,20 @@ cp .env.example .env
 pnpm db:start        # starts local Supabase, applies migrations and seed
 ```
 
-`pnpm db:start` prints the local API URL and keys. Put them in `.env`, then create app env files when the apps start using Supabase (Phase 1+).
+`pnpm db:start` prints the local API URL and keys. Copy `apps/web/.env.example` to `apps/web/.env.local` and fill in the URL, publishable key and secret key (`pnpm exec supabase status` shows them again).
 
-### Make yourself the owner
+### Admin (web)
 
-Staff access is controlled by `ops.staff_users`. After signing up a user in Supabase Studio (http://127.0.0.1:54323 → Authentication), run this in the SQL editor:
+```bash
+pnpm dev:owner                          # creates the local test owner from apps/web/.env.local
+pnpm --filter @wfh/web dev --port 3100  # http://localhost:3100/admin
+```
+
+The admin covers menu items and prices, add-ons and cooking fees, ingredients, delivery rates and barangays, hours, closed dates, ordering settings and promotions. Every change updates the public menu at `/` right away.
+
+### Make a real account the owner
+
+Staff access is controlled by `ops.staff_users`. On a real deployment, create the user in Supabase Studio (Authentication → Add user), then run this in the SQL editor:
 
 ```sql
 insert into ops.staff_users (user_id, display_name, role)
@@ -43,7 +52,8 @@ Roles: `owner`, `verifier`, `kitchen`, `counter` (PLAN.md §4.1).
 | Command | What it does |
 |---|---|
 | `pnpm dev` | Runs the web app and the Expo dev server |
-| `pnpm --filter @wfh/web dev` | Web app only (http://localhost:3000) |
+| `pnpm --filter @wfh/web dev --port 3100` | Web app only (http://localhost:3100) |
+| `pnpm dev:owner` | Create/reset the local test owner account |
 | `pnpm --filter @wfh/staff android` | Staff app on a connected Android device/emulator |
 | `pnpm test` | Unit tests (fee calculator, cutoffs, webhook signing, payload schemas) |
 | `pnpm typecheck` / `pnpm lint` | Type and lint checks across the repo |
