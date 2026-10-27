@@ -82,7 +82,7 @@ Roles: `owner`, `verifier`, `kitchen`, `counter` (PLAN.md §4.1).
 ## Database at a glance
 
 - **`store`** (web side): menu, ingredients, modifiers, barangays, delivery settings, store hours, customers, promotions, web orders.
-- **`ops`** (staff side): orders, items, availability confirmations, payment verifications, audit log, daily ingredient status, frozen stock, inventory counts, printers, label templates.
+- **`ops`** (staff side): orders, items, availability confirmations, payment verifications, audit log, daily ingredient status, frozen stock, inventory counts, printers, label templates, SMS settings and log, staff push subscriptions.
 - Staff actions that must behave the same everywhere live in the database (`ops.complete_availability_check`, `ops.review_payment`), so the web admin and the future Android app share them.
 - The two sides exchange data only through signed webhooks (`packages/shared/src/webhooks`).
 - Every table has row-level security. Staff permissions come from `ops.staff_users`.
@@ -90,5 +90,5 @@ Roles: `owner`, `verifier`, `kitchen`, `counter` (PLAN.md §4.1).
 ## Still to fill in
 
 - **Before launch, in the admin:** remaining prices, cooking fees, the GCash QR, inventory targets and reorder points.
-- **Credentials:** Facebook Login needs the Meta app. Road distances need an OpenRouteService key. Without it, distance is straight line × 1.3 and orders are flagged "estimated".
+- **Credentials:** Facebook Login needs the Meta app. Road distances need an OpenRouteService key. Without it, distance is straight line × 1.3 and orders are flagged "estimated". Customer texts go through an Android phone running textbee (`TEXTBEE_API_KEY`; steps in Admin → Texts) or PhilSMS once the business is registered (`SMS_PROVIDER=philsms`). `SMS_DRY_RUN=true` logs texts without sending. Staff alerts are free browser push: tap "Turn on phone alerts" on the Orders page on each phone (needs HTTPS, so the deployed site).
 - **Open items:** see PLAN.md §16.

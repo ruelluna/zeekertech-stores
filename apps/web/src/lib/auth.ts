@@ -10,7 +10,7 @@ export const KITCHEN_ROLES: StaffRole[] = ["owner", "verifier", "kitchen", "coun
 
 /** Admin pages each role can open (the nav shows the same list). */
 export const ROLE_PAGES: Record<StaffRole, string[]> = {
-  owner: ["orders", "inventory", "deliveries", "menu", "add-ons", "ingredients", "delivery", "hours", "promotions", "staff"],
+  owner: ["orders", "inventory", "deliveries", "menu", "add-ons", "ingredients", "delivery", "hours", "promotions", "texts", "staff"],
   verifier: ["orders", "inventory"],
   kitchen: ["orders", "inventory"],
   counter: ["orders", "inventory"],

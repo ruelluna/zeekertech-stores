@@ -7,6 +7,7 @@ export * from "./inventory";
 export * from "./delivery/fee";
 export * from "./delivery/geo";
 export * from "./pricing";
+export * from "./sms";
 export * from "./schedule/hours";
 export * from "./webhooks/signing";
 export * from "./webhooks/events";

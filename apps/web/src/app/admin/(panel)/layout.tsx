@@ -16,6 +16,7 @@ const NAV = [
   { page: "delivery", label: "Delivery" },
   { page: "hours", label: "Hours & settings" },
   { page: "promotions", label: "Promotions" },
+  { page: "texts", label: "Texts" },
   { page: "staff", label: "Staff" },
 ];
 

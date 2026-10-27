@@ -4,6 +4,8 @@ import type { OpsToWebEvent, TablesUpdate } from "@wfh/shared";
 import { MENU_TAG } from "../menu-tag";
 import { STATUS_TEXT } from "../order-status";
 import { notifyOrder } from "../push";
+import { textCustomer } from "../sms";
+import { customerStatusText } from "../sms-texts";
 import { createSupabaseAdminClient } from "../supabase/admin";
 
 // Website side: applies ordering-backend updates to web orders and menu badges.
@@ -20,7 +22,7 @@ export async function ingestOpsEvent(event: OpsToWebEvent): Promise<void> {
   const order = async (code: string) => {
     const { data, error } = await store
       .from("web_orders")
-      .select("id, customer_id, access_token, total, delivery_fee")
+      .select("id, customer_id, access_token, total, delivery_fee, status, fulfillment, order")
       .eq("order_code", code)
       .maybeSingle();
     if (error) throw error;
@@ -51,6 +53,15 @@ export async function ingestOpsEvent(event: OpsToWebEvent): Promise<void> {
         const text = STATUS_TEXT[event.status];
         const body = event.status === "out_for_delivery" && event.riderName ? `${event.riderName} is on the way with your order.` : text.body;
         await notifyOrder(o.id, o.customer_id, { title: text.title, body, url: `${siteUrl}/o/${o.access_token}` });
+
+        const sms = customerStatusText(
+          event.status,
+          o.status,
+          { code: event.orderId, total: o.total, fulfillment: o.fulfillment, link: `${siteUrl}/o/${o.access_token}` },
+          event.riderName,
+        );
+        const phone = (o.order as { customer?: { phone?: string } } | null)?.customer?.phone;
+        if (sms) await textCustomer(sms.kind, phone, sms.message, event.orderId);
         break;
       }
       case "order.payment_confirmed": {

@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { formatManilaTime, manilaParts, type ModifierSelection } from "@wfh/shared";
 import { ActionForm } from "@/components/action-form";
 import { LiveOrders } from "@/components/live";
+import { PhoneAlerts } from "@/components/phone-alerts";
 import { AutoPrintToggle, PrintButtons } from "@/components/print-controls";
 import { Badge, Card, Field, Input, Loading, PageHeader, PesoInput, Select, peso } from "@/components/ui";
 import Link from "next/link";
@@ -114,8 +115,9 @@ async function Orders() {
           {toBuy.length > 5 ? "…" : ""} →
         </Link>
       )}
-      <div className="mb-3">
+      <div className="mb-3 flex flex-wrap items-center gap-x-6 gap-y-2">
         <AutoPrintToggle />
+        <PhoneAlerts />
       </div>
       <div className="mb-6 flex flex-wrap gap-2 text-sm">
         <Badge tone={sourcing.length ? "amber" : "neutral"}>Sourcing {sourcing.length}</Badge>

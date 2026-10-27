@@ -641,6 +641,89 @@ export type Database = {
         };
         Relationships: [];
       };
+      sms_log: {
+        Row: {
+          created_at: string;
+          error: string | null;
+          id: number;
+          kind: string;
+          message: string;
+          order_code: string | null;
+          provider_id: string | null;
+          recipient: string;
+          status: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          error?: string | null;
+          id?: never;
+          kind: string;
+          message: string;
+          order_code?: string | null;
+          provider_id?: string | null;
+          recipient: string;
+          status: string;
+        };
+        Update: {
+          created_at?: string;
+          error?: string | null;
+          id?: never;
+          kind?: string;
+          message?: string;
+          order_code?: string | null;
+          provider_id?: string | null;
+          recipient?: string;
+          status?: string;
+        };
+        Relationships: [];
+      };
+      sms_settings: {
+        Row: {
+          admin_payment_to_verify: boolean;
+          admin_phone: string | null;
+          admin_seafood_check: boolean;
+          customer_cancelled: boolean;
+          customer_out_for_delivery: boolean;
+          customer_payment_confirmed: boolean;
+          customer_payment_rejected: boolean;
+          customer_ready_pickup: boolean;
+          customer_review: boolean;
+          enabled: boolean;
+          id: boolean;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          admin_payment_to_verify?: boolean;
+          admin_phone?: string | null;
+          admin_seafood_check?: boolean;
+          customer_cancelled?: boolean;
+          customer_out_for_delivery?: boolean;
+          customer_payment_confirmed?: boolean;
+          customer_payment_rejected?: boolean;
+          customer_ready_pickup?: boolean;
+          customer_review?: boolean;
+          enabled?: boolean;
+          id?: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          admin_payment_to_verify?: boolean;
+          admin_phone?: string | null;
+          admin_seafood_check?: boolean;
+          customer_cancelled?: boolean;
+          customer_out_for_delivery?: boolean;
+          customer_payment_confirmed?: boolean;
+          customer_payment_rejected?: boolean;
+          customer_ready_pickup?: boolean;
+          customer_review?: boolean;
+          enabled?: boolean;
+          id?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       staff_push_tokens: {
         Row: {
           created_at: string;
@@ -684,6 +767,31 @@ export type Database = {
           display_name?: string;
           role?: Database["ops"]["Enums"]["staff_role"];
           updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      staff_web_push: {
+        Row: {
+          auth: string;
+          created_at: string;
+          endpoint: string;
+          p256dh: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          auth: string;
+          created_at?: string;
+          endpoint: string;
+          p256dh: string;
+          user_id: string;
+        };
+        Update: {
+          auth?: string;
+          created_at?: string;
+          endpoint?: string;
+          p256dh?: string;
           user_id?: string;
         };
         Relationships: [];

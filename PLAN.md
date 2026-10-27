@@ -411,10 +411,13 @@ Seed data lives in `supabase/seed/launch_menu.sql`. After launch, the menu is ma
 |---|---|---|
 | Customer | Live status page | Everything (always on) |
 | Customer | Browser push (Android Chrome) | Availability result, payment confirmed, ready, out for delivery |
+| Customer | **SMS (own SIM via textbee; PhilSMS later)** | Significant moments only: seafood check result, payment not accepted, ready for pickup, rider on the way, cancelled by the store (§21) |
 | Customer | Email (if Facebook provides one) | Fallback for the above |
 | Customer | Staff **Text/Call** buttons (staff's own phone/load) | Anyone who misses a push |
 | Customer | Messenger via the **Weekend Food Hub** Page | **Later phase.** "Get updates on Messenger" button, needs Page messaging permission from Meta |
 | Staff | Expo push + in-app sound | New order to source, payment to review, order queued, overdue timers |
+| Staff | **Phone alerts (browser push)** | New order needing a seafood check (all kitchen roles), GCash payment to verify (Owner and Payments). Free, arrives with the browser closed (§21) |
+| Owner | SMS to the admin number | Same two alerts. Off by default; push covers them (§21) |
 
 ---
 
@@ -565,6 +568,7 @@ _(Prices and coordinates above are placeholders.)_
 | **3c. Inventory** ✅ done 2026-10-27 | Daily beginning/received/wasted/ending counts, usage, buy list with alert (§18) |
 | **3d. Staff roles** ✅ done 2026-10-27 | Staff page (owner creates logins); Kitchen/Payments/Counter see only Orders and Inventory; GCash confirmation and cancelling limited by role |
 | **3e. Browser printing** ✅ done 2026-10-27 | Kitchen ticket (58/80 mm) and item labels (size set in admin) from any printer the device has; Print buttons per order; per-device auto-print when an order reaches the kitchen (§19) |
+| **3f. SMS texts and phone alerts** ✅ done 2026-10-28 | Texts for significant moments only (textbee phone gateway, PhilSMS ready for later), each switchable in Admin → Texts, plus test send, provider status and a 90-day log. Free staff phone alerts via browser push (§21) |
 | **4. Android: confirmations** ⏸ deferred | Login and roles, Sourcing tab, daily availability board, Payment Review with flags, live queue board with sound, Expo push |
 | **5. Android: counter** ⏸ deferred | Walk-in quick sale (cash with change, on-the-spot GCash confirm, frozen as-is hand-over), phone/Messenger orders with customer search and fee override, **offline walk-in orders with sync**, frozen stock counts, Menu mode, Dispatch, Customers (Text/Call, merge), sold-out toggle |
 | **6. Native printing** ⏸ deferred | ESC/POS + TSPL drivers for direct Bluetooth/LAN printing from the Android app. Browser printing (3e) covers it for now |
@@ -597,6 +601,8 @@ _(Prices and coordinates above are placeholders.)_
 | Meta app for Facebook Login | Not created yet. Login is built and hidden until `NEXT_PUBLIC_FACEBOOK_LOGIN=on` |
 | OpenRouteService key (road distances) | Not set: straight line × 1.3, orders flagged "estimated" |
 | Inventory targets, reorder points, buy-for days | Blank for the 17 starter items |
+| textbee phone for customer texts | Not set up: spare Android phone + SIM with unli text, textbee account, `TEXTBEE_API_KEY`. Until then texts are only logged |
+| PhilSMS | Needs a registered business (DTI) for a sender name. Token kept in env; switch with `SMS_PROVIDER=philsms` |
 | Aguho barangay map point | Not found on OpenStreetMap: map centers on the kitchen |
 
 ---
@@ -736,3 +742,30 @@ The staff app isn't hosted. It's an Android APK installed on the devices and poi
 - **Payouts:** Admin → Staff → Rider pay lists each rider's delivered, not-yet-paid trips and total. **Mark paid out** stamps them (`rider_paid_out_at`).
 - **Customer side:** the order page shows "Your rider: Name is on the way", and the push notification says the same.
 - **One rider per order** (decided 2026-10-28).
+
+---
+
+## 21. SMS texts and staff phone alerts
+
+- **Providers** (`SMS_PROVIDER`):
+  - **textbee** (current): a spare Android phone with the textbee app sends from its own SIM. No business registration; customers see a real number they can reply to. Needs `TEXTBEE_API_KEY` (optional `TEXTBEE_DEVICE_ID`, and `TEXTBEE_API_URL` when self-hosted on the Coolify server). Keep the phone charged and online, with an unli-text promo.
+  - **philsms** (later): about ₱0.35 per text, but a sender name needs a registered business (found out 2026-10-28). `PHILSMS_API_TOKEN`, `PHILSMS_SENDER_ID`.
+  - Without the chosen provider's key, or with `SMS_DRY_RUN=true`, texts are only logged.
+- **Staff phone alerts (free):** "Turn on phone alerts" on the Orders page subscribes that device to browser push (`ops.staff_web_push`). Seafood checks go to every kitchen role, payments to Owner and Payments. Admin texts are therefore off by default.
+- **Significant moments only** (decided 2026-10-28). Each has a switch in Admin → Texts, plus a master switch:
+
+  | To | When | Default |
+  |---|---|---|
+  | Admin number | New website order needs a seafood check | Off (phone alerts) |
+  | Admin number | GCash payment to verify | Off (phone alerts) |
+  | Customer | Seafood check done: pay now, or review changed items | On |
+  | Customer | Payment not accepted | On |
+  | Customer | Pickup order ready | On |
+  | Customer | Rider on the way (with the rider's name) | On |
+  | Customer | Cancelled by the store: can't source, no reply in time, staff cancel | On |
+  | Customer | Payment confirmed | Off (the order page and push already show it) |
+
+- **Never texted:** routine steps (preparing, delivered), anything the customer did themselves on the order page, walk-in and phone orders.
+- **Cost control:** texts stay in the GSM alphabet ("PHP 149", not "₱149"; no emoji) and under 160 characters, so each is billed as one SMS. The admin page shows each sample's length.
+- **Privacy:** the admin number and the log live in `ops` with owner-only access (`store_settings` is public). The log keeps 90 days.
+- **Code:** `apps/web/src/lib/sms.ts` (providers, send, log, status), `lib/push.ts` (`notifyStaff`), `components/phone-alerts.tsx`, `lib/sms-texts.ts` (wording), `packages/shared/src/sms.ts` (GSM text, PH number format). Sent from the webhook handlers, after the order update, and never throws.

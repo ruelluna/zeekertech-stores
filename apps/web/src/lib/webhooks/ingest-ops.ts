@@ -1,5 +1,8 @@
 import "server-only";
 import type { OrderItem, TablesInsert, WebOrder, WebToOpsEvent } from "@wfh/shared";
+import { notifyStaff } from "../push";
+import { textAdmin } from "../sms";
+import { adminPaymentText, adminSeafoodCheckText } from "../sms-texts";
 import { createSupabaseAdminClient } from "../supabase/admin";
 
 // Ordering backend side: turns website events into ops orders the staff app works from.
@@ -27,7 +30,7 @@ function itemRow(orderId: string, item: OrderItem, sortOrder: number): TablesIns
 }
 
 async function findOrder(db: Db, externalId: string) {
-  const { data, error } = await db.schema("ops").from("orders").select("id, status, flags").eq("external_id", externalId).maybeSingle();
+  const { data, error } = await db.schema("ops").from("orders").select("id, status, flags, queue_code").eq("external_id", externalId).maybeSingle();
   if (error) throw error;
   if (!data) throw new Error(`Unknown order ${externalId}`);
   return data;
@@ -67,7 +70,7 @@ async function createOrder(db: Db, order: WebOrder) {
       flags: order.flags,
       availability_deadline: order.needsAvailability ? new Date(Date.now() + waitMinutes * 60_000).toISOString() : null,
     })
-    .select("id")
+    .select("id, queue_code")
     .single();
   if (error) throw error;
 
@@ -81,7 +84,14 @@ async function createOrder(db: Db, order: WebOrder) {
       .insert(uncertain.map((i) => ({ order_item_id: i.lineId, status: "pending" as const })));
     if (availError) throw availError;
   }
+  return created;
 }
+
+const adminUrl = () => `${process.env.SITE_URL ?? "http://localhost:3100"}/admin/orders`;
+
+// Who gets phone alerts: everyone who can do the seafood check, and only those who can confirm GCash payments.
+const SOURCING_ROLES = ["owner", "verifier", "kitchen", "counter"] as const;
+const PAYMENT_ROLES = ["owner", "verifier"] as const;
 
 export async function ingestWebEvent(event: WebToOpsEvent): Promise<void> {
   const db = createSupabaseAdminClient();
@@ -96,9 +106,26 @@ export async function ingestWebEvent(event: WebToOpsEvent): Promise<void> {
 
   try {
     switch (event.event) {
-      case "order.created":
-        await createOrder(db, event.order);
+      case "order.created": {
+        const created = await createOrder(db, event.order);
+        if (event.order.needsAvailability) {
+          const sms = adminSeafoodCheckText({
+            code: `${created.queue_code} (${event.order.orderId})`,
+            customer: event.order.customer.name,
+            fulfillment: event.order.fulfillment,
+            total: event.order.totals.total,
+            adminUrl: adminUrl(),
+          });
+          await notifyStaff([...SOURCING_ROLES], {
+            title: `🦐 Seafood check: ${created.queue_code}`,
+            body: `${event.order.customer.name} · ${event.order.fulfillment} · ₱${event.order.totals.total}. The customer is waiting to pay.`,
+            url: adminUrl(),
+            tag: `order-${event.order.orderId}`,
+          });
+          await textAdmin(sms.kind, sms.message, event.order.orderId);
+        }
         break;
+      }
 
       case "order.payment_submitted": {
         const order = await findOrder(db, event.orderId);
@@ -120,6 +147,21 @@ export async function ingestWebEvent(event: WebToOpsEvent): Promise<void> {
           })
           .eq("id", order.id);
         if (error) throw error;
+
+        const sms = adminPaymentText({
+          code: `${order.queue_code} (${event.orderId})`,
+          amount: event.amount,
+          referenceNo: event.referenceNo,
+          senderName: event.senderName,
+          adminUrl: adminUrl(),
+        });
+        await notifyStaff([...PAYMENT_ROLES], {
+          title: `💸 GCash to verify: ${order.queue_code}`,
+          body: `₱${event.amount} · ref ${event.referenceNo} · from ${event.senderName}`,
+          url: adminUrl(),
+          tag: `order-${event.orderId}`,
+        });
+        await textAdmin(sms.kind, sms.message, event.orderId);
         break;
       }
 
