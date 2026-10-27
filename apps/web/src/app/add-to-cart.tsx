@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { cart } from "@/lib/cart-store";
+import { cart, type CartEntry } from "@/lib/cart-store";
 import type { MenuItem } from "@/lib/menu";
 import { peso } from "@/components/ui";
 
@@ -20,12 +20,13 @@ export function AddToCart({ item, canOrder }: { item: MenuItem; canOrder: boolea
       >
         Add
       </button>
-      {open && <OptionsSheet item={item} onClose={() => setOpen(false)} />}
+      {open && <OptionsSheet item={item} onClose={() => setOpen(false)} onAdd={cart.add} />}
     </>
   );
 }
 
-function OptionsSheet({ item, onClose }: { item: MenuItem; onClose: () => void }) {
+/** Options, size, notes and quantity for one item. Used by the menu (cart) and the admin manual order. */
+export function OptionsSheet({ item, onClose, onAdd }: { item: MenuItem; onClose: () => void; onAdd: (entry: CartEntry) => void }) {
   const [qty, setQty] = useState(1);
   const [weightKg, setWeightKg] = useState<number | null>(item.soldBy === "weight" ? (item.weightOptionsKg[0] ?? null) : null);
   const [picked, setPicked] = useState<Record<string, string[]>>(() =>
@@ -56,7 +57,7 @@ function OptionsSheet({ item, onClose }: { item: MenuItem; onClose: () => void }
       const min = g.required ? Math.max(1, g.minSelect) : g.minSelect;
       if (count < min) return setError(`Choose ${g.name.toLowerCase()}`);
     }
-    cart.add({
+    onAdd({
       lineId: crypto.randomUUID(),
       productId: item.id,
       qty,

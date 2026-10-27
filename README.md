@@ -42,7 +42,10 @@ pnpm --filter @wfh/web dev --port 3100  # http://localhost:3100
   - Order page: GCash payment, continue or cancel after a seafood check, live status, browser notifications.
   - Guests can order without an account.
 - **Admin** (`/admin`):
-  - **Orders:** Sourcing, Payment Review, kitchen queue, dispatch, cancel. Stands in for the Android staff app until it's built.
+  - **Orders:** Sourcing, Payment Review, kitchen queue, dispatch, cancel, mark paid. Stands in for the Android staff app until it's built. Toasts and a chime announce new orders and payments.
+  - **New order:** walk-in, phone or Messenger orders. Payment can be cash now (with change), GCash now, pay on pickup/delivery, or GCash later.
+  - **Printing:** kitchen tickets and item labels from any printer the device has, with per-device auto-print (PLAN.md §19).
+  - **Staff:** the owner creates logins. Kitchen, Payments and Counter roles only see Orders and Inventory.
   - **Inventory:** daily beginning/ending counts and a buy list.
   - **Menu, add-ons, ingredients, delivery, hours and promotions.**
 - **Webhooks:** orders reach the ordering backend at `/api/webhooks/web`, and updates come back to the website at `/api/webhooks/ops`.

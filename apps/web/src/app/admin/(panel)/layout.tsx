@@ -1,36 +1,36 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
+import { ROLE_PAGES, currentStaffRole } from "@/lib/auth";
 import { signOut } from "../login/actions";
 
 export const metadata = { title: "Admin · Weekend Food Hub" };
 
 const NAV = [
-  { href: "/admin/orders", label: "Orders" },
-  { href: "/admin/inventory", label: "Inventory" },
-  { href: "/admin/menu", label: "Menu & prices" },
-  { href: "/admin/add-ons", label: "Add-ons" },
-  { href: "/admin/ingredients", label: "Ingredients" },
-  { href: "/admin/delivery", label: "Delivery" },
-  { href: "/admin/hours", label: "Hours & settings" },
-  { href: "/admin/promotions", label: "Promotions" },
+  { page: "orders", label: "Orders" },
+  { page: "inventory", label: "Inventory" },
+  { page: "menu", label: "Menu & prices" },
+  { page: "add-ons", label: "Add-ons" },
+  { page: "ingredients", label: "Ingredients" },
+  { page: "delivery", label: "Delivery" },
+  { page: "hours", label: "Hours & settings" },
+  { page: "promotions", label: "Promotions" },
+  { page: "staff", label: "Staff" },
 ];
 
-// Static chrome only: each page checks the owner session itself, inside a Suspense boundary.
+const ROLE_LABEL = { owner: "Owner", verifier: "Payments", kitchen: "Kitchen", counter: "Counter" } as const;
+
+// The chrome is static; only the nav (which depends on the signed-in role) waits for the session.
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-full flex-1 flex-col bg-stone-50 dark:bg-stone-950">
-      <header className="border-b border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900">
+      <header className="border-b border-stone-200 bg-white print:hidden dark:border-stone-800 dark:bg-stone-900">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
           <Link href="/admin" className="font-semibold">
             WFH Admin
           </Link>
-          <nav className="flex flex-1 flex-wrap gap-x-4 gap-y-1 text-sm">
-            {NAV.map((item) => (
-              <Link key={item.href} href={item.href} className="text-stone-600 hover:text-orange-700 dark:text-stone-300">
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <Suspense fallback={<nav className="flex-1" />}>
+            <RoleNav />
+          </Suspense>
           <div className="flex items-center gap-3 text-sm">
             <Link href="/" className="text-stone-500 hover:text-orange-700">
               View menu
@@ -45,5 +45,22 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       </header>
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">{children}</main>
     </div>
+  );
+}
+
+async function RoleNav() {
+  const role = await currentStaffRole();
+  const pages = role ? ROLE_PAGES[role] : [];
+  return (
+    <nav className="flex flex-1 flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+      {NAV.filter((item) => pages.includes(item.page)).map((item) => (
+        <Link key={item.page} href={`/admin/${item.page}`} className="text-stone-600 hover:text-orange-700 dark:text-stone-300">
+          {item.label}
+        </Link>
+      ))}
+      {role && role !== "owner" && (
+        <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-600 dark:bg-stone-800 dark:text-stone-300">{ROLE_LABEL[role]}</span>
+      )}
+    </nav>
   );
 }

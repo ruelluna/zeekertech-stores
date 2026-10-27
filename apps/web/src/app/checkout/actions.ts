@@ -20,7 +20,7 @@ import { CheckoutInput, type PlaceOrderResult } from "./schema";
 
 const SLOT_ERRORS = {
   closed_that_day: "We're closed on that day. Please pick another date.",
-  outside_hours: "That time is outside our hours. Please pick another time.",
+  outside_hours: "That time is outside our pickup and delivery hours. Please pick another time.",
   too_soon: "That time is too soon to prepare your order. Please pick a later time.",
   uncertain_items_cutoff: "Seafood dishes can't be ordered for today anymore. Please pick tomorrow.",
 } as const;
@@ -86,6 +86,8 @@ export async function placeOrder(raw: unknown): Promise<PlaceOrderResult> {
     closures: catalog.closures,
     hasUncertainItems: priced.needsAvailability,
     uncertainItemsCutoff: catalog.settings.uncertainItemsCutoff,
+    slotStartOffsetMinutes: catalog.settings.slotStartOffsetMinutes,
+    slotEndOffsetMinutes: catalog.settings.slotEndOffsetMinutes,
   });
   if (!slotCheck.ok) return { ok: false, errors: [SLOT_ERRORS[slotCheck.reason]] };
 

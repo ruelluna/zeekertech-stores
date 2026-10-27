@@ -1585,6 +1585,12 @@ export type Database = {
           ordering_paused: boolean;
           pickup_instructions: string | null;
           prep_lead_minutes: number;
+          print_label_height_mm: number;
+          print_label_width_mm: number;
+          print_labels_per_unit: boolean;
+          print_ticket_width_mm: number;
+          slot_end_offset_minutes: number;
+          slot_start_offset_minutes: number;
           uncertain_items_cutoff: string;
           unpaid_flag_minutes: number;
           updated_at: string;
@@ -1600,6 +1606,12 @@ export type Database = {
           ordering_paused?: boolean;
           pickup_instructions?: string | null;
           prep_lead_minutes?: number;
+          print_label_height_mm?: number;
+          print_label_width_mm?: number;
+          print_labels_per_unit?: boolean;
+          print_ticket_width_mm?: number;
+          slot_end_offset_minutes?: number;
+          slot_start_offset_minutes?: number;
           uncertain_items_cutoff?: string;
           unpaid_flag_minutes?: number;
           updated_at?: string;
@@ -1614,6 +1626,12 @@ export type Database = {
           ordering_paused?: boolean;
           pickup_instructions?: string | null;
           prep_lead_minutes?: number;
+          print_label_height_mm?: number;
+          print_label_width_mm?: number;
+          print_labels_per_unit?: boolean;
+          print_ticket_width_mm?: number;
+          slot_end_offset_minutes?: number;
+          slot_start_offset_minutes?: number;
           uncertain_items_cutoff?: string;
           unpaid_flag_minutes?: number;
           updated_at?: string;

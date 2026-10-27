@@ -68,6 +68,8 @@ async function Checkout() {
       prepLeadMinutes: catalog.settings.prepLeadMinutes,
       deliveryBufferMinutes: catalog.settings.deliveryBufferMinutes,
       uncertainItemsCutoff: catalog.settings.uncertainItemsCutoff,
+      slotStartOffsetMinutes: catalog.settings.slotStartOffsetMinutes,
+      slotEndOffsetMinutes: catalog.settings.slotEndOffsetMinutes,
       pickupInstructions: catalog.settings.pickupInstructions,
       kitchenAddress: catalog.delivery.kitchenAddress,
     },

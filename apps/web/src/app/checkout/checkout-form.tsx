@@ -39,6 +39,8 @@ export interface CheckoutData {
     prepLeadMinutes: number;
     deliveryBufferMinutes: number;
     uncertainItemsCutoff: ClockTime;
+    slotStartOffsetMinutes: number;
+    slotEndOffsetMinutes: number;
     pickupInstructions: string | null;
     kitchenAddress: string | null;
   };
@@ -116,6 +118,8 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
         closures: data.closures,
         hasUncertainItems: hasUncertain,
         uncertainItemsCutoff: data.settings.uncertainItemsCutoff,
+        slotStartOffsetMinutes: data.settings.slotStartOffsetMinutes,
+        slotEndOffsetMinutes: data.settings.slotEndOffsetMinutes,
       });
       if (slots.length) {
         const label =

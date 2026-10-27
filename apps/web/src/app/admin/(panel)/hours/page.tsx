@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { ActionForm } from "@/components/action-form";
 import { Card, Checkbox, Field, Input, Loading, PageHeader, Textarea } from "@/components/ui";
 import { requireOwner } from "@/lib/auth";
-import { addClosure, removeClosure, saveHours, saveStoreSettings, uploadGcashQr } from "./actions";
+import { addClosure, removeClosure, saveHours, savePrintSettings, saveStoreSettings, uploadGcashQr } from "./actions";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const hhmm = (t: string) => t.slice(0, 5);
@@ -12,7 +12,7 @@ export default function HoursPage() {
     <>
       <PageHeader
         title="Hours & settings"
-        description="Closing time is the last pickup/delivery time; same-day ordering stops early enough to finish by then."
+        description="Customers can place orders during opening hours. Pickup and delivery times start and end inside them (set below)."
       />
       <Suspense fallback={<Loading />}>
         <HoursContent />
@@ -85,6 +85,13 @@ async function HoursContent() {
             <Checkbox name="allow_preorders" label="Allow pre-orders outside opening hours" defaultChecked={s.allow_preorders} />
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
+            <Field label="First pickup/delivery (min after opening)" hint="60 = 1 hour: 1 PM opening → first time 2 PM">
+              <Input name="slot_start_offset_minutes" type="number" min="0" max="600" step="15" defaultValue={s.slot_start_offset_minutes} />
+            </Field>
+            <Field label="Last pickup/delivery (min before closing)" hint="60 = 1 hour: 9 PM closing → last time 8 PM">
+              <Input name="slot_end_offset_minutes" type="number" min="0" max="600" step="15" defaultValue={s.slot_end_offset_minutes} />
+            </Field>
+            <div />
             <Field label="Default prep time (min)" hint="Used when a product has no prep time">
               <Input name="prep_lead_minutes" type="number" min="0" defaultValue={s.prep_lead_minutes} />
             </Field>
@@ -106,6 +113,35 @@ async function HoursContent() {
             <Field label="Pickup instructions" className="sm:col-span-3" hint="Where to pick up, landmark, parking">
               <Textarea name="pickup_instructions" defaultValue={s.pickup_instructions ?? ""} />
             </Field>
+          </div>
+        </ActionForm>
+      </Card>
+
+      <Card
+        title="Printing"
+        description="Kitchen tickets and item labels print from the browser to any printer the device has. In the print dialog, choose the printer, turn off headers/footers and set margins to none."
+      >
+        <ActionForm action={savePrintSettings} className="flex flex-col gap-4">
+          <div className="grid gap-4 sm:grid-cols-4">
+            <Field label="Ticket paper width">
+              <select
+                name="print_ticket_width_mm"
+                defaultValue={String(s.print_ticket_width_mm)}
+                className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm dark:border-stone-700 dark:bg-stone-950"
+              >
+                <option value="80">80 mm (standard receipt)</option>
+                <option value="58">58 mm (small receipt)</option>
+              </select>
+            </Field>
+            <Field label="Label width (mm)">
+              <Input name="print_label_width_mm" type="number" step="0.5" min="20" max="120" defaultValue={s.print_label_width_mm} />
+            </Field>
+            <Field label="Label height (mm)">
+              <Input name="print_label_height_mm" type="number" step="0.5" min="15" max="120" defaultValue={s.print_label_height_mm} />
+            </Field>
+            <div className="flex items-end pb-2">
+              <Checkbox name="print_labels_per_unit" label="One label per piece" defaultChecked={s.print_labels_per_unit} />
+            </div>
           </div>
         </ActionForm>
       </Card>

@@ -11,7 +11,7 @@ An online storefront plus an Android staff app for **Weekend Food Hub**, a food 
 | Topic | Decision |
 |---|---|
 | Web app | Built from scratch in **Next.js**. It **owns the menu**, ingredients, delivery areas, fees, promotions and customer accounts |
-| Staff app | **Android only** (phones and tablets), **Expo / React Native**. Receives orders from the web app by **webhook** |
+| Staff app | **Web admin for now** (decided 2026-10-27): staff use Orders and Inventory in the browser on a phone, tablet or PC. The Android app (Expo) stays in the repo for later, for offline walk-ins and native printing |
 | Backend | **Supabase** (Postgres, Auth, Realtime, Storage), **self-hosted**. One project, separate `store` and `ops` schemas that talk only through webhooks/API |
 | Hosting | **₱0 to start:** one Oracle Cloud Always Free VM (Singapore) running **Coolify**, which hosts self-hosted Supabase, the Next.js site and any future apps in Docker, each on its own domain with automatic HTTPS (§17) |
 | Payment | **GCash QR** (owner's account). A person manually confirms payment in the app. Cash allowed for walk-in orders |
@@ -22,7 +22,7 @@ An online storefront plus an Android staff app for **Weekend Food Hub**, a food 
 | Delivery area | **Mainland Daanbantayan only.** 19 barangays. **Carnaza and Malapascua are excluded** |
 | Kitchen | **Tapilon, Purok Molmol** (exact map pin set during setup) |
 | Delivery fee | Calculated from road distance at ordering time. **₱30 covers the first 2 km, then ₱10/km**, rounded up to ₱5. Staff can override |
-| Ordering hours | **1:00 PM – 9:00 PM, every day** (weekdays and weekends, despite the name). **9:00 PM is the last pickup/delivery time**, so same-day ordering closes early enough to finish by 9. Editable per day in the admin |
+| Ordering hours | **1:00 PM – 9:00 PM, every day** (weekdays and weekends, despite the name). **Pickup/delivery times run 2:00–8:00 PM** (opening + 1 hour to closing − 1 hour, both adjustable in the admin). Editable per day in the admin |
 | Uncertain ingredients | Crabs, shrimp, etc. are **subject to availability**. Staff mark **Ready to cook** or **Can't source**, then the customer continues or cancels |
 | Market pricing | **Yes.** Seasonal items have an estimated price on the menu, and the final price is confirmed before payment |
 | Labels | Printer is **configurable** (connection, language, label size) |
@@ -123,15 +123,15 @@ Live updates: Checking availability → Awaiting payment → Payment confirmed �
 - **Closed dates** (holidays, market days off) and a **Pause ordering** switch (also in the Android app) for busy or short-staffed moments.
 - **Outside hours or paused:** the menu stays browsable and shows *"We're closed. Ordering opens at 1:00 PM."* Customers can **pre-order** for a time slot when the store is open.
 - **Pre-orders:** stay in a *Scheduled* list and enter Sourcing/Payment Review when the store opens. Customer decision and unpaid timers only start counting during open hours.
-- **9:00 PM is the last pickup/delivery time, not the last order time.** The same-day cutoff is worked out per order:
+- **Pickup/delivery times run from opening + 1 hour to closing − 1 hour** (2:00–8:00 PM; both offsets are settings in Admin → Hours & settings). Orders can be placed during opening hours (1–9 PM). The same-day cutoff is worked out per order:
   ```
   prep     = longest prep time among the items in the cart (e.g. Silog 15 min, Paluto 40 min; store default 30 min)
-  pickup:    last order = 9:00 PM − prep                                → 8:45 PM for silog only
-  delivery:  last order = 9:00 PM − prep − travel time − buffer (10 min) → e.g. 8:20 PM for silog with a 15-min drive
+  pickup:    last order = 8:00 PM − prep                                → 7:45 PM for silog only
+  delivery:  last order = 8:00 PM − prep − travel time − buffer (10 min) → e.g. 7:20 PM for silog with a 15-min drive
   ```
   Travel time comes from the same OpenRouteService route used for the delivery fee.
 - **Subject-to-availability dishes** (crabs, shrimp) have an earlier same-day cutoff, **8:00 PM** by default, so there's time to source them. After that they can only be pre-ordered for the next day.
-- **Time picker:** offers slots from 1:30 PM (1:00 PM opening + prep time) to 9:00 PM. Slots that can no longer be met disappear as the evening goes on. The checkout re-checks the slot on the server.
+- **Time picker:** offers slots from 2:00 PM (or opening + prep time, if longer) to 8:00 PM. Slots that can no longer be met disappear as the evening goes on. The checkout re-checks the slot on the server.
 - **Staff side:** an order still waiting on sourcing or payment when its slot can no longer be met is flagged on the Android app. Staff can move it to a later slot or the next day, and the customer sees the change on their status page.
 
 ### 3.7 Required pages
@@ -561,11 +561,13 @@ _(Prices and coordinates above are placeholders.)_
 | **1. Web admin + menu** ✅ done 2026-10-27 | Categories, products, modifiers, ingredients, price modes, barangays, delivery settings (kitchen pin as lat/lng), promotions, store hours and closures, owner-only sign-in. Seeded launch menu (§7.1). Public menu with badges and open/closed status. **Moved to Phase 2:** service-area polygon import, map pin picker, GCash QR upload, product photos |
 | **2. Web ordering** ✅ done 2026-10-27 (Facebook Login built, waiting on the Meta app) | Service-area import (barangay points + Malapascua exclusion), map pin picker (kitchen + customers), GCash QR and product photo uploads, Facebook Login, mobile number and saved addresses with map pin, fee calculator, service-area check, checkout, welcome discount, GCash step, decision page, order status page, browser push, privacy and data-deletion pages, outbound webhooks |
 | **3. Ops backend** ✅ mostly done 2026-10-27 | Webhook receiver (inbox), order tables, outbox sender, timers (decision expiry, unpaid flag). Still to do: menu copy, staff alert when the availability wait passes |
-| **3b. Web admin: Orders** ✅ done 2026-10-27 (interim) | Sourcing, Payment Review, kitchen queue, dispatch and cancel in the web admin, using the same database functions the Android app will call |
+| **3b. Web admin: Orders** ✅ done 2026-10-27 | Sourcing, Payment Review, kitchen queue, dispatch, cancel, manual orders (walk-in/phone/Messenger), mark paid, live updates with toasts and a chime |
 | **3c. Inventory** ✅ done 2026-10-27 | Daily beginning/received/wasted/ending counts, usage, buy list with alert (§18) |
-| **4. Android: confirmations** | Login and roles, Sourcing tab, daily availability board, Payment Review with flags, live queue board with sound, Expo push |
-| **5. Android: counter** | Walk-in quick sale (cash with change, on-the-spot GCash confirm, frozen as-is hand-over), phone/Messenger orders with customer search and fee override, **offline walk-in orders with sync**, frozen stock counts, Menu mode, Dispatch, Customers (Text/Call, merge), sold-out toggle |
-| **6. Printing** | Printer settings, ESC/POS + TSPL drivers (ZPL if needed), item label + delivery slip, auto-print/reprint |
+| **3d. Staff roles** ✅ done 2026-10-27 | Staff page (owner creates logins); Kitchen/Payments/Counter see only Orders and Inventory; GCash confirmation and cancelling limited by role |
+| **3e. Browser printing** ✅ done 2026-10-27 | Kitchen ticket (58/80 mm) and item labels (size set in admin) from any printer the device has; Print buttons per order; per-device auto-print when an order reaches the kitchen (§19) |
+| **4. Android: confirmations** ⏸ deferred | Login and roles, Sourcing tab, daily availability board, Payment Review with flags, live queue board with sound, Expo push |
+| **5. Android: counter** ⏸ deferred | Walk-in quick sale (cash with change, on-the-spot GCash confirm, frozen as-is hand-over), phone/Messenger orders with customer search and fee override, **offline walk-in orders with sync**, frozen stock counts, Menu mode, Dispatch, Customers (Text/Call, merge), sold-out toggle |
+| **6. Native printing** ⏸ deferred | ESC/POS + TSPL drivers for direct Bluetooth/LAN printing from the Android app. Browser printing (3e) covers it for now |
 | **7. Polish** | Coping with weak Wi-Fi (local cache, retry queue), Today summary/reports, timer tuning |
 | **8. Later** | Messenger updates via the Weekend Food Hub Page, scheduled/advance orders, inventory, Google login |
 | **Deploy** (alongside Phase 2) | Oracle VM + Coolify, self-hosted Supabase, Next.js Docker image, domains and HTTPS, nightly off-site backups (§17). Needed early because Facebook Login only works over HTTPS |
@@ -697,3 +699,19 @@ The staff app isn't hosted. It's an Android APK installed on the devices and poi
   - A push notification to the owner's phone (with the Android app).
   - Linking frozen-pack counts to the online stock count.
   - Usage estimates from orders (recipes) instead of counts only.
+
+
+---
+
+## 19. Printing (browser)
+
+- **Kitchen ticket** (`/admin/print/[id]?type=ticket`):
+  - Queue code, pickup/delivery and time, customer, address and rider notes.
+  - Items with options and notes, totals, and PAID / NOT PAID / COLLECT ₱.
+  - Paper width 58 or 80 mm.
+- **Item labels** (`?type=labels`): queue code, pickup/delivery, customer name, product, options, notes, time and "1 of N". Label size and one-per-piece vs one-per-line are set in Admin → Hours & settings → Printing.
+- **How it prints:** the page uses CSS `@page` sizes and the browser's print dialog, so any printer the phone, tablet or PC can print to works:
+  - USB or network receipt and label printers installed on the PC
+  - Android print services for Bluetooth/Wi-Fi printers
+- **Print buttons** on every order. **Auto-print** is a per-device setting on the Orders page: tickets and/or labels print when an order reaches the kitchen queue.
+- **Silent printing** (no dialog): run Chrome on the kitchen PC with `--kiosk-printing`, with the receipt printer as the default printer.

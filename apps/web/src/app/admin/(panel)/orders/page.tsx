@@ -2,17 +2,26 @@ import { Suspense } from "react";
 import { formatManilaTime, manilaParts, type ModifierSelection } from "@wfh/shared";
 import { ActionForm } from "@/components/action-form";
 import { LiveOrders } from "@/components/live";
+import { AutoPrintToggle, PrintButtons } from "@/components/print-controls";
 import { Badge, Card, Field, Input, Loading, PageHeader, PesoInput, peso } from "@/components/ui";
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
 import { loadInventory } from "@/lib/inventory";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { advanceOrder, reviewPayment, staffCancelOrder, submitAvailability } from "./actions";
+import { advanceOrder, markPaid, reviewPayment, staffCancelOrder, submitAvailability } from "./actions";
 
 export default function OrdersPage() {
   return (
     <>
-      <PageHeader title="Orders" description="Updates live. Actions here reach the customer's order page right away." />
+      <PageHeader
+        title="Orders"
+        description="Updates live. Actions here reach the customer's order page right away."
+        actions={
+          <Link href="/admin/orders/new" className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700">
+            New order
+          </Link>
+        }
+      />
       <Suspense fallback={<Loading />}>
         <Orders />
       </Suspense>
@@ -26,6 +35,7 @@ const FLAG_TEXT: Record<string, string> = {
   estimated_distance: "Distance estimated (straight line)",
   unpaid_overdue: "Unpaid for a while",
   customer_asked_to_cancel: "Customer asked to cancel",
+  collect_payment: "Collect payment",
 };
 
 /** ISO time N hours ago (runs per request: the page is dynamic). */
@@ -74,10 +84,11 @@ async function Orders() {
   const dispatch = by(["ready", "out_for_delivery"]);
   const finished = by(["delivered", "picked_up", "completed", "denied", "rejected", "cancelled", "expired"]);
   const canReview = role === "owner" || role === "verifier";
+  const canCancel = role !== "kitchen";
 
   return (
     <>
-      <LiveOrders />
+      <LiveOrders known={Object.fromEntries(orders.map((o) => [o.id, { status: o.status, paymentStatus: o.payment_status, flags: o.flags }]))} />
       {toBuy.length > 0 && (
         <Link
           href="/admin/inventory"
@@ -88,6 +99,9 @@ async function Orders() {
           {toBuy.length > 5 ? "…" : ""} →
         </Link>
       )}
+      <div className="mb-3">
+        <AutoPrintToggle />
+      </div>
       <div className="mb-6 flex flex-wrap gap-2 text-sm">
         <Badge tone={sourcing.length ? "amber" : "neutral"}>Sourcing {sourcing.length}</Badge>
         <Badge tone={review.length ? "amber" : "neutral"}>Payment review {review.length}</Badge>
@@ -98,7 +112,7 @@ async function Orders() {
 
       <Section title="Sourcing" description="Check the seafood and market prices, then send the result to the customer." empty="Nothing to check.">
         {sourcing.map((o) => (
-          <OrderCard key={o.id} o={o}>
+          <OrderCard key={o.id} o={o} canCancel={canCancel}>
             <ActionForm action={submitAvailability} submitLabel="Send result to customer">
               <input type="hidden" name="orderId" value={o.id} />
               {o.order_items
@@ -137,7 +151,7 @@ async function Orders() {
 
       <Section title="Payment review" description="Check GCash for the reference number and amount before confirming." empty="No payments to check.">
         {review.map((o) => (
-          <OrderCard key={o.id} o={o}>
+          <OrderCard key={o.id} o={o} canCancel={canCancel}>
             <dl className="mb-3 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
               <Info label="Amount due" value={peso(o.total)} strong />
               <Info
@@ -179,7 +193,7 @@ async function Orders() {
 
       <Section title="Kitchen" description="Paid orders, in pickup/delivery time order." empty="Nothing to cook right now.">
         {kitchen.map((o) => (
-          <OrderCard key={o.id} o={o}>
+          <OrderCard key={o.id} o={o} canCancel={canCancel}>
             <Advance o={o} />
           </OrderCard>
         ))}
@@ -187,7 +201,7 @@ async function Orders() {
 
       <Section title="Ready & out for delivery" empty="Nothing waiting.">
         {dispatch.map((o) => (
-          <OrderCard key={o.id} o={o}>
+          <OrderCard key={o.id} o={o} canCancel={canCancel}>
             <Advance o={o} />
           </OrderCard>
         ))}
@@ -195,13 +209,13 @@ async function Orders() {
 
       <Section title="Waiting for the customer" description="Unpaid orders, or customers reviewing changes after the availability check." empty="None.">
         {waiting.map((o) => (
-          <OrderCard key={o.id} o={o} />
+          <OrderCard key={o.id} o={o} canCancel={canCancel} />
         ))}
       </Section>
 
       <Section title="Finished (last 24 hours)" empty="None yet.">
         {finished.map((o) => (
-          <OrderCard key={o.id} o={o} compact />
+          <OrderCard key={o.id} o={o} canCancel={canCancel} />
         ))}
       </Section>
     </>
@@ -251,7 +265,7 @@ function Section({ title, description, empty, children }: { title: string; descr
   );
 }
 
-function OrderCard({ o, children, compact }: { o: Order; children?: React.ReactNode; compact?: boolean }) {
+function OrderCard({ o, children, canCancel }: { o: Order; children?: React.ReactNode; canCancel: boolean }) {
   const slot = new Date(o.scheduled_for);
   const today = manilaParts(slot).dateKey === manilaParts(new Date()).dateKey;
   const address = o.address as { streetPurok?: string; landmark?: string; riderNotes?: string; lat?: number; lng?: number } | null;
@@ -261,6 +275,9 @@ function OrderCard({ o, children, compact }: { o: Order; children?: React.ReactN
     <article className="rounded-xl border border-stone-200 p-3 dark:border-stone-700">
       <header className="mb-2 flex flex-wrap items-center gap-2">
         <span className="text-lg font-semibold">{o.queue_code}</span>
+        <span className="ml-auto order-last sm:order-none">
+          <PrintButtons orderId={o.id} />
+        </span>
         <Badge tone={o.fulfillment === "delivery" ? "orange" : "neutral"}>{o.fulfillment === "delivery" ? "DELIVERY" : "PICKUP"}</Badge>
         <Badge tone={today ? "amber" : "neutral"}>
           {today ? "Today" : slot.toLocaleDateString("en-PH", { weekday: "short", month: "short", day: "numeric", timeZone: "Asia/Manila" })} {formatManilaTime(slot)}
@@ -302,24 +319,22 @@ function OrderCard({ o, children, compact }: { o: Order; children?: React.ReactN
         </p>
       )}
 
-      {!compact && (
-        <ul className="my-2 text-sm">
-          {[...o.order_items]
-            .sort((a, b) => a.sort_order - b.sort_order)
-            .map((i) => {
-              const mods = (i.modifiers as ModifierSelection[]).map((m) => m.option);
-              const removed = i.item_status === "removed" || i.order_item_availability?.status === "cant_source";
-              return (
-                <li key={i.id} className={removed ? "text-stone-400 line-through" : ""}>
-                  {i.qty}× {i.name}
-                  {i.weight_kg ? ` (${i.weight_kg} kg)` : ""}
-                  {mods.length > 0 && <span className="text-stone-500"> · {mods.join(", ")}</span>}
-                  {i.notes && <span className="text-stone-500"> · “{i.notes}”</span>}
-                </li>
-              );
-            })}
-        </ul>
-      )}
+      <ul className="my-2 text-sm">
+        {[...o.order_items]
+          .sort((a, b) => a.sort_order - b.sort_order)
+          .map((i) => {
+            const mods = (i.modifiers as ModifierSelection[]).map((m) => m.option);
+            const removed = i.item_status === "removed" || i.order_item_availability?.status === "cant_source";
+            return (
+              <li key={i.id} className={removed ? "text-stone-400 line-through" : ""}>
+                {i.qty}× {i.name}
+                {i.weight_kg ? ` (${i.weight_kg} kg)` : ""}
+                {mods.length > 0 && <span className="text-stone-500"> · {mods.join(", ")}</span>}
+                {i.notes && <span className="text-stone-500"> · “{i.notes}”</span>}
+              </li>
+            );
+          })}
+      </ul>
 
       <p className="mb-2 text-sm">
         Total <strong>{o.is_estimate ? "~" : ""}{peso(o.total)}</strong>
@@ -331,7 +346,13 @@ function OrderCard({ o, children, compact }: { o: Order; children?: React.ReactN
 
       {children}
 
-      {!terminal && !compact && (
+      {o.flags.includes("collect_payment") && o.payment_status !== "confirmed" && !terminal && (
+        <ActionForm action={markPaid} submitLabel={`Mark paid (${peso(o.total)} collected)`} className="mt-3 flex flex-wrap items-end gap-3">
+          <input type="hidden" name="orderId" value={o.id} />
+        </ActionForm>
+      )}
+
+      {!terminal && canCancel && (
         <details className="mt-3 text-sm">
           <summary className="cursor-pointer text-stone-500">Cancel order…</summary>
           <ActionForm action={staffCancelOrder} submitLabel="Cancel order" danger className="mt-2 flex flex-wrap items-end gap-3">

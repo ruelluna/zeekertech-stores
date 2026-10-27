@@ -120,6 +120,35 @@ describe("storeStatus", () => {
   });
 });
 
+describe("slot window (opening + 1 h to closing − 1 h)", () => {
+  const windowed = {
+    ...base,
+    slotStartOffsetMinutes: DEFAULT_SCHEDULE_SETTINGS.slotStartOffsetMinutes,
+    slotEndOffsetMinutes: DEFAULT_SCHEDULE_SETTINGS.slotEndOffsetMinutes,
+  };
+
+  it("offers 2:00 PM to 8:00 PM for 1–9 PM hours", () => {
+    const slots = listSlots({ ...windowed, dateKey: DAY, now: at("09:00"), leadMinutes: 15 });
+    expect(formatManilaTime(slots[0]!)).toBe("2:00 PM");
+    expect(formatManilaTime(slots.at(-1)!)).toBe("8:00 PM");
+  });
+
+  it("rejects 1:45 PM and 8:15 PM", () => {
+    expect(checkSlot({ ...windowed, now: at("09:00"), slot: at("13:45"), leadMinutes: 15 })).toEqual({ ok: false, reason: "outside_hours" });
+    expect(checkSlot({ ...windowed, now: at("09:00"), slot: at("20:15"), leadMinutes: 15 })).toEqual({ ok: false, reason: "outside_hours" });
+  });
+
+  it("still uses the lead time when it's longer than the start offset", () => {
+    expect(checkSlot({ ...windowed, now: at("09:00"), slot: at("14:00"), leadMinutes: 75 }).ok).toBe(false);
+    expect(checkSlot({ ...windowed, now: at("09:00"), slot: at("14:15"), leadMinutes: 75 }).ok).toBe(true);
+  });
+
+  it("last same-day silog pickup is ordered by 7:45 PM", () => {
+    expect(checkSlot({ ...windowed, now: at("19:45"), slot: at("20:00"), leadMinutes: 15 }).ok).toBe(true);
+    expect(checkSlot({ ...windowed, now: at("19:46"), slot: at("20:00"), leadMinutes: 15 }).ok).toBe(false);
+  });
+});
+
 describe("listSlots", () => {
   it("lists 15-minute slots from 1:30 PM to 9:00 PM for a 30-min lead", () => {
     const slots = listSlots({ ...base, dateKey: DAY, now: at("09:00"), leadMinutes: 30 });

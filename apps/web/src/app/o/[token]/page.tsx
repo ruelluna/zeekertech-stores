@@ -57,7 +57,7 @@ async function Order({ params }: { params: PageProps<"/o/[token]">["params"] }) 
 
   return (
     <>
-      <LiveOrder token={token} active={!terminal} />
+      <LiveOrder token={token} active={!terminal} status={status} paymentStatus={row.payment_status} />
       <div className="mb-6 mt-3">
         <p className="text-sm text-stone-500">Order {row.order_code}</p>
         <h1 className="text-2xl font-semibold tracking-tight">{text.title}</h1>

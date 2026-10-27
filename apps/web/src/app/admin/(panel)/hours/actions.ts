@@ -65,6 +65,8 @@ const SettingsInput = z.object({
   prep_lead_minutes: minutes,
   delivery_buffer_minutes: minutes,
   uncertain_items_cutoff: time,
+  slot_start_offset_minutes: minutes,
+  slot_end_offset_minutes: minutes,
   customer_decision_minutes: minutes,
   unpaid_flag_minutes: minutes,
   gcash_account_name: form.optText,
@@ -84,6 +86,8 @@ export async function saveStoreSettings(_prev: ActionState, formData: FormData):
       ...d,
       prep_lead_minutes: d.prep_lead_minutes ?? 30,
       delivery_buffer_minutes: d.delivery_buffer_minutes ?? 10,
+      slot_start_offset_minutes: d.slot_start_offset_minutes ?? 60,
+      slot_end_offset_minutes: d.slot_end_offset_minutes ?? 60,
       customer_decision_minutes: d.customer_decision_minutes ?? 30,
       unpaid_flag_minutes: d.unpaid_flag_minutes ?? 30,
     })
@@ -107,4 +111,20 @@ export async function uploadGcashQr(_prev: ActionState, formData: FormData): Pro
   if (error) return fail(error.message);
   menuChanged();
   return ok("QR code uploaded");
+}
+
+const PrintInput = z.object({
+  print_ticket_width_mm: z.coerce.number().pipe(z.union([z.literal(58), z.literal(80)])),
+  print_label_width_mm: z.coerce.number().min(20).max(120),
+  print_label_height_mm: z.coerce.number().min(15).max(120),
+  print_labels_per_unit: form.bool,
+});
+
+export async function savePrintSettings(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const parsed = PrintInput.safeParse(formObject(formData));
+  if (!parsed.success) return fail("Check the paper sizes (labels: 20–120 mm wide, 15–120 mm tall)");
+  const { supabase } = await requireOwner();
+  const { error } = await supabase.schema("store").from("store_settings").update(parsed.data).eq("id", true);
+  if (error) return fail(error.message);
+  return ok();
 }

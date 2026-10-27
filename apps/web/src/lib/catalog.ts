@@ -29,6 +29,8 @@ export interface Catalog {
     prepLeadMinutes: number;
     deliveryBufferMinutes: number;
     uncertainItemsCutoff: StoreHoursDay["opensAt"];
+    slotStartOffsetMinutes: number;
+    slotEndOffsetMinutes: number;
     customerDecisionMinutes: number;
     unpaidFlagMinutes: number;
     gcashQrUrl: string | null;
@@ -148,6 +150,8 @@ export async function fetchCatalog(): Promise<Catalog> {
       prepLeadMinutes: s.prep_lead_minutes,
       deliveryBufferMinutes: s.delivery_buffer_minutes,
       uncertainItemsCutoff: hhmm(s.uncertain_items_cutoff),
+      slotStartOffsetMinutes: s.slot_start_offset_minutes,
+      slotEndOffsetMinutes: s.slot_end_offset_minutes,
       customerDecisionMinutes: s.customer_decision_minutes,
       unpaidFlagMinutes: s.unpaid_flag_minutes,
       gcashQrUrl: s.gcash_qr_url,

@@ -20,9 +20,13 @@ export interface ScheduleSettings {
   deliveryBufferMinutes: number;
   /** Same-day cutoff for subject-to-availability items. */
   uncertainItemsCutoff: ClockTime;
+  /** First pickup/delivery time = opening + this. */
+  slotStartOffsetMinutes: number;
+  /** Last pickup/delivery time = closing − this. */
+  slotEndOffsetMinutes: number;
 }
 
-/** 1:00 PM – 9:00 PM every day; 9:00 PM is the last pickup/delivery time (PLAN.md §3.6). */
+/** 1:00 PM – 9:00 PM every day; pickup/delivery times run 2:00–8:00 PM (PLAN.md §3.6). */
 export const DEFAULT_STORE_HOURS: StoreHoursDay[] = [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
   dayOfWeek,
   opensAt: "13:00",
@@ -34,6 +38,8 @@ export const DEFAULT_SCHEDULE_SETTINGS: ScheduleSettings = {
   defaultPrepMinutes: 30,
   deliveryBufferMinutes: 10,
   uncertainItemsCutoff: "20:00",
+  slotStartOffsetMinutes: 60,
+  slotEndOffsetMinutes: 60,
 };
 
 export function clockToMinutes(t: ClockTime): number {
@@ -82,8 +88,8 @@ export type SlotCheck =
     };
 
 /**
- * Whether a pickup/delivery time can be offered. Slots run from opening + lead time up to
- * closing (the last pickup/delivery time), and must be at least the lead time from now.
+ * Whether a pickup/delivery time can be offered. Slots run from opening + the start offset (or the
+ * lead time, if longer) up to closing − the end offset, and must be at least the lead time from now.
  */
 export function checkSlot(input: {
   now: Date;
@@ -93,6 +99,10 @@ export function checkSlot(input: {
   closures: string[];
   hasUncertainItems: boolean;
   uncertainItemsCutoff: ClockTime;
+  /** First slot = opening + this (default 0). */
+  slotStartOffsetMinutes?: number;
+  /** Last slot = closing − this (default 0). */
+  slotEndOffsetMinutes?: number;
 }): SlotCheck {
   const slot = manilaParts(input.slot);
   const now = manilaParts(input.now);
@@ -102,7 +112,9 @@ export function checkSlot(input: {
 
   const open = clockToMinutes(day.opensAt);
   const close = clockToMinutes(day.closesAt);
-  if (slot.minutes < open + input.leadMinutes || slot.minutes > close) {
+  const earliest = open + Math.max(input.leadMinutes, input.slotStartOffsetMinutes ?? 0);
+  const latest = close - (input.slotEndOffsetMinutes ?? 0);
+  if (slot.minutes < earliest || slot.minutes > latest) {
     return { ok: false, reason: "outside_hours" };
   }
 
@@ -170,6 +182,8 @@ export function listSlots(input: {
   closures: string[];
   hasUncertainItems: boolean;
   uncertainItemsCutoff: ClockTime;
+  slotStartOffsetMinutes?: number;
+  slotEndOffsetMinutes?: number;
   intervalMinutes?: number;
 }): Date[] {
   const interval = input.intervalMinutes ?? 15;

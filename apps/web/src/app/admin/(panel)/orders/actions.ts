@@ -4,6 +4,7 @@ import { refresh } from "next/cache";
 import { z } from "zod";
 import { fail, form, ok, type ActionState } from "@/lib/action-state";
 import { requireStaff } from "@/lib/auth";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { flushOutboxes } from "@/lib/webhooks/outbox";
 
 // Staff actions on orders. Status changes on web orders reach the customer through the ops outbox
@@ -125,4 +126,27 @@ export async function staffCancelOrder(_prev: ActionState, formData: FormData): 
   const { error } = await supabase.schema("ops").from("orders").update({ status: "cancelled", notes: reason }).eq("id", orderId.data);
   if (error) return fail(error.message);
   return done("Order cancelled");
+}
+
+/** For "pay on pickup/delivery" orders: record the cash collected at handover. */
+export async function markPaid(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const orderId = z.uuid().safeParse(formData.get("orderId"));
+  if (!orderId.success) return fail("Invalid order");
+  const { supabase, userId } = await requireStaff();
+  const ops = supabase.schema("ops");
+
+  const { data: order, error: readError } = await ops.from("orders").select("total, flags, payment_status").eq("id", orderId.data).single();
+  if (readError) return fail(readError.message);
+  if (order.payment_status === "confirmed") return fail("Already paid");
+
+  const { error } = await ops
+    .from("orders")
+    .update({ payment_status: "confirmed", flags: order.flags.filter((f) => f !== "collect_payment") })
+    .eq("id", orderId.data);
+  if (error) return fail(error.message);
+  await createSupabaseAdminClient()
+    .schema("ops")
+    .from("payment_verifications")
+    .insert({ order_id: orderId.data, decision: "confirmed", amount_received: order.total, verified_by: userId });
+  return done("Marked as paid");
 }

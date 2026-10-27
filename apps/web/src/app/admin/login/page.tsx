@@ -22,12 +22,12 @@ export default function LoginPage({ searchParams }: PageProps<"/admin/login">) {
 async function LoginForm({ searchParams }: { searchParams: PageProps<"/admin/login">["searchParams"] }) {
   const params = await searchParams;
   const next = typeof params.next === "string" ? params.next : "";
-  const notOwner = params.error === "not_owner";
+  const notStaff = params.error === "not_staff";
   return (
     <>
-      {notOwner && (
+      {notStaff && (
         <p className="mb-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200">
-          This account isn&apos;t an owner. Only the owner can use the admin.
+          This account isn&apos;t a staff account. Ask the owner to add you on the Staff page.
         </p>
       )}
       <ActionForm action={signIn} submitLabel="Sign in">
