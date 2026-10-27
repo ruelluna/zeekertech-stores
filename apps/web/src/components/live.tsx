@@ -2,16 +2,64 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import { savePushSubscription } from "@/app/o/[token]/actions";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
-/** Re-fetches the order every few seconds while it can still change. */
-export function AutoRefresh({ active }: { active: boolean }) {
+/**
+ * Reloads the page's server data whenever a Realtime channel reports a change (debounced), when the
+ * tab becomes visible again, and on a slow fallback timer in case the connection drops silently.
+ */
+function useLiveRefresh(active: boolean, connect: (onChange: () => void) => RealtimeChannel, fallbackMs: number) {
   const router = useRouter();
   useEffect(() => {
     if (!active) return;
-    const t = setInterval(() => router.refresh(), 10_000);
-    return () => clearInterval(t);
-  }, [active, router]);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const refresh = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => router.refresh(), 250);
+    };
+    const channel = connect(refresh);
+    const fallback = setInterval(() => router.refresh(), fallbackMs);
+    const onVisible = () => document.visibilityState === "visible" && refresh();
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(fallback);
+      document.removeEventListener("visibilitychange", onVisible);
+      void getSupabaseBrowserClient().removeChannel(channel);
+    };
+    // connect is defined inline by callers; the channel depends only on `active` and the ids they pass.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, router, fallbackMs]);
+}
+
+/** Customer order page: live via a broadcast on the order's secret channel (works for guests). */
+export function LiveOrder({ token, active }: { token: string; active: boolean }) {
+  useLiveRefresh(
+    active,
+    (onChange) =>
+      getSupabaseBrowserClient()
+        .channel(`order:${token}`)
+        .on("broadcast", { event: "changed" }, onChange)
+        .subscribe(),
+    60_000,
+  );
+  return null;
+}
+
+/** Admin Orders page: live via database changes on ops orders (row-level security: staff only). */
+export function LiveOrders() {
+  useLiveRefresh(
+    true,
+    (onChange) =>
+      getSupabaseBrowserClient()
+        .channel("admin-orders")
+        .on("postgres_changes", { event: "*", schema: "ops", table: "orders" }, onChange)
+        .on("postgres_changes", { event: "*", schema: "ops", table: "order_item_availability" }, onChange)
+        .subscribe(),
+    60_000,
+  );
   return null;
 }
 

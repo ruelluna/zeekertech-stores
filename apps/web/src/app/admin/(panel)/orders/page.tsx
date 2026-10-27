@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { formatManilaTime, manilaParts, type ModifierSelection } from "@wfh/shared";
 import { ActionForm } from "@/components/action-form";
-import { AutoRefresh } from "@/components/live";
+import { LiveOrders } from "@/components/live";
 import { Badge, Card, Field, Input, Loading, PageHeader, PesoInput, peso } from "@/components/ui";
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
@@ -12,7 +12,7 @@ import { advanceOrder, reviewPayment, staffCancelOrder, submitAvailability } fro
 export default function OrdersPage() {
   return (
     <>
-      <PageHeader title="Orders" description="Updates every 15 seconds. Actions here reach the customer's order page right away." />
+      <PageHeader title="Orders" description="Updates live. Actions here reach the customer's order page right away." />
       <Suspense fallback={<Loading />}>
         <Orders />
       </Suspense>
@@ -77,7 +77,7 @@ async function Orders() {
 
   return (
     <>
-      <AutoRefresh active />
+      <LiveOrders />
       {toBuy.length > 0 && (
         <Link
           href="/admin/inventory"

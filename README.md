@@ -45,7 +45,11 @@ pnpm --filter @wfh/web dev --port 3100  # http://localhost:3100
   - **Orders:** Sourcing, Payment Review, kitchen queue, dispatch, cancel. Stands in for the Android staff app until it's built.
   - **Inventory:** daily beginning/ending counts and a buy list.
   - **Menu, add-ons, ingredients, delivery, hours and promotions.**
-- **Webhooks:** orders reach the ordering backend at `/api/webhooks/web`, and updates come back to the website at `/api/webhooks/ops`. A background worker in the Next.js server retries deliveries every 30 seconds and expires stale orders.
+- **Webhooks:** orders reach the ordering backend at `/api/webhooks/web`, and updates come back to the website at `/api/webhooks/ops`.
+- **Real time:** a background worker in the Next.js server listens for new outbox rows (Supabase Realtime) and delivers them within about a second. Every 30 seconds it also retries failures and runs order timers.
+  - The customer's order page listens on a broadcast channel named after the order's secret link.
+  - The admin Orders page listens to order changes, protected by row-level security.
+  - Both reload instantly, with a 60-second fallback.
 
 ### Make a real account the owner
 

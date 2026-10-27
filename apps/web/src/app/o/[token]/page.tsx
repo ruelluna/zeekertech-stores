@@ -9,7 +9,7 @@ import { fetchCatalog } from "@/lib/catalog";
 import { STATUS_TEXT } from "@/lib/order-status";
 import { loadWebOrderByToken, revisedOrder } from "@/lib/web-order";
 import { cancelOrder, decide, submitPayment } from "./actions";
-import { AutoRefresh, NotifyButton } from "@/components/live";
+import { LiveOrder, NotifyButton } from "@/components/live";
 
 export const metadata = { title: "Your order · Weekend Food Hub", robots: { index: false } };
 
@@ -57,7 +57,7 @@ async function Order({ params }: { params: PageProps<"/o/[token]">["params"] }) 
 
   return (
     <>
-      <AutoRefresh active={!terminal} />
+      <LiveOrder token={token} active={!terminal} />
       <div className="mb-6 mt-3">
         <p className="text-sm text-stone-500">Order {row.order_code}</p>
         <h1 className="text-2xl font-semibold tracking-tight">{text.title}</h1>
