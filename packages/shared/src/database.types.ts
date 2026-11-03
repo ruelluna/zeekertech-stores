@@ -252,6 +252,7 @@ export type Database = {
       };
       order_items: {
         Row: {
+          brand: string | null;
           estimated_unit_price: number | null;
           id: string;
           item_status: Database["ops"]["Enums"]["item_status"];
@@ -271,6 +272,7 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          brand?: string | null;
           estimated_unit_price?: number | null;
           id?: string;
           item_status?: Database["ops"]["Enums"]["item_status"];
@@ -289,6 +291,7 @@ export type Database = {
           weight_kg?: number | null;
         };
         Update: {
+          brand?: string | null;
           estimated_unit_price?: number | null;
           id?: string;
           item_status?: Database["ops"]["Enums"]["item_status"];
@@ -1020,8 +1023,43 @@ export type Database = {
         };
         Relationships: [];
       };
+      brands: {
+        Row: {
+          active: boolean;
+          created_at: string;
+          id: string;
+          name: string;
+          notice_days: number;
+          sort_order: number;
+          tagline: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          active?: boolean;
+          created_at?: string;
+          id?: string;
+          name: string;
+          notice_days?: number;
+          sort_order?: number;
+          tagline?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          created_at?: string;
+          id?: string;
+          name?: string;
+          notice_days?: number;
+          sort_order?: number;
+          tagline?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       categories: {
         Row: {
+          brand_id: string | null;
           active: boolean;
           created_at: string;
           id: string;
@@ -1031,6 +1069,7 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          brand_id?: string | null;
           active?: boolean;
           created_at?: string;
           id?: string;
@@ -1039,6 +1078,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          brand_id?: string | null;
           active?: boolean;
           created_at?: string;
           id?: string;
@@ -1046,7 +1086,15 @@ export type Database = {
           sort_order?: number;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "categories_brand_id_fkey";
+            columns: ["brand_id"];
+            isOneToOne: false;
+            referencedRelation: "brands";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       customer_addresses: {
         Row: {
@@ -1453,6 +1501,8 @@ export type Database = {
       };
       products: {
         Row: {
+          note_prompt: string | null;
+          notice_days: number | null;
           active: boolean;
           category_id: string;
           created_at: string;
@@ -1476,6 +1526,8 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          note_prompt?: string | null;
+          notice_days?: number | null;
           active?: boolean;
           category_id: string;
           created_at?: string;
@@ -1498,6 +1550,8 @@ export type Database = {
           weight_options_kg?: number[];
         };
         Update: {
+          note_prompt?: string | null;
+          notice_days?: number | null;
           active?: boolean;
           category_id?: string;
           created_at?: string;

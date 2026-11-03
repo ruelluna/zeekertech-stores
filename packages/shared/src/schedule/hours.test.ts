@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  addDays,
   cartPrepMinutes,
   checkSlot,
   DEFAULT_SCHEDULE_SETTINGS,
@@ -155,5 +156,25 @@ describe("listSlots", () => {
     expect(manilaParts(slots[0]!).minutes).toBe(13 * 60 + 30);
     expect(manilaParts(slots.at(-1)!).minutes).toBe(21 * 60);
     expect(slots).toHaveLength(31);
+  });
+});
+
+describe("advance notice (made-to-order cakes)", () => {
+  it("adds calendar days across month ends", () => {
+    expect(addDays("2026-10-30", 2)).toBe("2026-11-01");
+    expect(addDays(DAY, 0)).toBe(DAY);
+  });
+
+  it("only offers dates at least the notice away, whatever the time of day", () => {
+    const cake = { ...base, leadMinutes: 30, noticeDays: 2 };
+    expect(checkSlot({ ...cake, now: at("10:00"), slot: at("18:00") })).toEqual({ ok: false, reason: "needs_notice" });
+    expect(checkSlot({ ...cake, now: at("10:00"), slot: at("18:00", "2026-10-29") })).toEqual({ ok: false, reason: "needs_notice" });
+    expect(checkSlot({ ...cake, now: at("20:59"), slot: at("14:00", "2026-10-30") })).toEqual({ ok: true });
+  });
+
+  it("lists no slots before the notice date", () => {
+    const opts = { ...base, now: at("10:00"), leadMinutes: 30, noticeDays: 1 };
+    expect(listSlots({ ...opts, dateKey: DAY })).toEqual([]);
+    expect(listSlots({ ...opts, dateKey: "2026-10-29" }).length).toBeGreaterThan(0);
   });
 });

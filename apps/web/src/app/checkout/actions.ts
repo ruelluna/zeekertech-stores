@@ -23,6 +23,7 @@ const SLOT_ERRORS = {
   outside_hours: "That time is outside our pickup and delivery hours. Please pick another time.",
   too_soon: "That time is too soon to prepare your order. Please pick a later time.",
   uncertain_items_cutoff: "Seafood dishes can't be ordered for today anymore. Please pick tomorrow.",
+  needs_notice: "Cakes and pastries are made to order. Please pick a later date.",
 } as const;
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -43,15 +44,17 @@ export async function placeOrder(raw: unknown): Promise<PlaceOrderResult> {
   if (catalog.settings.orderingPaused) return { ok: false, errors: ["Online ordering is paused for a while. Please try again later."] };
   const status = storeStatus({ now, hours: catalog.hours, closures: catalog.closures, paused: false });
   const slot = new Date(input.scheduledFor);
-  if (!catalog.settings.allowPreorders) {
-    if (status.state !== "open") return { ok: false, errors: ["We're closed right now."] };
-    if (manilaParts(slot).dateKey !== manilaParts(now).dateKey) return { ok: false, errors: ["We're only taking orders for today."] };
-  }
 
   // Prices and options
   const products = new Map<string, CatalogProduct>(catalog.products.map((p) => [p.id, p]));
   const priced = priceCart(products, input.cart);
   if (!priced.ok) return { ok: false, errors: priced.errors };
+
+  // Items that need advance notice (cakes) are always pre-orders, even when pre-orders are off.
+  if (!catalog.settings.allowPreorders && priced.noticeDays === 0) {
+    if (status.state !== "open") return { ok: false, errors: ["We're closed right now."] };
+    if (manilaParts(slot).dateKey !== manilaParts(now).dateKey) return { ok: false, errors: ["We're only taking orders for today."] };
+  }
 
   // Delivery
   let quote: DeliveryQuote | null = null;
@@ -88,6 +91,7 @@ export async function placeOrder(raw: unknown): Promise<PlaceOrderResult> {
     uncertainItemsCutoff: catalog.settings.uncertainItemsCutoff,
     slotStartOffsetMinutes: catalog.settings.slotStartOffsetMinutes,
     slotEndOffsetMinutes: catalog.settings.slotEndOffsetMinutes,
+    noticeDays: priced.noticeDays,
   });
   if (!slotCheck.ok) return { ok: false, errors: [SLOT_ERRORS[slotCheck.reason]] };
 

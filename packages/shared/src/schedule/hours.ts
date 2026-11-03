@@ -57,6 +57,12 @@ export function manilaParts(instant: Date): { dateKey: string; dayOfWeek: number
   };
 }
 
+/** A Manila date (YYYY-MM-DD) plus some calendar days. */
+export function addDays(dateKey: string, days: number): string {
+  const [y, m, d] = dateKey.split("-").map(Number);
+  return new Date(Date.UTC(y!, m! - 1, d! + days)).toISOString().slice(0, 10);
+}
+
 /** The instant for a Manila date (YYYY-MM-DD) plus minutes since midnight. */
 export function manilaInstant(dateKey: string, minutes: number): Date {
   const [y, m, d] = dateKey.split("-").map(Number);
@@ -84,7 +90,7 @@ export type SlotCheck =
   | { ok: true }
   | {
       ok: false;
-      reason: "closed_that_day" | "outside_hours" | "too_soon" | "uncertain_items_cutoff";
+      reason: "closed_that_day" | "outside_hours" | "too_soon" | "uncertain_items_cutoff" | "needs_notice";
     };
 
 /**
@@ -103,12 +109,18 @@ export function checkSlot(input: {
   slotStartOffsetMinutes?: number;
   /** Last slot = closing − this (default 0). */
   slotEndOffsetMinutes?: number;
+  /** Made-to-order items (e.g. cakes): the earliest date is today + this many days (default 0). */
+  noticeDays?: number;
 }): SlotCheck {
   const slot = manilaParts(input.slot);
   const now = manilaParts(input.now);
   const day = input.hours.find((h) => h.dayOfWeek === slot.dayOfWeek);
 
   if (!day?.isOpen || input.closures.includes(slot.dateKey)) return { ok: false, reason: "closed_that_day" };
+
+  if (input.noticeDays && slot.dateKey < addDays(now.dateKey, input.noticeDays)) {
+    return { ok: false, reason: "needs_notice" };
+  }
 
   const open = clockToMinutes(day.opensAt);
   const close = clockToMinutes(day.closesAt);
@@ -184,6 +196,7 @@ export function listSlots(input: {
   uncertainItemsCutoff: ClockTime;
   slotStartOffsetMinutes?: number;
   slotEndOffsetMinutes?: number;
+  noticeDays?: number;
   intervalMinutes?: number;
 }): Date[] {
   const interval = input.intervalMinutes ?? 15;

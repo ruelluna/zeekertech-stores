@@ -26,6 +26,7 @@ type Item = {
   item_status: string;
   requires_cooking: boolean;
   sort_order: number;
+  brand: string | null;
   order_item_availability: { status: string } | null;
 };
 
@@ -52,7 +53,7 @@ async function Print({ params, searchParams }: { params: PageProps<"/admin/print
       .select(
         `id, queue_code, external_id, source, fulfillment, scheduled_for, customer_name, customer_phone, address, barangay,
          delivery_fee, discount_amount, total, payment_method, payment_status, flags, notes, rider_name, parent_order_id,
-         order_items(id, name, qty, weight_kg, modifiers, notes, item_status, requires_cooking, sort_order, order_item_availability(status))`,
+         order_items(id, name, qty, weight_kg, modifiers, notes, item_status, requires_cooking, sort_order, brand, order_item_availability(status))`,
       )
       .eq("id", id)
       .maybeSingle(),
@@ -129,6 +130,7 @@ async function Print({ params, searchParams }: { params: PageProps<"/admin/print
                   {i.weight_kg ? ` (${i.weight_kg} kg)` : ""}
                   {!i.requires_cooking ? " [no cooking]" : ""}
                 </div>
+                {i.brand && <div style={{ paddingLeft: "3mm" }}>[{i.brand}]</div>}
                 {options(i).length > 0 && <div style={{ paddingLeft: "3mm" }}>{options(i).join(", ")}</div>}
                 {i.notes && <div style={{ paddingLeft: "3mm", fontWeight: 700 }}>** {i.notes} **</div>}
               </div>
@@ -167,6 +169,7 @@ async function Print({ params, searchParams }: { params: PageProps<"/admin/print
                     {i.name}
                     {i.weight_kg ? ` ${i.weight_kg} kg` : ""}
                   </div>
+                  {i.brand && <div style={{ fontSize: "7pt" }}>{i.brand}</div>}
                   {options(i).length > 0 && <div>{options(i).join(", ")}</div>}
                   {i.notes && <div>“{i.notes}”</div>}
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "7pt" }}>

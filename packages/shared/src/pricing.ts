@@ -56,6 +56,10 @@ export interface PricingProduct {
   prepMinutes: number | null;
   badge: MenuBadge;
   groups: PricingGroup[];
+  /** Sub-brand name; null for the main menu. */
+  brand: string | null;
+  /** Calendar days of advance notice (made-to-order cakes etc.); 0 = same day is fine. */
+  noticeDays: number;
 }
 
 export interface PricedLine {
@@ -64,6 +68,7 @@ export interface PricedLine {
   displayUnitPrice: number;
   requiresCooking: boolean;
   prepMinutes: number;
+  noticeDays: number;
 }
 
 export type PriceLineResult = { ok: true; line: PricedLine } | { ok: false; error: string };
@@ -141,10 +146,12 @@ export function priceLine(product: PricingProduct, line: CartLine): PriceLineRes
         needsAvailability: product.badge === "subject_to_availability" || product.priceMode === "market",
         requiresCooking,
         prepMinutes: requiresCooking ? (product.prepMinutes ?? 0) : 0,
+        brand: product.brand,
       },
       displayUnitPrice: (unitPrice ?? estimatedUnitPrice)!,
       requiresCooking,
       prepMinutes: requiresCooking ? (product.prepMinutes ?? 0) : 0,
+      noticeDays: product.noticeDays,
     },
   };
 }
@@ -158,6 +165,8 @@ export type PriceCartResult =
       isEstimate: boolean;
       needsAvailability: boolean;
       prepMinutes: number;
+      /** Longest advance notice among the items. */
+      noticeDays: number;
     }
   | { ok: false; errors: string[] };
 
@@ -185,6 +194,7 @@ export function priceCart(products: Map<string, PricingProduct>, cart: CartLine[
     isEstimate: lines.some((l) => l.item.unitPrice === null),
     needsAvailability: lines.some((l) => l.item.needsAvailability),
     prepMinutes: Math.max(0, ...lines.map((l) => l.prepMinutes)),
+    noticeDays: Math.max(0, ...lines.map((l) => l.noticeDays)),
   };
 }
 

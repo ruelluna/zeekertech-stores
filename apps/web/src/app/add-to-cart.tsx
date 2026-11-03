@@ -75,6 +75,7 @@ export function OptionsSheet({ item, onClose, onAdd }: { item: MenuItem; onClose
       needsAvailability: market || item.badge === "subject_to_availability",
       requiresCooking,
       prepMinutes: requiresCooking ? (item.prepMinutes ?? 0) : 0,
+      noticeDays: item.noticeDays,
     });
     onClose();
   }
@@ -92,6 +93,11 @@ export function OptionsSheet({ item, onClose, onAdd }: { item: MenuItem; onClose
           <div>
             <h3 className="text-lg font-semibold">{item.name}</h3>
             {market && <p className="text-sm text-stone-500">Market price. We confirm the final price before you pay.</p>}
+            {item.noticeDays > 0 && (
+              <p className="text-sm text-stone-500">
+                Made to order. The earliest pickup or delivery is {item.noticeDays === 1 ? "tomorrow" : `${item.noticeDays} days from today`}.
+              </p>
+            )}
           </div>
           <button type="button" onClick={onClose} className="text-2xl leading-none text-stone-400" aria-label="Close">
             ×
@@ -150,7 +156,7 @@ export function OptionsSheet({ item, onClose, onAdd }: { item: MenuItem; onClose
         ))}
 
         <label className="mb-4 flex flex-col gap-1 text-sm">
-          <span className="font-medium">Notes (optional)</span>
+          <span className="font-medium">{item.notePrompt ?? "Notes"} (optional)</span>
           <input
             value={notes}
             onChange={(e) => setNotes(e.target.value)}

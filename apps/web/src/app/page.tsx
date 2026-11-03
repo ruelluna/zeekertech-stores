@@ -1,7 +1,7 @@
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { Badge, peso } from "@/components/ui";
-import { getPublicMenu, type MenuItem } from "@/lib/menu";
+import { getPublicMenu, type MenuItem, type PublicMenu } from "@/lib/menu";
 import Link from "next/link";
 import { AddToCart } from "./add-to-cart";
 import { CartBar } from "./cart-bar";
@@ -30,6 +30,7 @@ async function Menu() {
   // Read at request time (not at build), then served from the cache.
   await connection();
   const menu = await getPublicMenu();
+  const mainCategories = menu.categories.filter((c) => c.brandId === null);
 
   return (
     <>
@@ -42,21 +43,42 @@ async function Menu() {
       </div>
 
       <nav className="sticky top-0 z-10 -mx-4 mb-6 flex gap-2 overflow-x-auto bg-stone-50/95 px-4 py-2 backdrop-blur dark:bg-stone-950/95">
-        {menu.categories.map((c) => (
+        {mainCategories.map((c) => (
           <a key={c.id} href={`#${c.id}`} className="shrink-0 rounded-full border border-stone-300 px-3 py-1 text-sm hover:border-orange-500 dark:border-stone-700">
             {c.name}
           </a>
         ))}
+        {menu.brands.map((b) => (
+          <a
+            key={b.id}
+            href={`#${b.id}`}
+            className="shrink-0 rounded-full border border-pink-300 bg-pink-50 px-3 py-1 text-sm text-pink-800 hover:border-pink-500 dark:border-pink-800 dark:bg-pink-950 dark:text-pink-200"
+          >
+            {b.name}
+          </a>
+        ))}
       </nav>
 
-      {menu.categories.map((c) => (
-        <section key={c.id} id={c.id} className="mb-10 scroll-mt-16">
-          <h2 className="mb-3 text-xl font-semibold">{c.name}</h2>
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {c.items.map((item) => (
-              <MenuCard key={item.id} item={item} canOrder={!menu.orderingPaused} />
+      {mainCategories.map((c) => (
+        <CategorySection key={c.id} category={c} canOrder={!menu.orderingPaused} />
+      ))}
+
+      {menu.brands.map((b) => (
+        <section key={b.id} id={b.id} className="mb-10 scroll-mt-16 rounded-2xl border border-pink-200 bg-pink-50/60 p-4 dark:border-pink-900 dark:bg-pink-950/30">
+          <header className="mb-5">
+            <h2 className="text-2xl font-semibold tracking-tight text-pink-900 dark:text-pink-200">{b.name}</h2>
+            {b.tagline && <p className="mt-1 text-stone-600 dark:text-stone-400">{b.tagline}</p>}
+            {b.noticeDays > 0 && (
+              <p className="mt-2 text-sm text-pink-900 dark:text-pink-200">
+                Baked to order. Please order at least {noticeText(b.noticeDays)} before your pickup or delivery date.
+              </p>
+            )}
+          </header>
+          {menu.categories
+            .filter((c) => c.brandId === b.id)
+            .map((c) => (
+              <CategorySection key={c.id} category={c} canOrder={!menu.orderingPaused} />
             ))}
-          </ul>
         </section>
       ))}
 
@@ -73,6 +95,21 @@ async function Menu() {
     </>
   );
 }
+
+function CategorySection({ category: c, canOrder }: { category: PublicMenu["categories"][number]; canOrder: boolean }) {
+  return (
+    <section id={c.id} className="mb-10 scroll-mt-16 last:mb-0">
+      <h2 className="mb-3 text-xl font-semibold">{c.name}</h2>
+      <ul className="grid gap-3 sm:grid-cols-2">
+        {c.items.map((item) => (
+          <MenuCard key={item.id} item={item} canOrder={canOrder} />
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+const noticeText = (days: number) => (days === 1 ? "1 day" : `${days} days`);
 
 function MenuCard({ item, canOrder }: { item: MenuItem; canOrder: boolean }) {
   const dimmed = item.badge === "sold_out" || item.badge === "unavailable";
@@ -128,6 +165,7 @@ function PriceTag({ item }: { item: MenuItem }) {
 function AvailabilityBadge({ item }: { item: MenuItem }) {
   switch (item.badge) {
     case "available":
+      if (item.noticeDays > 0) return <Badge tone="pink">Order {noticeText(item.noticeDays)} ahead</Badge>;
       return <Badge tone="green">Available today</Badge>;
     case "subject_to_availability":
       return (

@@ -94,6 +94,12 @@ export function ProductForm({ product: p, categories, ingredients, groups, linke
           <Field label="Order in category">
             <Input name="sort_order" type="number" defaultValue={p?.sort_order ?? 0} />
           </Field>
+          <Field label="Advance notice (days)" hint="For made-to-order cakes etc. Blank = the brand's notice (none for the main menu).">
+            <Input name="notice_days" type="number" min="0" max="60" defaultValue={p?.notice_days ?? ""} />
+          </Field>
+          <Field label="Notes label" hint="Replaces “Notes” when adding to cart, e.g. Message on the cake" className="sm:col-span-2">
+            <Input name="note_prompt" defaultValue={p?.note_prompt ?? ""} placeholder="Notes" />
+          </Field>
           <div className="flex flex-col justify-end gap-2 pb-2">
             <Checkbox name="stock_tracked" label="Count stock (packs)" defaultChecked={p?.stock_tracked ?? false} />
             <Checkbox name="active" label="Active (shown on the menu)" defaultChecked={p?.active ?? true} />

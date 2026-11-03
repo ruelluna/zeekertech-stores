@@ -39,10 +39,24 @@ export interface MenuItem {
   badge: MenuBadge;
   confirmWaitMinutes: number | null;
   groups: MenuGroup[];
+  /** Calendar days of advance notice (made-to-order cakes etc.); 0 = same day. */
+  noticeDays: number;
+  /** Label for the notes field, e.g. "Message on the cake". */
+  notePrompt: string | null;
+}
+
+export interface MenuBrand {
+  id: string;
+  name: string;
+  tagline: string | null;
+  noticeDays: number;
 }
 
 export interface PublicMenu {
-  categories: { id: string; name: string; items: MenuItem[] }[];
+  /** Every category with items; brandId null = the main Weekend Food Hub menu. */
+  categories: { id: string; name: string; brandId: string | null; items: MenuItem[] }[];
+  /** Sub-brands with at least one category on the menu. */
+  brands: MenuBrand[];
   hours: StoreHoursDay[];
   closures: string[];
   orderingPaused: boolean;
@@ -77,6 +91,8 @@ export async function getPublicMenu(): Promise<PublicMenu> {
       prepMinutes: p.prepMinutes,
       badge: p.badge,
       confirmWaitMinutes: p.confirmWaitMinutes,
+      noticeDays: p.noticeDays,
+      notePrompt: p.notePrompt,
       groups: p.groups.map((g) => ({
         id: g.id,
         name: g.name,
@@ -91,10 +107,13 @@ export async function getPublicMenu(): Promise<PublicMenu> {
     }),
   );
 
+  const categories = catalog.categories
+    .map((c) => ({ id: c.id, name: c.name, brandId: c.brandId, items: items.filter((i) => i.categoryId === c.id) }))
+    .filter((c) => c.items.length > 0);
+
   return {
-    categories: catalog.categories
-      .map((c) => ({ id: c.id, name: c.name, items: items.filter((i) => i.categoryId === c.id) }))
-      .filter((c) => c.items.length > 0),
+    categories,
+    brands: catalog.brands.filter((b) => categories.some((c) => c.brandId === b.id)),
     hours: catalog.hours,
     closures: catalog.closures,
     orderingPaused: catalog.settings.orderingPaused,

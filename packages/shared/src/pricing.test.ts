@@ -15,6 +15,8 @@ const silog: PricingProduct = {
   weightOptionsKg: [],
   prepMinutes: 15,
   badge: "available",
+  brand: null,
+  noticeDays: 0,
   groups: [
     {
       id: id(10),
@@ -200,5 +202,34 @@ describe("calculateDiscount", () => {
     expect(calculateDiscount({ type: "percent", value: 10, maxDiscount: 100, minOrder: null }, 1500)).toBe(100);
     expect(calculateDiscount({ type: "percent", value: 10, maxDiscount: null, minOrder: null }, 455)).toBe(45.5);
     expect(calculateDiscount({ type: "fixed", value: 50, maxDiscount: null, minOrder: null }, 30)).toBe(30);
+  });
+});
+
+describe("made-to-order sub-brand items", () => {
+  const cake: PricingProduct = {
+    ...silog,
+    id: id(5),
+    sku: "STY-UBE",
+    name: "Ube Cake",
+    price: 650,
+    groups: [],
+    brand: "Sweet Treats by Yang",
+    noticeDays: 2,
+  };
+
+  it("carries the brand onto the order item and the longest notice onto the cart", () => {
+    const result = priceCart(
+      new Map([
+        [cake.id, cake],
+        [silog.id, silog],
+      ]),
+      [line(cake.id, { notes: "Happy birthday Ana" }), line(silog.id, { modifierIds: [id(11)] })],
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.lines[0]!.item.brand).toBe("Sweet Treats by Yang");
+    expect(result.lines[0]!.item.notes).toBe("Happy birthday Ana");
+    expect(result.lines[1]!.item.brand).toBeNull();
+    expect(result.noticeDays).toBe(2);
   });
 });

@@ -92,6 +92,9 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
   const quote: QuoteState = !quoteKey ? { status: "idle" } : quoteResult?.key === quoteKey ? quoteResult.value : { status: "loading" };
   const isEstimate = lines.some((l) => l.isEstimate);
   const hasUncertain = lines.some((l) => l.needsAvailability);
+  // Made-to-order items (cakes etc.) push the whole order to their earliest date.
+  const noticeDays = Math.max(0, ...lines.map((l) => l.noticeDays ?? 0));
+  const noticeItems = lines.filter((l) => (l.noticeDays ?? 0) > 0);
   const prep = Math.max(0, ...lines.map((l) => l.prepMinutes)) || (lines.some((l) => l.requiresCooking) ? data.settings.prepLeadMinutes : 0);
   const deliveryFee = fulfillment === "delivery" && quote.status === "ok" ? quote.quote.fee : 0;
   const discount = data.offer ? calculateDiscount(data.offer, subtotal) : 0;
@@ -104,11 +107,12 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
     bufferMinutes: data.settings.deliveryBufferMinutes,
   });
 
-  // Dates with at least one bookable slot (today only when pre-orders are off).
+  // Dates with at least one bookable slot (today only when pre-orders are off, unless items need notice).
   const days = useMemo(() => {
     if (!now) return [];
     const result: { dateKey: string; label: string; slots: Date[] }[] = [];
-    for (let i = 0; i < (data.settings.allowPreorders ? 7 : 1); i++) {
+    const dayCount = noticeDays > 0 ? noticeDays + 7 : data.settings.allowPreorders ? 7 : 1;
+    for (let i = 0; i < dayCount; i++) {
       const key = manilaParts(new Date(now.getTime() + i * 86_400_000)).dateKey;
       const slots = listSlots({
         dateKey: key,
@@ -120,6 +124,7 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
         uncertainItemsCutoff: data.settings.uncertainItemsCutoff,
         slotStartOffsetMinutes: data.settings.slotStartOffsetMinutes,
         slotEndOffsetMinutes: data.settings.slotEndOffsetMinutes,
+        noticeDays,
       });
       if (slots.length) {
         const label =
@@ -128,7 +133,7 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
       }
     }
     return result;
-  }, [now, lead, hasUncertain, data]);
+  }, [now, lead, hasUncertain, noticeDays, data]);
 
   // The chosen date/time, falling back to the first valid one as lead time and the clock change.
   const day = days.find((d) => d.dateKey === dateKey) ?? days[0];
@@ -451,6 +456,13 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
               </select>
             </label>
           </div>
+        )}
+        {noticeDays > 0 && (
+          <p className="mt-3 text-sm text-pink-800 dark:text-pink-300">
+            {noticeItems.map((l) => l.name).join(", ")} {noticeItems.length === 1 ? "is" : "are"} made to order and need{noticeItems.length === 1 ? "s" : ""}{" "}
+            {noticeDays === 1 ? "1 day" : `${noticeDays} days`}&apos; notice, so the whole order comes on that date.
+            {noticeItems.length < lines.length && " Want the other food sooner? Place it as a separate order."}
+          </p>
         )}
         {hasUncertain && (
           <p className="mt-3 text-sm text-amber-800 dark:text-amber-300">

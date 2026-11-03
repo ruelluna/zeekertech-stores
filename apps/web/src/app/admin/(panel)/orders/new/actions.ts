@@ -233,6 +233,7 @@ export async function createManualOrder(raw: unknown): Promise<ManualOrderResult
       needs_availability: false,
       requires_cooking: i.requiresCooking,
       prep_minutes: i.prepMinutes,
+      brand: i.brand,
       item_status: handedOverNow || !i.requiresCooking ? ("handed_over" as const) : ("pending" as const),
       sort_order: index,
     })),

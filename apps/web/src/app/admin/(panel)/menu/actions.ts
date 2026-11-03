@@ -49,6 +49,8 @@ const ProductInput = z
       return values;
     }),
     prep_minutes: form.int.pipe(z.number().int().nonnegative().nullable()),
+    notice_days: form.int.pipe(z.number().int().min(0).max(60, "At most 60 days").nullable()),
+    note_prompt: form.optText,
     sort_order: form.int.pipe(z.number().int().nullable()).transform((n) => n ?? 0),
     stock_tracked: form.bool,
     active: form.bool,
@@ -109,6 +111,8 @@ const CategoryInput = z.object({
   id: z.uuid().optional().or(z.literal("").transform(() => undefined)),
   name: form.text.pipe(z.string().min(1, "Required")),
   sort_order: form.int.pipe(z.number().int().nullable()).transform((n) => n ?? 0),
+  // Blank = the main Weekend Food Hub menu.
+  brand_id: z.uuid().nullable().or(z.literal("").transform(() => null)).default(null),
   active: form.bool,
 });
 
@@ -124,6 +128,30 @@ export async function saveCategory(_prev: ActionState, formData: FormData): Prom
 
   menuChanged();
   return ok(id ? "Saved" : "Category added");
+}
+
+const BrandInput = z.object({
+  id: z.uuid().optional().or(z.literal("").transform(() => undefined)),
+  name: form.text.pipe(z.string().min(1, "Required")),
+  tagline: form.optText,
+  notice_days: form.int.pipe(z.number().int().min(0).max(60, "At most 60 days").nullable()).transform((n) => n ?? 0),
+  sort_order: form.int.pipe(z.number().int().nullable()).transform((n) => n ?? 0),
+  active: form.bool,
+});
+
+/** Sub-brands (e.g. Sweet Treats by Yang): their categories get their own section on the menu. */
+export async function saveBrand(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const parsed = BrandInput.safeParse(formObject(formData));
+  if (!parsed.success) return fail(zodMessage(parsed.error));
+
+  const { supabase } = await requireOwner();
+  const { id, ...fields } = parsed.data;
+  const brands = supabase.schema("store").from("brands");
+  const { error } = id ? await brands.update(fields).eq("id", id) : await brands.insert(fields);
+  if (error) return fail(error.code === "23505" ? "A brand with that name already exists" : error.message);
+
+  menuChanged();
+  return ok(id ? "Saved" : "Brand added");
 }
 
 export async function uploadProductPhoto(_prev: ActionState, formData: FormData): Promise<ActionState> {

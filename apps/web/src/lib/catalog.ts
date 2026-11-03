@@ -16,10 +16,22 @@ export interface CatalogProduct extends PricingProduct {
   description: string | null;
   imageUrl: string | null;
   confirmWaitMinutes: number | null;
+  /** Label for the notes field, e.g. "Message on the cake". */
+  notePrompt: string | null;
+}
+
+export interface CatalogBrand {
+  id: string;
+  name: string;
+  tagline: string | null;
+  noticeDays: number;
 }
 
 export interface Catalog {
-  categories: { id: string; name: string }[];
+  /** Null brandId = the main Weekend Food Hub menu. */
+  categories: { id: string; name: string; brandId: string | null }[];
+  /** Active sub-brands, in display order. */
+  brands: CatalogBrand[];
   products: CatalogProduct[];
   hours: StoreHoursDay[];
   closures: string[];
@@ -51,13 +63,14 @@ const hhmm = (t: string) => t.slice(0, 5) as StoreHoursDay["opensAt"];
 /** Fresh (uncached) read of everything needed to show the menu, price a cart and quote delivery. */
 export async function fetchCatalog(): Promise<Catalog> {
   const store = createSupabasePublicClient().schema("store");
-  const [categories, products, today, hours, closures, settings, delivery, barangays] = await Promise.all([
-    store.from("categories").select("id, name").eq("active", true).order("sort_order"),
+  const [categories, brands, products, today, hours, closures, settings, delivery, barangays] = await Promise.all([
+    store.from("categories").select("id, name, brand_id, active").order("sort_order"),
+    store.from("brands").select("id, name, tagline, notice_days").eq("active", true).order("sort_order"),
     store
       .from("products")
       .select(
         `id, sku, name, description, category_id, type, price_mode, sold_by, price, estimated_price, weight_options_kg,
-         prep_minutes, stock_tracked, stock_qty, sold_out, active, image_url, sort_order,
+         prep_minutes, stock_tracked, stock_qty, sold_out, active, image_url, sort_order, notice_days, note_prompt,
          product_ingredients(is_key, ingredients(id, availability_mode, default_wait_minutes)),
          product_modifier_groups(sort_order, show_when_modifier_id, modifier_groups(id, name, required, min_select, max_select,
            modifiers(id, name, price_delta, requires_cooking, active, sort_order)))`,
@@ -71,7 +84,7 @@ export async function fetchCatalog(): Promise<Catalog> {
     store.from("delivery_settings").select("*").eq("id", true).single(),
     store.from("barangays").select("id, name, center_lat, center_lng, fee_override, surcharge").eq("active", true).order("name"),
   ]);
-  for (const r of [categories, products, today, hours, closures, settings, delivery, barangays]) if (r.error) throw r.error;
+  for (const r of [categories, brands, products, today, hours, closures, settings, delivery, barangays]) if (r.error) throw r.error;
 
   const todayStatus = new Map<string, DailyStatus>(
     (today.data ?? []).filter((r) => r.ingredient_id && r.status).map((r) => [r.ingredient_id!, r.status!]),
@@ -79,9 +92,18 @@ export async function fetchCatalog(): Promise<Catalog> {
   const s = settings.data!;
   const d = delivery.data!;
 
+  const activeBrands: CatalogBrand[] = (brands.data ?? []).map((b) => ({ id: b.id, name: b.name, tagline: b.tagline, noticeDays: b.notice_days }));
+  const brandById = new Map(activeBrands.map((b) => [b.id, b]));
+  // Products of a hidden (inactive) brand can't be ordered; its categories aren't shown.
+  const hiddenBrandCategories = new Set((categories.data ?? []).filter((c) => c.brand_id && !brandById.has(c.brand_id)).map((c) => c.id));
+  const categoryBrand = new Map((categories.data ?? []).map((c) => [c.id, c.brand_id ? (brandById.get(c.brand_id) ?? null) : null]));
+
   return {
-    categories: categories.data ?? [],
-    products: (products.data ?? []).map((p) => {
+    categories: (categories.data ?? [])
+      .filter((c) => c.active && !hiddenBrandCategories.has(c.id))
+      .map((c) => ({ id: c.id, name: c.name, brandId: c.brand_id })),
+    brands: activeBrands,
+    products: (products.data ?? []).filter((p) => !hiddenBrandCategories.has(p.category_id)).map((p) => {
       const keyIngredients = p.product_ingredients
         .filter((l) => l.is_key && l.ingredients)
         .map((l) => ({
@@ -90,6 +112,7 @@ export async function fetchCatalog(): Promise<Catalog> {
           todayStatus: todayStatus.get(l.ingredients!.id),
         }));
       const hasPrice = p.price_mode === "market" ? p.price !== null || p.estimated_price !== null : p.price !== null;
+      const brand = categoryBrand.get(p.category_id) ?? null;
       return {
         id: p.id,
         sku: p.sku,
@@ -104,6 +127,9 @@ export async function fetchCatalog(): Promise<Catalog> {
         estimatedPrice: p.estimated_price,
         weightOptionsKg: p.weight_options_kg,
         prepMinutes: p.prep_minutes,
+        brand: brand?.name ?? null,
+        noticeDays: p.notice_days ?? brand?.noticeDays ?? 0,
+        notePrompt: p.note_prompt,
         badge: menuBadge({
           active: p.active,
           hasPrice,

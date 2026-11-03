@@ -66,6 +66,8 @@ export const OrderItem = z.object({
   /** False for frozen "As is" packs: they skip the kitchen queue. */
   requiresCooking: z.boolean(),
   prepMinutes: z.number().int().nonnegative(),
+  /** Sub-brand name (e.g. "Sweet Treats by Yang"); null for the main menu. Missing in older payloads. */
+  brand: z.string().nullable().default(null),
 });
 export type OrderItem = z.infer<typeof OrderItem>;
 

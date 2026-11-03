@@ -13,6 +13,8 @@ export interface CartEntry extends CartLine {
   needsAvailability: boolean;
   requiresCooking: boolean;
   prepMinutes: number;
+  /** Days of advance notice (cakes etc.). Missing in carts saved before sub-brands. */
+  noticeDays?: number;
 }
 
 const KEY = "wfh-cart-v1";

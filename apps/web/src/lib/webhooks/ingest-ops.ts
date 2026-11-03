@@ -25,6 +25,7 @@ function itemRow(orderId: string, item: OrderItem, sortOrder: number): TablesIns
     needs_availability: item.needsAvailability,
     requires_cooking: item.requiresCooking,
     prep_minutes: item.prepMinutes,
+    brand: item.brand,
     sort_order: sortOrder,
   };
 }

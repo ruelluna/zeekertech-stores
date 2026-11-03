@@ -69,13 +69,14 @@ export function Checkbox({ label, ...props }: ComponentProps<"input"> & { label:
   );
 }
 
-export function Badge({ tone = "neutral", children }: { tone?: "neutral" | "green" | "amber" | "red" | "orange"; children: ReactNode }) {
+export function Badge({ tone = "neutral", children }: { tone?: "neutral" | "green" | "amber" | "red" | "orange" | "pink"; children: ReactNode }) {
   const tones = {
     neutral: "bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300",
     green: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300",
     amber: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300",
     red: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300",
     orange: "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300",
+    pink: "bg-pink-100 text-pink-800 dark:bg-pink-950 dark:text-pink-300",
   };
   return <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${tones[tone]}`}>{children}</span>;
 }
