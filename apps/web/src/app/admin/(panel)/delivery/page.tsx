@@ -22,11 +22,11 @@ export default function DeliveryPage() {
 }
 
 async function DeliveryContent() {
-  const { supabase } = await requireOwner();
+  const { supabase, storeId } = await requireOwner();
   const store = supabase.schema("store");
   const [{ data: s, error: sError }, { data: barangays, error: bError }] = await Promise.all([
-    store.from("delivery_settings").select("*").eq("id", true).single(),
-    store.from("barangays").select("id, name, active, fee_override, surcharge, notes, is_island").order("sort_order"),
+    store.from("delivery_settings").select("*").eq("store_id", storeId).single(),
+    store.from("barangays").select("id, name, active, fee_override, surcharge, notes, is_island").eq("store_id", storeId).order("sort_order"),
   ]);
   if (sError || bError) throw sError ?? bError;
 
@@ -36,6 +36,11 @@ async function DeliveryContent() {
     <>
       <Card title="Delivery fee" description="fee = base fee + per-km rate × (distance − km included), rounded up, never below the minimum.">
         <ActionForm action={saveDeliverySettings} submitLabel="Save rates and kitchen location">
+          <Checkbox
+            name="delivery_enabled"
+            label="Offer delivery (untick for pickup only). Delivery also needs the kitchen location below."
+            defaultChecked={s.delivery_enabled}
+          />
           <div className="grid gap-4 sm:grid-cols-3">
             <Field label="Base fee">
               <PesoInput name="base_fee" defaultValue={s.base_fee} required />

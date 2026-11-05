@@ -41,11 +41,12 @@ function IngredientFields({ i }: { i?: { name: string; unit: string | null; avai
 }
 
 async function IngredientList() {
-  const { supabase } = await requireOwner();
+  const { supabase, storeId } = await requireOwner();
   const { data: ingredients, error } = await supabase
     .schema("store")
     .from("ingredients")
     .select("id, key, name, unit, availability_mode, default_wait_minutes, product_ingredients(products(name))")
+    .eq("store_id", storeId)
     .order("availability_mode", { ascending: false })
     .order("name");
   if (error) throw error;

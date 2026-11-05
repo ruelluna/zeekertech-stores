@@ -6,19 +6,17 @@ import { TERMINAL_ORDER_STATUSES, formatManilaTime, manilaParts, type OrderStatu
 import { ActionForm } from "@/components/action-form";
 import { Badge, Loading, peso } from "@/components/ui";
 import { fetchCatalog } from "@/lib/catalog";
+import { getStoreById, storePath } from "@/lib/stores";
 import { STATUS_TEXT } from "@/lib/order-status";
 import { loadWebOrderByToken, revisedOrder } from "@/lib/web-order";
 import { cancelOrder, decide, submitPayment } from "./actions";
 import { LiveOrder, NotifyButton } from "@/components/live";
 
-export const metadata = { title: "Your order · Weekend Food Hub", robots: { index: false } };
+export const metadata = { title: "Your order", robots: { index: false } };
 
 export default function OrderPage({ params }: PageProps<"/o/[token]">) {
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-16 pt-6">
-      <Link href="/" className="text-sm text-stone-500 hover:text-orange-700">
-        ← Menu
-      </Link>
       <Suspense fallback={<Loading />}>
         <Order params={params} />
       </Suspense>
@@ -40,6 +38,7 @@ async function Order({ params }: { params: PageProps<"/o/[token]">["params"] }) 
   const loaded = await loadWebOrderByToken(token);
   if (!loaded) notFound();
   const { row, order, availability } = loaded;
+  const store = await getStoreById(row.store_id);
   const status = row.status as OrderStatus;
   const text = STATUS_TEXT[status];
   const terminal = TERMINAL_ORDER_STATUSES.includes(status);
@@ -52,14 +51,21 @@ async function Order({ params }: { params: PageProps<"/o/[token]">["params"] }) 
   const needsDecision = status === "awaiting_customer" && availability;
   const revised = needsDecision ? await revisedOrder(order, availability) : null;
   const needsPayment = status === "pending_payment" && ["awaiting_payment", "rejected", "partial"].includes(row.payment_status);
-  const settings = needsPayment ? (await fetchCatalog()).settings : null;
+  const settings = needsPayment ? (await fetchCatalog(row.store_id)).settings : null;
   const cancellable = ["received", "awaiting_availability", "awaiting_customer", "pending_payment"].includes(status) && !["submitted", "confirmed"].includes(row.payment_status);
 
   return (
     <>
       <LiveOrder token={token} active={!terminal} status={status} paymentStatus={row.payment_status} />
+      {store && (
+        <Link href={storePath(store.slug)} className="text-sm text-stone-500 hover:text-orange-700">
+          ← {store.name}
+        </Link>
+      )}
       <div className="mb-6 mt-3">
-        <p className="text-sm text-stone-500">Order {row.order_code}</p>
+        <p className="text-sm text-stone-500">
+          {store ? `${store.name} · ` : ""}Order {row.order_code}
+        </p>
         <h1 className="text-2xl font-semibold tracking-tight">{text.title}</h1>
         <p className="mt-1 text-stone-600 dark:text-stone-400">
           {status === "awaiting_availability" && order.confirmWaitMinutes ? `Usually within ~${order.confirmWaitMinutes} minutes. ` : ""}

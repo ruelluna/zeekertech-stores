@@ -11,13 +11,14 @@ import { flushOutboxes } from "@/lib/webhooks/outbox";
 export async function markDelivered(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const orderId = z.uuid().safeParse(formData.get("orderId"));
   if (!orderId.success) return fail("Invalid order");
-  const { userId, role } = await requireStaff(["rider", "owner"]);
+  const { userId, role, storeId } = await requireStaff(["rider", "owner"]);
 
   const ops = createSupabaseAdminClient().schema("ops");
   const { data: order } = await ops
     .from("orders")
     .select("id, status, rider_id, total, flags, payment_status")
     .eq("id", orderId.data)
+    .eq("store_id", storeId)
     .maybeSingle();
   if (!order) return fail("Order not found");
   if (role === "rider" && order.rider_id !== userId) return fail("This isn't your delivery");

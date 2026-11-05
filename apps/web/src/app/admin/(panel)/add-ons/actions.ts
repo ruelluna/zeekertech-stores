@@ -22,10 +22,12 @@ export async function saveGroup(_prev: ActionState, formData: FormData): Promise
   const parsed = GroupInput.safeParse(formObject(formData));
   if (!parsed.success) return fail(zodMessage(parsed.error));
 
-  const { supabase } = await requireOwner();
+  const { supabase, storeId } = await requireOwner();
   const { id, ...fields } = parsed.data;
   const groups = supabase.schema("store").from("modifier_groups");
-  const { error } = id ? await groups.update(fields).eq("id", id) : await groups.insert(fields);
+  const { error } = id
+    ? await groups.update(fields).eq("id", id).eq("store_id", storeId)
+    : await groups.insert({ ...fields, store_id: storeId });
   if (error) return fail(error.message);
 
   menuChanged();
@@ -46,8 +48,11 @@ export async function saveModifier(_prev: ActionState, formData: FormData): Prom
   const parsed = ModifierInput.safeParse(formObject(formData));
   if (!parsed.success) return fail(zodMessage(parsed.error));
 
-  const { supabase } = await requireOwner();
+  const { supabase, storeId } = await requireOwner();
   const { id, ...fields } = parsed.data;
+  // The option's group must belong to the store being worked in.
+  const { data: group } = await supabase.schema("store").from("modifier_groups").select("id").eq("id", fields.group_id).eq("store_id", storeId).maybeSingle();
+  if (!group) return fail("That add-on group isn't in this store");
   const modifiers = supabase.schema("store").from("modifiers");
   const { error } = id ? await modifiers.update(fields).eq("id", id) : await modifiers.insert(fields);
   if (error) return fail(error.code === "23505" ? "This group already has an option with that name" : error.message);

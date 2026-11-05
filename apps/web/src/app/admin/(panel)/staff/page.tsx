@@ -37,9 +37,9 @@ function RoleSelect({ value }: { value?: string }) {
 }
 
 async function Staff() {
-  const { supabase, userId: me } = await requireOwner();
+  const { supabase, userId: me, storeId } = await requireOwner();
   const [{ data: staff, error }, { data: users }] = await Promise.all([
-    supabase.schema("ops").from("staff_users").select("user_id, display_name, role, active, created_at").order("created_at"),
+    supabase.schema("ops").from("staff_users").select("user_id, display_name, role, active, created_at").eq("store_id", storeId).order("created_at"),
     createSupabaseAdminClient().auth.admin.listUsers({ perPage: 1000 }),
   ]);
   if (error) throw error;
@@ -52,6 +52,7 @@ async function Staff() {
         .schema("ops")
         .from("orders")
         .select("rider_id, rider_pay, completed_at")
+        .eq("store_id", storeId)
         .in("rider_id", riders.map((r) => r.user_id))
         .eq("status", "delivered")
         .is("rider_paid_out_at", null)

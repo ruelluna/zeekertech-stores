@@ -31,11 +31,11 @@ const prettyDate = (dateKey: string) =>
 const qty = (n: number | null, unit: string) => (n === null ? "—" : `${Math.round(n * 100) / 100} ${unit}`);
 
 async function Inventory({ searchParams }: { searchParams: PageProps<"/admin/inventory">["searchParams"] }) {
-  const { supabase, role } = await requireStaff();
+  const { supabase, role, storeId } = await requireStaff();
   const params = await searchParams;
   const today = manilaParts(new Date()).dateKey;
   const date = typeof params.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(params.date) ? params.date : today;
-  const rows = await loadInventory(supabase, date, role === "owner");
+  const rows = await loadInventory(supabase, storeId, date, role === "owner");
   const active = rows.filter((r) => r.active);
   const toBuy = active.filter((r) => r.suggestion.status === "buy");
   const notSet = active.filter((r) => r.suggestion.status === "unknown");

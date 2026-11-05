@@ -9,6 +9,7 @@ const peso = form.num.pipe(z.number().nonnegative().nullable());
 const requiredPeso = form.num.pipe(z.number().nonnegative({ message: "Required" }));
 
 const SettingsInput = z.object({
+  delivery_enabled: form.bool,
   kitchen_address: form.optText,
   kitchen_lat: form.num.pipe(z.number().min(-90).max(90).nullable()),
   kitchen_lng: form.num.pipe(z.number().min(-180).max(180).nullable()),
@@ -30,8 +31,8 @@ export async function saveDeliverySettings(_prev: ActionState, formData: FormDat
     return fail("Enter both latitude and longitude for the kitchen, or neither.");
   }
 
-  const { supabase } = await requireOwner();
-  const { error } = await supabase.schema("store").from("delivery_settings").update(parsed.data).eq("id", true);
+  const { supabase, storeId } = await requireOwner();
+  const { error } = await supabase.schema("store").from("delivery_settings").update(parsed.data).eq("store_id", storeId);
   if (error) return fail(error.message);
 
   menuChanged();
@@ -50,9 +51,9 @@ export async function saveBarangay(_prev: ActionState, formData: FormData): Prom
   const parsed = BarangayInput.safeParse(formObject(formData));
   if (!parsed.success) return fail(zodMessage(parsed.error));
 
-  const { supabase } = await requireOwner();
+  const { supabase, storeId } = await requireOwner();
   const { id, ...fields } = parsed.data;
-  const { error } = await supabase.schema("store").from("barangays").update(fields).eq("id", id);
+  const { error } = await supabase.schema("store").from("barangays").update(fields).eq("id", id).eq("store_id", storeId);
   if (error) return fail(error.message);
 
   menuChanged();

@@ -55,7 +55,7 @@ export function MapPicker({
       if (kitchen) {
         L.circleMarker([kitchen.lat, kitchen.lng], { radius: 6, color: "#57534e", fillOpacity: 0.8 })
           .addTo(m)
-          .bindTooltip("Weekend Food Hub kitchen");
+          .bindTooltip("Kitchen");
       }
       m.on("click", (e) => onChangeRef.current({ lat: e.latlng.lat, lng: e.latlng.lng }));
       map.current = m;

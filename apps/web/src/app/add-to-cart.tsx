@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { groupApplies } from "@wfh/shared";
-import { cart, type CartEntry } from "@/lib/cart-store";
+import { cartFor, type CartEntry } from "@/lib/cart-store";
 import type { MenuItem } from "@/lib/menu";
 import { peso } from "@/components/ui";
 
-/** "Add" button and the options sheet for one menu item. */
-export function AddToCart({ item, canOrder }: { item: MenuItem; canOrder: boolean }) {
+/** "Add" button and the options sheet for one menu item, adding to that store's cart. */
+export function AddToCart({ item, canOrder, store }: { item: MenuItem; canOrder: boolean; store: string }) {
   const [open, setOpen] = useState(false);
   const orderable = canOrder && (item.badge === "available" || item.badge === "subject_to_availability");
   if (!orderable) return null;
@@ -21,7 +21,7 @@ export function AddToCart({ item, canOrder }: { item: MenuItem; canOrder: boolea
       >
         Add
       </button>
-      {open && <OptionsSheet item={item} onClose={() => setOpen(false)} onAdd={cart.add} />}
+      {open && <OptionsSheet item={item} onClose={() => setOpen(false)} onAdd={cartFor(store).add} />}
     </>
   );
 }

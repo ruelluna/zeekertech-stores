@@ -27,10 +27,12 @@ export async function savePromotion(_prev: ActionState, formData: FormData): Pro
   const parsed = PromotionInput.safeParse(formObject(formData));
   if (!parsed.success) return fail(zodMessage(parsed.error));
 
-  const { supabase } = await requireOwner();
+  const { supabase, storeId } = await requireOwner();
   const { id, ...fields } = parsed.data;
   const promotions = supabase.schema("store").from("promotions");
-  const { error } = id ? await promotions.update(fields).eq("id", id) : await promotions.insert(fields);
+  const { error } = id
+    ? await promotions.update(fields).eq("id", id).eq("store_id", storeId)
+    : await promotions.insert({ ...fields, store_id: storeId });
   if (error) return fail(error.code === "23505" ? "That promo code is already used" : error.message);
 
   menuChanged();

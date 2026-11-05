@@ -29,8 +29,8 @@ async function flushSoon(): Promise<void> {
 /** Runs one full round: order timers, then webhook delivery (with retries). */
 export async function runWorkerOnce(): Promise<void> {
   const db = createSupabaseAdminClient();
-  const { data: settings } = await db.schema("store").from("store_settings").select("unpaid_flag_minutes").eq("id", true).maybeSingle();
-  const { error } = await db.schema("ops").rpc("run_timers", { p_unpaid_flag_minutes: settings?.unpaid_flag_minutes ?? 30 });
+  // Each store's own unpaid-flag delay applies (read inside run_timers).
+  const { error } = await db.schema("ops").rpc("run_timers", {});
   if (error) console.error("[worker] run_timers", error.message);
   await flushSoon();
 }

@@ -12,13 +12,14 @@ export interface WelcomeOffer {
   minOrder: number | null;
 }
 
-/** The welcome discount this customer can still use, if any (PLAN.md §8). */
-export async function welcomeOfferFor(customer: Customer | null): Promise<WelcomeOffer | null> {
+/** The store's welcome discount this customer can still use, if any (PLAN.md §8). */
+export async function welcomeOfferFor(customer: Customer | null, storeId: string): Promise<WelcomeOffer | null> {
   if (!customer) return null;
   const db = createSupabaseAdminClient().schema("store");
   const { data: promo } = await db
     .from("promotions")
     .select("id, name, type, value, max_discount, min_order, valid_days, per_customer_limit, starts_at, ends_at")
+    .eq("store_id", storeId)
     .eq("trigger", "welcome")
     .eq("active", true)
     .order("created_at")

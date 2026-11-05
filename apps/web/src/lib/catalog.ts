@@ -20,18 +20,9 @@ export interface CatalogProduct extends PricingProduct {
   notePrompt: string | null;
 }
 
-export interface CatalogBrand {
-  id: string;
-  name: string;
-  tagline: string | null;
-  noticeDays: number;
-}
-
 export interface Catalog {
-  /** Null brandId = the main Weekend Food Hub menu. */
-  categories: { id: string; name: string; brandId: string | null }[];
-  /** Active sub-brands, in display order. */
-  brands: CatalogBrand[];
+  storeId: string;
+  categories: { id: string; name: string }[];
   products: CatalogProduct[];
   hours: StoreHoursDay[];
   closures: string[];
@@ -48,8 +39,12 @@ export interface Catalog {
     gcashQrUrl: string | null;
     gcashAccountName: string | null;
     pickupInstructions: string | null;
+    /** Default advance notice in days (made-to-order stores); products can override it. */
+    noticeDays: number;
   };
   delivery: DeliverySettings & {
+    /** Off = pickup only. */
+    enabled: boolean;
     kitchen: { lat: number; lng: number } | null;
     kitchenAddress: string | null;
     serviceArea: ServiceAreaGeoJSON | null;
@@ -60,12 +55,11 @@ export interface Catalog {
 
 const hhmm = (t: string) => t.slice(0, 5) as StoreHoursDay["opensAt"];
 
-/** Fresh (uncached) read of everything needed to show the menu, price a cart and quote delivery. */
-export async function fetchCatalog(): Promise<Catalog> {
+/** Fresh (uncached) read of everything one store needs to show its menu, price a cart and quote delivery. */
+export async function fetchCatalog(storeId: string): Promise<Catalog> {
   const store = createSupabasePublicClient().schema("store");
-  const [categories, brands, products, today, hours, closures, settings, delivery, barangays] = await Promise.all([
-    store.from("categories").select("id, name, brand_id, active").order("sort_order"),
-    store.from("brands").select("id, name, tagline, notice_days").eq("active", true).order("sort_order"),
+  const [categories, products, today, hours, closures, settings, delivery, barangays] = await Promise.all([
+    store.from("categories").select("id, name").eq("store_id", storeId).eq("active", true).order("sort_order"),
     store
       .from("products")
       .select(
@@ -75,16 +69,22 @@ export async function fetchCatalog(): Promise<Catalog> {
          product_modifier_groups(sort_order, show_when_modifier_id, modifier_groups(id, name, required, min_select, max_select,
            modifiers(id, name, price_delta, requires_cooking, active, sort_order)))`,
       )
+      .eq("store_id", storeId)
       .eq("active", true)
       .order("sort_order"),
     store.from("ingredient_availability_today").select("ingredient_id, status"),
-    store.from("store_hours").select("day_of_week, opens_at, closes_at, is_open"),
-    store.from("store_closures").select("date"),
-    store.from("store_settings").select("*").eq("id", true).single(),
-    store.from("delivery_settings").select("*").eq("id", true).single(),
-    store.from("barangays").select("id, name, center_lat, center_lng, fee_override, surcharge").eq("active", true).order("name"),
+    store.from("store_hours").select("day_of_week, opens_at, closes_at, is_open").eq("store_id", storeId),
+    store.from("store_closures").select("date").eq("store_id", storeId),
+    store.from("store_settings").select("*").eq("store_id", storeId).single(),
+    store.from("delivery_settings").select("*").eq("store_id", storeId).single(),
+    store
+      .from("barangays")
+      .select("id, name, center_lat, center_lng, fee_override, surcharge")
+      .eq("store_id", storeId)
+      .eq("active", true)
+      .order("name"),
   ]);
-  for (const r of [categories, brands, products, today, hours, closures, settings, delivery, barangays]) if (r.error) throw r.error;
+  for (const r of [categories, products, today, hours, closures, settings, delivery, barangays]) if (r.error) throw r.error;
 
   const todayStatus = new Map<string, DailyStatus>(
     (today.data ?? []).filter((r) => r.ingredient_id && r.status).map((r) => [r.ingredient_id!, r.status!]),
@@ -92,18 +92,10 @@ export async function fetchCatalog(): Promise<Catalog> {
   const s = settings.data!;
   const d = delivery.data!;
 
-  const activeBrands: CatalogBrand[] = (brands.data ?? []).map((b) => ({ id: b.id, name: b.name, tagline: b.tagline, noticeDays: b.notice_days }));
-  const brandById = new Map(activeBrands.map((b) => [b.id, b]));
-  // Products of a hidden (inactive) brand can't be ordered; its categories aren't shown.
-  const hiddenBrandCategories = new Set((categories.data ?? []).filter((c) => c.brand_id && !brandById.has(c.brand_id)).map((c) => c.id));
-  const categoryBrand = new Map((categories.data ?? []).map((c) => [c.id, c.brand_id ? (brandById.get(c.brand_id) ?? null) : null]));
-
   return {
-    categories: (categories.data ?? [])
-      .filter((c) => c.active && !hiddenBrandCategories.has(c.id))
-      .map((c) => ({ id: c.id, name: c.name, brandId: c.brand_id })),
-    brands: activeBrands,
-    products: (products.data ?? []).filter((p) => !hiddenBrandCategories.has(p.category_id)).map((p) => {
+    storeId,
+    categories: categories.data ?? [],
+    products: (products.data ?? []).map((p) => {
       const keyIngredients = p.product_ingredients
         .filter((l) => l.is_key && l.ingredients)
         .map((l) => ({
@@ -112,7 +104,6 @@ export async function fetchCatalog(): Promise<Catalog> {
           todayStatus: todayStatus.get(l.ingredients!.id),
         }));
       const hasPrice = p.price_mode === "market" ? p.price !== null || p.estimated_price !== null : p.price !== null;
-      const brand = categoryBrand.get(p.category_id) ?? null;
       return {
         id: p.id,
         sku: p.sku,
@@ -127,8 +118,7 @@ export async function fetchCatalog(): Promise<Catalog> {
         estimatedPrice: p.estimated_price,
         weightOptionsKg: p.weight_options_kg,
         prepMinutes: p.prep_minutes,
-        brand: brand?.name ?? null,
-        noticeDays: p.notice_days ?? brand?.noticeDays ?? 0,
+        noticeDays: p.notice_days ?? s.notice_days,
         notePrompt: p.note_prompt,
         badge: menuBadge({
           active: p.active,
@@ -184,8 +174,10 @@ export async function fetchCatalog(): Promise<Catalog> {
       gcashQrUrl: s.gcash_qr_url,
       gcashAccountName: s.gcash_account_name,
       pickupInstructions: s.pickup_instructions,
+      noticeDays: s.notice_days,
     },
     delivery: {
+      enabled: d.delivery_enabled,
       baseFee: d.base_fee,
       includedKm: d.included_km,
       perKm: d.per_km,

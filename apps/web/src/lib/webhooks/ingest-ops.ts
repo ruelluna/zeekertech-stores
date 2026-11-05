@@ -3,6 +3,7 @@ import type { OrderItem, TablesInsert, WebOrder, WebToOpsEvent } from "@wfh/shar
 import { notifyStaff } from "../push";
 import { textAdmin } from "../sms";
 import { adminPaymentText, adminSeafoodCheckText } from "../sms-texts";
+import { getStoreById } from "../stores";
 import { createSupabaseAdminClient } from "../supabase/admin";
 
 // Ordering backend side: turns website events into ops orders the staff app works from.
@@ -25,24 +26,38 @@ function itemRow(orderId: string, item: OrderItem, sortOrder: number): TablesIns
     needs_availability: item.needsAvailability,
     requires_cooking: item.requiresCooking,
     prep_minutes: item.prepMinutes,
-    brand: item.brand,
     sort_order: sortOrder,
   };
 }
 
 async function findOrder(db: Db, externalId: string) {
-  const { data, error } = await db.schema("ops").from("orders").select("id, status, flags, queue_code").eq("external_id", externalId).maybeSingle();
+  const { data, error } = await db
+    .schema("ops")
+    .from("orders")
+    .select("id, status, flags, queue_code, store_id")
+    .eq("external_id", externalId)
+    .maybeSingle();
   if (error) throw error;
   if (!data) throw new Error(`Unknown order ${externalId}`);
   return data;
 }
 
+/** The order's store: from the payload, or from the web order (orders placed before stores existed). */
+async function orderStoreId(db: Db, order: WebOrder): Promise<string> {
+  if (order.storeId) return order.storeId;
+  const { data, error } = await db.schema("store").from("web_orders").select("store_id").eq("order_code", order.orderId).single();
+  if (error) throw error;
+  return data.store_id;
+}
+
 async function createOrder(db: Db, order: WebOrder) {
   const ops = db.schema("ops");
   const waitMinutes = order.confirmWaitMinutes ?? 20;
+  const storeId = await orderStoreId(db, order);
   const { data: created, error } = await ops
     .from("orders")
     .insert({
+      store_id: storeId,
       external_id: order.orderId,
       source: "web",
       customer_ref: order.customer.id,
@@ -71,7 +86,7 @@ async function createOrder(db: Db, order: WebOrder) {
       flags: order.flags,
       availability_deadline: order.needsAvailability ? new Date(Date.now() + waitMinutes * 60_000).toISOString() : null,
     })
-    .select("id, queue_code")
+    .select("id, queue_code, store_id")
     .single();
   if (error) throw error;
 
@@ -110,20 +125,22 @@ export async function ingestWebEvent(event: WebToOpsEvent): Promise<void> {
       case "order.created": {
         const created = await createOrder(db, event.order);
         if (event.order.needsAvailability) {
+          const store = await getStoreById(created.store_id);
           const sms = adminSeafoodCheckText({
+            store: store?.name ?? "Store",
             code: `${created.queue_code} (${event.order.orderId})`,
             customer: event.order.customer.name,
             fulfillment: event.order.fulfillment,
             total: event.order.totals.total,
             adminUrl: adminUrl(),
           });
-          await notifyStaff([...SOURCING_ROLES], {
+          await notifyStaff(created.store_id, [...SOURCING_ROLES], {
             title: `🦐 Seafood check: ${created.queue_code}`,
             body: `${event.order.customer.name} · ${event.order.fulfillment} · ₱${event.order.totals.total}. The customer is waiting to pay.`,
             url: adminUrl(),
             tag: `order-${event.order.orderId}`,
           });
-          await textAdmin(sms.kind, sms.message, event.order.orderId);
+          await textAdmin(created.store_id, sms.kind, sms.message, event.order.orderId);
         }
         break;
       }
@@ -149,20 +166,22 @@ export async function ingestWebEvent(event: WebToOpsEvent): Promise<void> {
           .eq("id", order.id);
         if (error) throw error;
 
+        const store = await getStoreById(order.store_id);
         const sms = adminPaymentText({
+          store: store?.name ?? "Store",
           code: `${order.queue_code} (${event.orderId})`,
           amount: event.amount,
           referenceNo: event.referenceNo,
           senderName: event.senderName,
           adminUrl: adminUrl(),
         });
-        await notifyStaff([...PAYMENT_ROLES], {
+        await notifyStaff(order.store_id, [...PAYMENT_ROLES], {
           title: `💸 GCash to verify: ${order.queue_code}`,
           body: `₱${event.amount} · ref ${event.referenceNo} · from ${event.senderName}`,
           url: adminUrl(),
           tag: `order-${event.orderId}`,
         });
-        await textAdmin(sms.kind, sms.message, event.orderId);
+        await textAdmin(order.store_id, sms.kind, sms.message, event.orderId);
         break;
       }
 

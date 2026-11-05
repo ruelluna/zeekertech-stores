@@ -88,6 +88,7 @@ export type Database = {
           par_level: number | null;
           reorder_point: number | null;
           sort_order: number;
+          store_id: string;
           unit: string;
           updated_at: string;
         };
@@ -103,6 +104,7 @@ export type Database = {
           par_level?: number | null;
           reorder_point?: number | null;
           sort_order?: number;
+          store_id: string;
           unit?: string;
           updated_at?: string;
         };
@@ -117,6 +119,7 @@ export type Database = {
           par_level?: number | null;
           reorder_point?: number | null;
           sort_order?: number;
+          store_id?: string;
           unit?: string;
           updated_at?: string;
         };
@@ -130,6 +133,7 @@ export type Database = {
           kind: Database["ops"]["Enums"]["label_kind"];
           layout: NonNullable<Json>;
           name: string;
+          store_id: string;
           updated_at: string;
         };
         ComputedFields: never;
@@ -140,6 +144,7 @@ export type Database = {
           kind: Database["ops"]["Enums"]["label_kind"];
           layout: NonNullable<Json>;
           name: string;
+          store_id: string;
           updated_at?: string;
         };
         Update: {
@@ -149,6 +154,7 @@ export type Database = {
           kind?: Database["ops"]["Enums"]["label_kind"];
           layout?: NonNullable<Json>;
           name?: string;
+          store_id?: string;
           updated_at?: string;
         };
         Relationships: [];
@@ -157,17 +163,20 @@ export type Database = {
         Row: {
           received_at: string;
           snapshot: NonNullable<Json>;
+          store_id: string;
           version: string;
         };
         ComputedFields: never;
         Insert: {
           received_at?: string;
           snapshot: NonNullable<Json>;
+          store_id: string;
           version: string;
         };
         Update: {
           received_at?: string;
           snapshot?: NonNullable<Json>;
+          store_id?: string;
           version?: string;
         };
         Relationships: [];
@@ -252,7 +261,6 @@ export type Database = {
       };
       order_items: {
         Row: {
-          brand: string | null;
           estimated_unit_price: number | null;
           id: string;
           item_status: Database["ops"]["Enums"]["item_status"];
@@ -272,7 +280,6 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
-          brand?: string | null;
           estimated_unit_price?: number | null;
           id?: string;
           item_status?: Database["ops"]["Enums"]["item_status"];
@@ -291,7 +298,6 @@ export type Database = {
           weight_kg?: number | null;
         };
         Update: {
-          brand?: string | null;
           estimated_unit_price?: number | null;
           id?: string;
           item_status?: Database["ops"]["Enums"]["item_status"];
@@ -367,6 +373,7 @@ export type Database = {
           scheduled_for: string;
           source: Database["ops"]["Enums"]["order_source"];
           status: Database["ops"]["Enums"]["order_status"];
+          store_id: string;
           subtotal: number;
           total: number;
           travel_minutes: number | null;
@@ -420,6 +427,7 @@ export type Database = {
           scheduled_for: string;
           source: Database["ops"]["Enums"]["order_source"];
           status?: Database["ops"]["Enums"]["order_status"];
+          store_id: string;
           subtotal?: number;
           total?: number;
           travel_minutes?: number | null;
@@ -472,6 +480,7 @@ export type Database = {
           scheduled_for?: string;
           source?: Database["ops"]["Enums"]["order_source"];
           status?: Database["ops"]["Enums"]["order_status"];
+          store_id?: string;
           subtotal?: number;
           total?: number;
           travel_minutes?: number | null;
@@ -547,6 +556,7 @@ export type Database = {
           name: string;
           options: NonNullable<Json>;
           port: number | null;
+          store_id: string;
           updated_at: string;
         };
         ComputedFields: never;
@@ -564,6 +574,7 @@ export type Database = {
           name: string;
           options?: NonNullable<Json>;
           port?: number | null;
+          store_id: string;
           updated_at?: string;
         };
         Update: {
@@ -580,6 +591,7 @@ export type Database = {
           name?: string;
           options?: NonNullable<Json>;
           port?: number | null;
+          store_id?: string;
           updated_at?: string;
         };
         Relationships: [];
@@ -632,15 +644,18 @@ export type Database = {
         Row: {
           last_number: number;
           queue_date: string;
+          store_id: string;
         };
         ComputedFields: never;
         Insert: {
           last_number?: number;
           queue_date: string;
+          store_id: string;
         };
         Update: {
           last_number?: number;
           queue_date?: string;
+          store_id?: string;
         };
         Relationships: [];
       };
@@ -655,6 +670,7 @@ export type Database = {
           provider_id: string | null;
           recipient: string;
           status: string;
+          store_id: string;
         };
         ComputedFields: never;
         Insert: {
@@ -667,6 +683,7 @@ export type Database = {
           provider_id?: string | null;
           recipient: string;
           status: string;
+          store_id: string;
         };
         Update: {
           created_at?: string;
@@ -678,6 +695,7 @@ export type Database = {
           provider_id?: string | null;
           recipient?: string;
           status?: string;
+          store_id?: string;
         };
         Relationships: [];
       };
@@ -693,7 +711,7 @@ export type Database = {
           customer_ready_pickup: boolean;
           customer_review: boolean;
           enabled: boolean;
-          id: boolean;
+          store_id: string;
           updated_at: string;
         };
         ComputedFields: never;
@@ -708,7 +726,7 @@ export type Database = {
           customer_ready_pickup?: boolean;
           customer_review?: boolean;
           enabled?: boolean;
-          id?: boolean;
+          store_id: string;
           updated_at?: string;
         };
         Update: {
@@ -722,7 +740,7 @@ export type Database = {
           customer_ready_pickup?: boolean;
           customer_review?: boolean;
           enabled?: boolean;
-          id?: boolean;
+          store_id?: string;
           updated_at?: string;
         };
         Relationships: [];
@@ -752,6 +770,7 @@ export type Database = {
           created_at: string;
           display_name: string;
           role: Database["ops"]["Enums"]["staff_role"];
+          store_id: string;
           updated_at: string;
           user_id: string;
         };
@@ -761,6 +780,7 @@ export type Database = {
           created_at?: string;
           display_name: string;
           role: Database["ops"]["Enums"]["staff_role"];
+          store_id: string;
           updated_at?: string;
           user_id: string;
         };
@@ -769,6 +789,7 @@ export type Database = {
           created_at?: string;
           display_name?: string;
           role?: Database["ops"]["Enums"]["staff_role"];
+          store_id?: string;
           updated_at?: string;
           user_id?: string;
         };
@@ -837,6 +858,22 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      super_admins: {
+        Row: {
+          created_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
       };
       webhook_inbox: {
         Row: {
@@ -915,14 +952,16 @@ export type Database = {
         Args: { p_decision_minutes?: number; p_order_id: string };
         Returns: Database["ops"]["Enums"]["order_status"];
       };
-      current_staff_role: {
-        Args: Record<PropertyKey, never>;
-        Returns: Database["ops"]["Enums"]["staff_role"];
-      };
       enqueue_web_event: { Args: { p_event: string; p_payload: Json }; Returns: undefined };
-      has_role: { Args: { roles: Database["ops"]["Enums"]["staff_role"][] }; Returns: boolean };
-      is_staff: { Args: Record<PropertyKey, never>; Returns: boolean };
-      next_queue_code: { Args: { p_date: string }; Returns: string };
+      has_store_role: {
+        Args: { p_store: string; roles: Database["ops"]["Enums"]["staff_role"][] };
+        Returns: boolean;
+      };
+      ingredient_store: { Args: { p_key: string }; Returns: string };
+      is_any_staff: { Args: Record<PropertyKey, never>; Returns: boolean };
+      is_store_staff: { Args: { p_store: string }; Returns: boolean };
+      is_super_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
+      next_queue_code: { Args: { p_date: string; p_store: string }; Returns: string };
       review_payment: {
         Args: {
           p_amount_received?: number;
@@ -933,6 +972,8 @@ export type Database = {
         Returns: undefined;
       };
       run_timers: { Args: { p_unpaid_flag_minutes?: number }; Returns: undefined };
+      sku_store: { Args: { p_sku: string }; Returns: string };
+      store_role: { Args: { p_store: string }; Returns: Database["ops"]["Enums"]["staff_role"] };
     };
     Enums: {
       customer_decision: "continue" | "cancel" | "expired";
@@ -989,6 +1030,7 @@ export type Database = {
           name: string;
           notes: string | null;
           sort_order: number;
+          store_id: string;
           surcharge: number | null;
           updated_at: string;
         };
@@ -1004,6 +1046,7 @@ export type Database = {
           name: string;
           notes?: string | null;
           sort_order?: number;
+          store_id: string;
           surcharge?: number | null;
           updated_at?: string;
         };
@@ -1018,80 +1061,55 @@ export type Database = {
           name?: string;
           notes?: string | null;
           sort_order?: number;
+          store_id?: string;
           surcharge?: number | null;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
-      brands: {
-        Row: {
-          active: boolean;
-          created_at: string;
-          id: string;
-          name: string;
-          notice_days: number;
-          sort_order: number;
-          tagline: string | null;
-          updated_at: string;
-        };
-        ComputedFields: never;
-        Insert: {
-          active?: boolean;
-          created_at?: string;
-          id?: string;
-          name: string;
-          notice_days?: number;
-          sort_order?: number;
-          tagline?: string | null;
-          updated_at?: string;
-        };
-        Update: {
-          active?: boolean;
-          created_at?: string;
-          id?: string;
-          name?: string;
-          notice_days?: number;
-          sort_order?: number;
-          tagline?: string | null;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
-      categories: {
-        Row: {
-          brand_id: string | null;
-          active: boolean;
-          created_at: string;
-          id: string;
-          name: string;
-          sort_order: number;
-          updated_at: string;
-        };
-        ComputedFields: never;
-        Insert: {
-          brand_id?: string | null;
-          active?: boolean;
-          created_at?: string;
-          id?: string;
-          name: string;
-          sort_order?: number;
-          updated_at?: string;
-        };
-        Update: {
-          brand_id?: string | null;
-          active?: boolean;
-          created_at?: string;
-          id?: string;
-          name?: string;
-          sort_order?: number;
           updated_at?: string;
         };
         Relationships: [
           {
-            foreignKeyName: "categories_brand_id_fkey";
-            columns: ["brand_id"];
+            foreignKeyName: "barangays_store_id_fkey";
+            columns: ["store_id"];
             isOneToOne: false;
-            referencedRelation: "brands";
+            referencedRelation: "stores";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      categories: {
+        Row: {
+          active: boolean;
+          created_at: string;
+          id: string;
+          name: string;
+          sort_order: number;
+          store_id: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          active?: boolean;
+          created_at?: string;
+          id?: string;
+          name: string;
+          sort_order?: number;
+          store_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          created_at?: string;
+          id?: string;
+          name?: string;
+          sort_order?: number;
+          store_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "categories_store_id_fkey";
+            columns: ["store_id"];
+            isOneToOne: false;
+            referencedRelation: "stores";
             referencedColumns: ["id"];
           },
         ];
@@ -1170,6 +1188,7 @@ export type Database = {
           phone: string | null;
           phone_verified: boolean;
           privacy_consent_at: string | null;
+          store_id: string;
           updated_at: string;
           user_id: string | null;
         };
@@ -1186,6 +1205,7 @@ export type Database = {
           phone?: string | null;
           phone_verified?: boolean;
           privacy_consent_at?: string | null;
+          store_id: string;
           updated_at?: string;
           user_id?: string | null;
         };
@@ -1201,6 +1221,7 @@ export type Database = {
           phone?: string | null;
           phone_verified?: boolean;
           privacy_consent_at?: string | null;
+          store_id?: string;
           updated_at?: string;
           user_id?: string | null;
         };
@@ -1212,14 +1233,21 @@ export type Database = {
             referencedRelation: "customers";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "customers_store_id_fkey";
+            columns: ["store_id"];
+            isOneToOne: false;
+            referencedRelation: "stores";
+            referencedColumns: ["id"];
+          },
         ];
       };
       delivery_settings: {
         Row: {
           base_fee: number;
+          delivery_enabled: boolean;
           excluded_areas_geojson: Json | null;
           free_delivery_threshold: number | null;
-          id: boolean;
           included_km: number;
           kitchen_address: string | null;
           kitchen_lat: number | null;
@@ -1231,14 +1259,15 @@ export type Database = {
           rider_share_percent: number;
           round_to: number;
           service_area_geojson: Json | null;
+          store_id: string;
           updated_at: string;
         };
         ComputedFields: never;
         Insert: {
           base_fee?: number;
+          delivery_enabled?: boolean;
           excluded_areas_geojson?: Json | null;
           free_delivery_threshold?: number | null;
-          id?: boolean;
           included_km?: number;
           kitchen_address?: string | null;
           kitchen_lat?: number | null;
@@ -1250,13 +1279,14 @@ export type Database = {
           rider_share_percent?: number;
           round_to?: number;
           service_area_geojson?: Json | null;
+          store_id: string;
           updated_at?: string;
         };
         Update: {
           base_fee?: number;
+          delivery_enabled?: boolean;
           excluded_areas_geojson?: Json | null;
           free_delivery_threshold?: number | null;
-          id?: boolean;
           included_km?: number;
           kitchen_address?: string | null;
           kitchen_lat?: number | null;
@@ -1268,9 +1298,18 @@ export type Database = {
           rider_share_percent?: number;
           round_to?: number;
           service_area_geojson?: Json | null;
+          store_id?: string;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "delivery_settings_store_id_fkey";
+            columns: ["store_id"];
+            isOneToOne: true;
+            referencedRelation: "stores";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       ingredient_availability: {
         Row: {
@@ -1316,6 +1355,7 @@ export type Database = {
           id: string;
           key: string;
           name: string;
+          store_id: string;
           unit: string | null;
           updated_at: string;
         };
@@ -1327,6 +1367,7 @@ export type Database = {
           id?: string;
           key: string;
           name: string;
+          store_id: string;
           unit?: string | null;
           updated_at?: string;
         };
@@ -1337,10 +1378,19 @@ export type Database = {
           id?: string;
           key?: string;
           name?: string;
+          store_id?: string;
           unit?: string | null;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "ingredients_store_id_fkey";
+            columns: ["store_id"];
+            isOneToOne: false;
+            referencedRelation: "stores";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       modifier_groups: {
         Row: {
@@ -1351,6 +1401,7 @@ export type Database = {
           name: string;
           required: boolean;
           sort_order: number;
+          store_id: string;
           updated_at: string;
         };
         ComputedFields: never;
@@ -1362,6 +1413,7 @@ export type Database = {
           name: string;
           required?: boolean;
           sort_order?: number;
+          store_id: string;
           updated_at?: string;
         };
         Update: {
@@ -1372,9 +1424,18 @@ export type Database = {
           name?: string;
           required?: boolean;
           sort_order?: number;
+          store_id?: string;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "modifier_groups_store_id_fkey";
+            columns: ["store_id"];
+            isOneToOne: false;
+            referencedRelation: "stores";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       modifiers: {
         Row: {
@@ -1501,8 +1562,6 @@ export type Database = {
       };
       products: {
         Row: {
-          note_prompt: string | null;
-          notice_days: number | null;
           active: boolean;
           category_id: string;
           created_at: string;
@@ -1511,6 +1570,8 @@ export type Database = {
           id: string;
           image_url: string | null;
           name: string;
+          note_prompt: string | null;
+          notice_days: number | null;
           prep_minutes: number | null;
           price: number | null;
           price_mode: Database["store"]["Enums"]["price_mode"];
@@ -1520,14 +1581,13 @@ export type Database = {
           sort_order: number;
           stock_qty: number | null;
           stock_tracked: boolean;
+          store_id: string;
           type: Database["store"]["Enums"]["product_type"];
           updated_at: string;
           weight_options_kg: number[];
         };
         ComputedFields: never;
         Insert: {
-          note_prompt?: string | null;
-          notice_days?: number | null;
           active?: boolean;
           category_id: string;
           created_at?: string;
@@ -1536,6 +1596,8 @@ export type Database = {
           id?: string;
           image_url?: string | null;
           name: string;
+          note_prompt?: string | null;
+          notice_days?: number | null;
           prep_minutes?: number | null;
           price?: number | null;
           price_mode?: Database["store"]["Enums"]["price_mode"];
@@ -1545,13 +1607,12 @@ export type Database = {
           sort_order?: number;
           stock_qty?: number | null;
           stock_tracked?: boolean;
+          store_id: string;
           type: Database["store"]["Enums"]["product_type"];
           updated_at?: string;
           weight_options_kg?: number[];
         };
         Update: {
-          note_prompt?: string | null;
-          notice_days?: number | null;
           active?: boolean;
           category_id?: string;
           created_at?: string;
@@ -1560,6 +1621,8 @@ export type Database = {
           id?: string;
           image_url?: string | null;
           name?: string;
+          note_prompt?: string | null;
+          notice_days?: number | null;
           prep_minutes?: number | null;
           price?: number | null;
           price_mode?: Database["store"]["Enums"]["price_mode"];
@@ -1569,6 +1632,7 @@ export type Database = {
           sort_order?: number;
           stock_qty?: number | null;
           stock_tracked?: boolean;
+          store_id?: string;
           type?: Database["store"]["Enums"]["product_type"];
           updated_at?: string;
           weight_options_kg?: number[];
@@ -1579,6 +1643,13 @@ export type Database = {
             columns: ["category_id"];
             isOneToOne: false;
             referencedRelation: "categories";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "products_store_id_fkey";
+            columns: ["store_id"];
+            isOneToOne: false;
+            referencedRelation: "stores";
             referencedColumns: ["id"];
           },
         ];
@@ -1645,6 +1716,7 @@ export type Database = {
           name: string;
           per_customer_limit: number;
           starts_at: string | null;
+          store_id: string;
           trigger: Database["store"]["Enums"]["promotion_trigger"];
           type: Database["store"]["Enums"]["promotion_type"];
           updated_at: string;
@@ -1663,6 +1735,7 @@ export type Database = {
           name: string;
           per_customer_limit?: number;
           starts_at?: string | null;
+          store_id: string;
           trigger: Database["store"]["Enums"]["promotion_trigger"];
           type: Database["store"]["Enums"]["promotion_type"];
           updated_at?: string;
@@ -1680,13 +1753,22 @@ export type Database = {
           name?: string;
           per_customer_limit?: number;
           starts_at?: string | null;
+          store_id?: string;
           trigger?: Database["store"]["Enums"]["promotion_trigger"];
           type?: Database["store"]["Enums"]["promotion_type"];
           updated_at?: string;
           valid_days?: number | null;
           value?: number;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "promotions_store_id_fkey";
+            columns: ["store_id"];
+            isOneToOne: false;
+            referencedRelation: "stores";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       push_subscriptions: {
         Row: {
@@ -1738,17 +1820,28 @@ export type Database = {
         Row: {
           date: string;
           reason: string | null;
+          store_id: string;
         };
         ComputedFields: never;
         Insert: {
           date: string;
           reason?: string | null;
+          store_id: string;
         };
         Update: {
           date?: string;
           reason?: string | null;
+          store_id?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "store_closures_store_id_fkey";
+            columns: ["store_id"];
+            isOneToOne: false;
+            referencedRelation: "stores";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       store_hours: {
         Row: {
@@ -1756,6 +1849,7 @@ export type Database = {
           day_of_week: number;
           is_open: boolean;
           opens_at: string;
+          store_id: string;
         };
         ComputedFields: never;
         Insert: {
@@ -1763,14 +1857,24 @@ export type Database = {
           day_of_week: number;
           is_open?: boolean;
           opens_at: string;
+          store_id: string;
         };
         Update: {
           closes_at?: string;
           day_of_week?: number;
           is_open?: boolean;
           opens_at?: string;
+          store_id?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "store_hours_store_id_fkey";
+            columns: ["store_id"];
+            isOneToOne: false;
+            referencedRelation: "stores";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       store_settings: {
         Row: {
@@ -1779,7 +1883,7 @@ export type Database = {
           delivery_buffer_minutes: number;
           gcash_account_name: string | null;
           gcash_qr_url: string | null;
-          id: boolean;
+          notice_days: number;
           ordering_paused: boolean;
           pickup_instructions: string | null;
           prep_lead_minutes: number;
@@ -1789,6 +1893,7 @@ export type Database = {
           print_ticket_width_mm: number;
           slot_end_offset_minutes: number;
           slot_start_offset_minutes: number;
+          store_id: string;
           uncertain_items_cutoff: string;
           unpaid_flag_minutes: number;
           updated_at: string;
@@ -1800,7 +1905,7 @@ export type Database = {
           delivery_buffer_minutes?: number;
           gcash_account_name?: string | null;
           gcash_qr_url?: string | null;
-          id?: boolean;
+          notice_days?: number;
           ordering_paused?: boolean;
           pickup_instructions?: string | null;
           prep_lead_minutes?: number;
@@ -1810,6 +1915,7 @@ export type Database = {
           print_ticket_width_mm?: number;
           slot_end_offset_minutes?: number;
           slot_start_offset_minutes?: number;
+          store_id: string;
           uncertain_items_cutoff?: string;
           unpaid_flag_minutes?: number;
           updated_at?: string;
@@ -1820,7 +1926,7 @@ export type Database = {
           delivery_buffer_minutes?: number;
           gcash_account_name?: string | null;
           gcash_qr_url?: string | null;
-          id?: boolean;
+          notice_days?: number;
           ordering_paused?: boolean;
           pickup_instructions?: string | null;
           prep_lead_minutes?: number;
@@ -1830,8 +1936,51 @@ export type Database = {
           print_ticket_width_mm?: number;
           slot_end_offset_minutes?: number;
           slot_start_offset_minutes?: number;
+          store_id?: string;
           uncertain_items_cutoff?: string;
           unpaid_flag_minutes?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "store_settings_store_id_fkey";
+            columns: ["store_id"];
+            isOneToOne: true;
+            referencedRelation: "stores";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      stores: {
+        Row: {
+          active: boolean;
+          created_at: string;
+          id: string;
+          name: string;
+          slug: string;
+          sort_order: number;
+          tagline: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          active?: boolean;
+          created_at?: string;
+          id?: string;
+          name: string;
+          slug: string;
+          sort_order?: number;
+          tagline?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          created_at?: string;
+          id?: string;
+          name?: string;
+          slug?: string;
+          sort_order?: number;
+          tagline?: string | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -1856,6 +2005,7 @@ export type Database = {
           scheduled_for: string;
           status: Database["store"]["Enums"]["order_status"];
           status_note: string | null;
+          store_id: string;
           subtotal: number;
           total: number;
           updated_at: string;
@@ -1880,6 +2030,7 @@ export type Database = {
           scheduled_for: string;
           status?: Database["store"]["Enums"]["order_status"];
           status_note?: string | null;
+          store_id: string;
           subtotal: number;
           total: number;
           updated_at?: string;
@@ -1903,6 +2054,7 @@ export type Database = {
           scheduled_for?: string;
           status?: Database["store"]["Enums"]["order_status"];
           status_note?: string | null;
+          store_id?: string;
           subtotal?: number;
           total?: number;
           updated_at?: string;
@@ -1913,6 +2065,13 @@ export type Database = {
             columns: ["customer_id"];
             isOneToOne: false;
             referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "web_orders_store_id_fkey";
+            columns: ["store_id"];
+            isOneToOne: false;
+            referencedRelation: "stores";
             referencedColumns: ["id"];
           },
         ];

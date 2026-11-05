@@ -101,7 +101,7 @@ export async function advanceOrder(_prev: ActionState, formData: FormData): Prom
   const { from, to, orderId } = parsed.data;
   if (!(NEXT_STATUS[from] as readonly string[]).includes(to)) return fail("That step isn't allowed");
 
-  const { supabase } = await requireStaff();
+  const { supabase, storeId } = await requireStaff();
   const now = new Date().toISOString();
 
   // Going out: record the rider and fix their pay for this trip (share of the fee, at least the minimum).
@@ -116,6 +116,7 @@ export async function advanceOrder(_prev: ActionState, formData: FormData): Prom
         .from("staff_users")
         .select("user_id, display_name")
         .eq("user_id", parsed.data.riderId)
+        .eq("store_id", storeId)
         .eq("role", "rider")
         .eq("active", true)
         .maybeSingle();
@@ -126,8 +127,8 @@ export async function advanceOrder(_prev: ActionState, formData: FormData): Prom
     if (!riderName) return fail("Choose the rider");
 
     const [{ data: order }, { data: settings }] = await Promise.all([
-      supabase.schema("ops").from("orders").select("delivery_fee, parent_order_id").eq("id", orderId).single(),
-      admin.schema("store").from("delivery_settings").select("rider_share_percent, rider_min_pay").eq("id", true).single(),
+      supabase.schema("ops").from("orders").select("delivery_fee, parent_order_id").eq("id", orderId).eq("store_id", storeId).single(),
+      admin.schema("store").from("delivery_settings").select("rider_share_percent, rider_min_pay").eq("store_id", storeId).single(),
     ]);
     const pay = riderPay({
       deliveryFee: order?.delivery_fee ?? 0,
@@ -147,6 +148,7 @@ export async function advanceOrder(_prev: ActionState, formData: FormData): Prom
       ...(to === "picked_up" || to === "delivered" ? { completed_at: now } : {}),
     })
     .eq("id", orderId)
+    .eq("store_id", storeId)
     .eq("status", from) // ignore double taps / stale screens
     .select("id");
   if (error) return fail(error.message);
@@ -160,8 +162,13 @@ export async function staffCancelOrder(_prev: ActionState, formData: FormData): 
   if (!orderId.success) return fail("Invalid order");
   if (!reason) return fail("Add a reason (the customer sees it)");
 
-  const { supabase } = await requireStaff(["owner", "verifier", "counter"]);
-  const { error } = await supabase.schema("ops").from("orders").update({ status: "cancelled", notes: reason }).eq("id", orderId.data);
+  const { supabase, storeId } = await requireStaff(["owner", "verifier", "counter"]);
+  const { error } = await supabase
+    .schema("ops")
+    .from("orders")
+    .update({ status: "cancelled", notes: reason })
+    .eq("id", orderId.data)
+    .eq("store_id", storeId);
   if (error) return fail(error.message);
   return done("Order cancelled");
 }
@@ -170,10 +177,15 @@ export async function staffCancelOrder(_prev: ActionState, formData: FormData): 
 export async function markPaid(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const orderId = z.uuid().safeParse(formData.get("orderId"));
   if (!orderId.success) return fail("Invalid order");
-  const { supabase, userId } = await requireStaff();
+  const { supabase, userId, storeId } = await requireStaff();
   const ops = supabase.schema("ops");
 
-  const { data: order, error: readError } = await ops.from("orders").select("total, flags, payment_status").eq("id", orderId.data).single();
+  const { data: order, error: readError } = await ops
+    .from("orders")
+    .select("total, flags, payment_status")
+    .eq("id", orderId.data)
+    .eq("store_id", storeId)
+    .single();
   if (readError) return fail(readError.message);
   if (order.payment_status === "confirmed") return fail("Already paid");
 

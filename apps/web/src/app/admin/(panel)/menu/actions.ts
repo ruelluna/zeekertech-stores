@@ -19,9 +19,9 @@ export async function updatePrice(_prev: ActionState, formData: FormData): Promi
   const parsed = PriceInput.safeParse(formObject(formData));
   if (!parsed.success) return fail(zodMessage(parsed.error));
 
-  const { supabase } = await requireOwner();
+  const { supabase, storeId } = await requireOwner();
   const { id, ...prices } = parsed.data;
-  const { error } = await supabase.schema("store").from("products").update(prices).eq("id", id);
+  const { error } = await supabase.schema("store").from("products").update(prices).eq("id", id).eq("store_id", storeId);
   if (error) return fail(error.message);
 
   menuChanged();
@@ -35,8 +35,13 @@ export async function setProductActive(_prev: ActionState, formData: FormData): 
   const parsed = ActiveInput.safeParse(formObject(formData));
   if (!parsed.success) return fail(zodMessage(parsed.error));
 
-  const { supabase } = await requireOwner();
-  const { error } = await supabase.schema("store").from("products").update({ active: parsed.data.active }).eq("id", parsed.data.id);
+  const { supabase, storeId } = await requireOwner();
+  const { error } = await supabase
+    .schema("store")
+    .from("products")
+    .update({ active: parsed.data.active })
+    .eq("id", parsed.data.id)
+    .eq("store_id", storeId);
   if (error) return fail(error.message);
 
   menuChanged();
@@ -83,13 +88,24 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
   const groupIds = z.array(z.uuid()).safeParse(formData.getAll("group_ids"));
   if (!ingredientIds.success || !groupIds.success) return fail("Invalid ingredient or add-on selection");
 
-  const { supabase } = await requireOwner();
+  const { supabase, storeId } = await requireOwner();
   const store = supabase.schema("store");
   const { id, ...fields } = parsed.data;
 
+  // The category, ingredients and add-on groups must all be the active store's.
+  const [category, ownIngredients, ownGroups] = await Promise.all([
+    store.from("categories").select("id").eq("id", fields.category_id).eq("store_id", storeId).maybeSingle(),
+    store.from("ingredients").select("id").eq("store_id", storeId).in("id", ingredientIds.data),
+    store.from("modifier_groups").select("id").eq("store_id", storeId).in("id", groupIds.data),
+  ]);
+  if (!category.data) return fail("Choose one of this store's categories");
+  if ((ownIngredients.data ?? []).length !== ingredientIds.data.length || (ownGroups.data ?? []).length !== groupIds.data.length) {
+    return fail("Some ingredients or add-ons aren't in this store");
+  }
+
   const { data: saved, error } = id
-    ? await store.from("products").update(fields).eq("id", id).select("id").single()
-    : await store.from("products").insert(fields).select("id").single();
+    ? await store.from("products").update(fields).eq("id", id).eq("store_id", storeId).select("id").single()
+    : await store.from("products").insert({ ...fields, store_id: storeId }).select("id").single();
   if (error) return fail(error.code === "23505" ? "That SKU is already used by another product" : error.message);
 
   // Replace ingredient and add-on links with the submitted selection.
@@ -126,8 +142,6 @@ const CategoryInput = z.object({
   id: z.uuid().optional().or(z.literal("").transform(() => undefined)),
   name: form.text.pipe(z.string().min(1, "Required")),
   sort_order: form.int.pipe(z.number().int().nullable()).transform((n) => n ?? 0),
-  // Blank = the main Weekend Food Hub menu.
-  brand_id: z.uuid().nullable().or(z.literal("").transform(() => null)).default(null),
   active: form.bool,
 });
 
@@ -135,48 +149,26 @@ export async function saveCategory(_prev: ActionState, formData: FormData): Prom
   const parsed = CategoryInput.safeParse(formObject(formData));
   if (!parsed.success) return fail(zodMessage(parsed.error));
 
-  const { supabase } = await requireOwner();
+  const { supabase, storeId } = await requireOwner();
   const { id, ...fields } = parsed.data;
   const categories = supabase.schema("store").from("categories");
-  const { error } = id ? await categories.update(fields).eq("id", id) : await categories.insert(fields);
+  const { error } = id
+    ? await categories.update(fields).eq("id", id).eq("store_id", storeId)
+    : await categories.insert({ ...fields, store_id: storeId });
   if (error) return fail(error.code === "23505" ? "A category with that name already exists" : error.message);
 
   menuChanged();
   return ok(id ? "Saved" : "Category added");
 }
 
-const BrandInput = z.object({
-  id: z.uuid().optional().or(z.literal("").transform(() => undefined)),
-  name: form.text.pipe(z.string().min(1, "Required")),
-  tagline: form.optText,
-  notice_days: form.int.pipe(z.number().int().min(0).max(60, "At most 60 days").nullable()).transform((n) => n ?? 0),
-  sort_order: form.int.pipe(z.number().int().nullable()).transform((n) => n ?? 0),
-  active: form.bool,
-});
-
-/** Sub-brands (e.g. Sweet Treats by Yang): their categories get their own section on the menu. */
-export async function saveBrand(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  const parsed = BrandInput.safeParse(formObject(formData));
-  if (!parsed.success) return fail(zodMessage(parsed.error));
-
-  const { supabase } = await requireOwner();
-  const { id, ...fields } = parsed.data;
-  const brands = supabase.schema("store").from("brands");
-  const { error } = id ? await brands.update(fields).eq("id", id) : await brands.insert(fields);
-  if (error) return fail(error.code === "23505" ? "A brand with that name already exists" : error.message);
-
-  menuChanged();
-  return ok(id ? "Saved" : "Brand added");
-}
-
 export async function uploadProductPhoto(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const id = z.uuid().safeParse(formData.get("id"));
   if (!id.success) return fail("Invalid product");
-  const { supabase } = await requireOwner();
+  const { supabase, storeId } = await requireOwner();
   const products = supabase.schema("store").from("products");
 
   if (formData.get("remove") === "1") {
-    const { error } = await products.update({ image_url: null }).eq("id", id.data);
+    const { error } = await products.update({ image_url: null }).eq("id", id.data).eq("store_id", storeId);
     if (error) return fail(error.message);
     menuChanged();
     return ok("Photo removed");
@@ -186,7 +178,7 @@ export async function uploadProductPhoto(_prev: ActionState, formData: FormData)
   if (!(file instanceof File)) return fail("Choose a photo");
   const uploaded = await uploadPublicImage(file, "products");
   if (!uploaded.ok) return fail(uploaded.error);
-  const { error } = await products.update({ image_url: uploaded.url }).eq("id", id.data);
+  const { error } = await products.update({ image_url: uploaded.url }).eq("id", id.data).eq("store_id", storeId);
   if (error) return fail(error.message);
   menuChanged();
   return ok("Photo uploaded");

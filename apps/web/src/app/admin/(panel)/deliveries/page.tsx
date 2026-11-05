@@ -40,7 +40,7 @@ type Delivery = {
 };
 
 async function Deliveries() {
-  const { supabase, role } = await requireStaff(["rider", "owner"]);
+  const { supabase, role, storeId } = await requireStaff(["rider", "owner"]);
   const startOfToday = manilaInstant(manilaParts(new Date()).dateKey, 0).toISOString();
 
   // Row-level security limits riders to their own deliveries; the owner sees every rider's.
@@ -52,6 +52,7 @@ async function Deliveries() {
        rider_name, rider_pay, rider_paid_out_at, completed_at, scheduled_for, parent_order_id,
        order_items(id, name, qty, modifiers, item_status)`,
     )
+    .eq("store_id", storeId)
     .not("rider_name", "is", null)
     .or(`status.eq.out_for_delivery,completed_at.gte.${startOfToday},and(status.eq.delivered,rider_paid_out_at.is.null)`)
     .order("scheduled_for");

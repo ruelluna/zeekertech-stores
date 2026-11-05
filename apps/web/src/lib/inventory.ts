@@ -32,14 +32,19 @@ const addDays = (dateKey: string, days: number) => {
   return d.toISOString().slice(0, 10);
 };
 
-/** The inventory sheet for a Manila date, with usage history (last 14 days) and buy suggestions. */
-export async function loadInventory(supabase: Supabase, dateKey: string, includeInactive = false): Promise<InventoryRow[]> {
+/** A store's inventory sheet for a Manila date, with usage history (last 14 days) and buy suggestions. */
+export async function loadInventory(supabase: Supabase, storeId: string, dateKey: string, includeInactive = false): Promise<InventoryRow[]> {
   const ops = supabase.schema("ops");
-  let itemsQuery = ops.from("inventory_items").select("*").order("category").order("sort_order").order("name");
+  let itemsQuery = ops.from("inventory_items").select("*").eq("store_id", storeId).order("category").order("sort_order").order("name");
   if (!includeInactive) itemsQuery = itemsQuery.eq("active", true);
   const [items, counts] = await Promise.all([
     itemsQuery,
-    ops.from("inventory_counts").select("*").gte("date", addDays(dateKey, -14)).lte("date", dateKey),
+    ops
+      .from("inventory_counts")
+      .select("*, inventory_items!inner(store_id)")
+      .eq("inventory_items.store_id", storeId)
+      .gte("date", addDays(dateKey, -14))
+      .lte("date", dateKey),
   ]);
   if (items.error) throw items.error;
   if (counts.error) throw counts.error;

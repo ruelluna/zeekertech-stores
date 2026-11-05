@@ -45,7 +45,7 @@ function hoursAgo(hours: number): string {
 }
 
 async function Orders() {
-  const { supabase, role } = await requireStaff();
+  const { supabase, role, storeId } = await requireStaff();
   const ops = supabase.schema("ops");
   const since = hoursAgo(24);
 
@@ -55,20 +55,22 @@ async function Orders() {
       `id, queue_code, external_id, source, status, payment_status, fulfillment, scheduled_for, customer_name, customer_phone,
        barangay, address, distance_km, delivery_fee, subtotal, discount_amount, total, is_estimate, flags, rider_name, notes,
        payment_reference_no, payment_sender_name, payment_amount_claimed, payment_proof_path, created_at, updated_at, parent_order_id,
-       order_items(id, name, qty, unit_price, estimated_unit_price, weight_kg, modifiers, notes, needs_availability, price_mode, item_status, sort_order, brand,
+       order_items(id, name, qty, unit_price, estimated_unit_price, weight_kg, modifiers, notes, needs_availability, price_mode, item_status, sort_order,
          order_item_availability(status, final_unit_price, note))`,
     )
+    .eq("store_id", storeId)
     .or(`status.not.in.(delivered,picked_up,completed,denied,rejected,cancelled,expired),updated_at.gte.${since}`)
     .order("scheduled_for");
   if (error) throw error;
 
-  const toBuy = (await loadInventory(supabase, manilaParts(new Date()).dateKey)).filter((r) => r.suggestion.status === "buy");
+  const toBuy = (await loadInventory(supabase, storeId, manilaParts(new Date()).dateKey)).filter((r) => r.suggestion.status === "buy");
 
   // Active rider accounts for dispatch (staff_users is owner-only under RLS, so read it server-side).
   const { data: riderRows } = await createSupabaseAdminClient()
     .schema("ops")
     .from("staff_users")
     .select("user_id, display_name")
+    .eq("store_id", storeId)
     .eq("role", "rider")
     .eq("active", true)
     .order("display_name");
@@ -104,7 +106,7 @@ async function Orders() {
 
   return (
     <>
-      <LiveOrders known={Object.fromEntries(orders.map((o) => [o.id, { status: o.status, paymentStatus: o.payment_status, flags: o.flags }]))} />
+      <LiveOrders storeId={storeId} known={Object.fromEntries(orders.map((o) => [o.id, { status: o.status, paymentStatus: o.payment_status, flags: o.flags }]))} />
       {toBuy.length > 0 && (
         <Link
           href="/admin/inventory"
@@ -273,7 +275,6 @@ type Order = {
     notes: string;
     item_status: string;
     sort_order: number;
-    brand: string | null;
     order_item_availability: { status: string; final_unit_price: number | null; note: string | null } | null;
   }[];
 };
@@ -347,11 +348,6 @@ function OrderCard({ o, children, canCancel, links }: { o: Order; children?: Rea
                     {i.weight_kg ? <span className="font-normal"> · {i.weight_kg} kg</span> : null}
                     {removed && <span className="ml-2 text-xs font-normal text-red-700 no-underline dark:text-red-400">not available</span>}
                   </p>
-                  {i.brand && (
-                    <span className="mt-0.5 inline-block">
-                      <Badge tone="pink">{i.brand}</Badge>
-                    </span>
-                  )}
                   {mods.length > 0 && <p className="text-sm text-stone-600 dark:text-stone-300">{mods.join(" · ")}</p>}
                   {i.notes && (
                     <p className="mt-0.5 inline-block whitespace-pre-line rounded bg-amber-100 px-1.5 text-sm font-medium text-amber-900 dark:bg-amber-950 dark:text-amber-200">“{i.notes}”</p>

@@ -15,7 +15,6 @@ const silog: PricingProduct = {
   weightOptionsKg: [],
   prepMinutes: 15,
   badge: "available",
-  brand: null,
   noticeDays: 0,
   groups: [
     {
@@ -205,31 +204,21 @@ describe("calculateDiscount", () => {
   });
 });
 
-describe("made-to-order sub-brand items", () => {
-  const cake: PricingProduct = {
-    ...silog,
-    id: id(5),
-    sku: "STY-UBE",
-    name: "Ube Cake",
-    price: 650,
-    groups: [],
-    brand: "Sweet Treats by Yang",
-    noticeDays: 2,
-  };
+describe("made-to-order items (advance notice)", () => {
+  const cake: PricingProduct = { ...silog, id: id(5), sku: "STY-UBE", name: "Ube Cake", price: 650, groups: [], noticeDays: 2 };
+  const cupcakes: PricingProduct = { ...cake, id: id(6), sku: "STY-CUP", name: "Cupcakes", price: 300, noticeDays: 1 };
 
-  it("carries the brand onto the order item and the longest notice onto the cart", () => {
+  it("uses the longest notice in the cart and keeps the cake message", () => {
     const result = priceCart(
       new Map([
         [cake.id, cake],
-        [silog.id, silog],
+        [cupcakes.id, cupcakes],
       ]),
-      [line(cake.id, { notes: "Happy birthday Ana" }), line(silog.id, { modifierIds: [id(11)] })],
+      [line(cake.id, { notes: "Happy birthday\nAna" }), line(cupcakes.id)],
     );
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.lines[0]!.item.brand).toBe("Sweet Treats by Yang");
-    expect(result.lines[0]!.item.notes).toBe("Happy birthday Ana");
-    expect(result.lines[1]!.item.brand).toBeNull();
+    expect(result.lines[0]!.item.notes).toBe("Happy birthday\nAna");
     expect(result.noticeDays).toBe(2);
   });
 });

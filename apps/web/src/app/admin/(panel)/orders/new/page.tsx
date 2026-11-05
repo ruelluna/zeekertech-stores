@@ -22,7 +22,7 @@ export default function NewOrderPage({ searchParams }: PageProps<"/admin/orders/
 }
 
 async function NewOrder({ searchParams }: { searchParams: PageProps<"/admin/orders/new">["searchParams"] }) {
-  const { supabase } = await requireStaff();
+  const { supabase, storeId } = await requireStaff();
   const { addTo } = await searchParams;
 
   // "+ Add items" on an order: the new items become a linked add-on order.
@@ -33,6 +33,7 @@ async function NewOrder({ searchParams }: { searchParams: PageProps<"/admin/orde
       .from("orders")
       .select("id, queue_code, customer_name, fulfillment, scheduled_for, barangay")
       .eq("id", addTo)
+      .eq("store_id", storeId)
       .maybeSingle();
     if (data) {
       target = {
@@ -46,7 +47,7 @@ async function NewOrder({ searchParams }: { searchParams: PageProps<"/admin/orde
     }
   }
 
-  const [menu, catalog] = await Promise.all([getPublicMenu(), fetchCatalog()]);
+  const [menu, catalog] = await Promise.all([getPublicMenu(storeId), fetchCatalog(storeId)]);
   return (
     <>
       <PageHeader
@@ -58,6 +59,7 @@ async function NewOrder({ searchParams }: { searchParams: PageProps<"/admin/orde
         }
       />
       <ManualOrderForm
+        storeId={storeId}
         categories={menu.categories}
         barangays={catalog.barangays.map((b) => ({ id: b.id, name: b.name, center: b.center }))}
         kitchen={catalog.delivery.kitchen}

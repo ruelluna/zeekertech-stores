@@ -26,10 +26,14 @@ export async function saveIngredient(_prev: ActionState, formData: FormData): Pr
   const parsed = IngredientInput.safeParse(formObject(formData));
   if (!parsed.success) return fail(zodMessage(parsed.error));
 
-  const { supabase } = await requireOwner();
+  const { supabase, storeId, store } = await requireOwner();
   const { id, key, ...fields } = parsed.data;
   const ingredients = supabase.schema("store").from("ingredients");
-  const { error } = id ? await ingredients.update(fields).eq("id", id) : await ingredients.insert({ ...fields, key });
+  let { error } = id
+    ? await ingredients.update(fields).eq("id", id).eq("store_id", storeId)
+    : await ingredients.insert({ ...fields, key, store_id: storeId });
+  // Keys are unique across stores; another store may already use this one.
+  if (!id && error?.code === "23505") ({ error } = await ingredients.insert({ ...fields, key: `${key}_${store.slug.replace(/-/g, "_")}`, store_id: storeId }));
   if (error) return fail(error.code === "23505" ? "An ingredient with that name already exists" : error.message);
 
   menuChanged();

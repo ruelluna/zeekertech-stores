@@ -15,16 +15,17 @@ import {
 } from "@wfh/shared";
 import { MapPicker } from "@/components/map-picker";
 import { Badge, peso } from "@/components/ui";
-import { cart, cartSubtotal, useCart, type CartEntry } from "@/lib/cart-store";
+import { cartFor, cartSubtotal, useCart, type Cart, type CartEntry } from "@/lib/cart-store";
 import { rememberOrder } from "@/lib/recent-orders";
 import type { WelcomeOffer } from "@/lib/discounts";
 import type { MenuItem } from "@/lib/menu";
-import { OptionsSheet } from "../add-to-cart";
+import { OptionsSheet } from "@/app/add-to-cart";
 import { placeOrder } from "./actions";
 
 type LatLng = { lat: number; lng: number };
 
 export interface CheckoutData {
+  store: { id: string; slug: string; name: string };
   customer: { name: string; phone: string | null } | null;
   facebookLogin: boolean;
   offer: WelcomeOffer | null;
@@ -34,6 +35,9 @@ export interface CheckoutData {
   barangays: { id: string; name: string; center: LatLng | null }[];
   kitchen: LatLng | null;
   mapCenter: LatLng;
+  /** Off = the store is pickup-only. */
+  deliveryEnabled: boolean;
+  /** The kitchen pin is set, so delivery can be quoted. */
   deliveryReady: boolean;
   hours: StoreHoursDay[];
   closures: string[];
@@ -63,7 +67,8 @@ const inputClass = "w-full rounded-lg border border-stone-300 bg-white px-3 py-2
 
 export function CheckoutForm({ data }: { data: CheckoutData }) {
   const router = useRouter();
-  const lines = useCart();
+  const lines = useCart(data.store.slug);
+  const cart = cartFor(data.store.slug);
   const [pending, startTransition] = useTransition();
   const [errors, setErrors] = useState<string[]>([]);
   const [editing, setEditing] = useState<CartEntry | null>(null);
@@ -155,7 +160,7 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
         const res = await fetch("/api/delivery/quote", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ lat: pin.lat, lng: pin.lng, barangayId, subtotal }),
+          body: JSON.stringify({ storeId: data.store.id, lat: pin.lat, lng: pin.lng, barangayId, subtotal }),
           signal: controller.signal,
         });
         const json = (await res.json()) as { ok: true; quote: DeliveryQuote; estimated: boolean } | { ok: false; error: string };
@@ -168,7 +173,7 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
       clearTimeout(t);
       controller.abort();
     };
-  }, [quoteKey, pin, barangayId, subtotal]);
+  }, [quoteKey, pin, barangayId, subtotal, data.store.id]);
 
   function chooseSaved(id: string) {
     setSavedId(id);
@@ -227,6 +232,7 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
 
     startTransition(async () => {
       const result = await placeOrder({
+        store: data.store.slug,
         cart: lines.map(({ lineId, productId, qty, weightKg, modifierIds, notes }) => ({ lineId, productId, qty, weightKg, modifierIds, notes })),
         name,
         phone,
@@ -239,7 +245,7 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
         consent: true,
       });
       if (result.ok) {
-        rememberOrder({ code: result.code, url: result.url, placedAt: new Date().toISOString() });
+        rememberOrder({ code: result.code, url: result.url, placedAt: new Date().toISOString(), store: data.store.slug });
         cart.clear();
         router.push(result.url);
       } else {
@@ -252,7 +258,7 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
     return (
       <div className="rounded-xl border border-stone-200 bg-white p-6 text-center dark:border-stone-800 dark:bg-stone-900">
         <p className="mb-4 text-stone-600 dark:text-stone-400">Your cart is empty.</p>
-        <Link href="/" className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white">
+        <Link href={`/s/${data.store.slug}`} className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white">
           Browse the menu
         </Link>
       </div>
@@ -272,7 +278,7 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
         <h2 className="mb-3 font-semibold">Your order</h2>
         <ul className="divide-y divide-stone-100 dark:divide-stone-800">
           {lines.map((l) => (
-            <CartLineRow key={l.lineId} line={l} item={data.menuItems[l.productId]} onEdit={() => setEditing(l)} />
+            <CartLineRow key={l.lineId} line={l} item={data.menuItems[l.productId]} cart={cart} onEdit={() => setEditing(l)} />
           ))}
         </ul>
         {editing && data.menuItems[editing.productId] && (
@@ -287,7 +293,7 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
           <p className="mb-3 rounded-lg bg-orange-50 p-3 text-sm text-orange-900 dark:bg-orange-950 dark:text-orange-200">
             {data.facebookLogin ? (
               <>
-                <Link href="/login?next=/checkout" className="font-medium underline">
+                <Link href={`/s/${data.store.slug}/login?next=/s/${data.store.slug}/checkout`} className="font-medium underline">
                   Log in with Facebook
                 </Link>{" "}
                 to save your details{data.offer === null ? " and get a welcome discount." : "."}
@@ -311,8 +317,8 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
 
       {/* Pickup / delivery */}
       <section className={section}>
-        <h2 className="mb-3 font-semibold">Pickup or delivery</h2>
-        <div className="mb-4 grid grid-cols-2 gap-2">
+        <h2 className="mb-3 font-semibold">{data.deliveryEnabled ? "Pickup or delivery" : "Pickup"}</h2>
+        <div className={`mb-4 grid grid-cols-2 gap-2 ${data.deliveryEnabled ? "" : "hidden"}`}>
           {(["pickup", "delivery"] as const).map((f) => (
             <button
               key={f}
@@ -328,11 +334,11 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
 
         {fulfillment === "pickup" && (
           <p className="text-sm text-stone-600 dark:text-stone-400">
-            Pick up at {data.settings.kitchenAddress ?? "our kitchen in Tapilon"}.
+            Pick up at {data.settings.kitchenAddress ?? `${data.store.name}'s kitchen`}.
             {data.settings.pickupInstructions ? ` ${data.settings.pickupInstructions}` : ""}
           </p>
         )}
-        {!data.deliveryReady && <p className="text-xs text-stone-500">Delivery isn&apos;t available yet.</p>}
+        {data.deliveryEnabled && !data.deliveryReady && <p className="text-xs text-stone-500">Delivery isn&apos;t available yet.</p>}
 
         {fulfillment === "delivery" && (
           <div className="flex flex-col gap-3">
@@ -513,7 +519,7 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
 }
 
 /** One cart line: base price, each add-on with its price, notes, quantity and an edit button. */
-function CartLineRow({ line: l, item, onEdit }: { line: CartEntry; item: MenuItem | undefined; onEdit: () => void }) {
+function CartLineRow({ line: l, item, cart, onEdit }: { line: CartEntry; item: MenuItem | undefined; cart: Cart; onEdit: () => void }) {
   const tilde = l.isEstimate ? "~" : "";
   // Add-ons priced from the current menu; items no longer on the menu fall back to the saved labels.
   const options = item?.groups.flatMap((g) => g.options).filter((o) => l.modifierIds.includes(o.id));

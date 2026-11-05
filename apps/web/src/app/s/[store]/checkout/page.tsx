@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
@@ -7,31 +8,32 @@ import { DAANBANTAYAN_CENTER, fetchCatalog } from "@/lib/catalog";
 import { getCurrentCustomer } from "@/lib/customer";
 import { welcomeOfferFor } from "@/lib/discounts";
 import { getPublicMenu } from "@/lib/menu";
+import { getStore, storePath } from "@/lib/stores";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { CheckoutForm, type CheckoutData } from "./checkout-form";
 import { readServerPublicEnv } from "@/lib/supabase/env";
 
-export const metadata = { title: "Checkout · Weekend Food Hub" };
+export async function generateMetadata({ params }: PageProps<"/s/[store]/checkout">): Promise<Metadata> {
+  const store = await getStore((await params).store);
+  return { title: `Checkout · ${store.name}` };
+}
 
-export default function CheckoutPage() {
+export default function CheckoutPage({ params }: PageProps<"/s/[store]/checkout">) {
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-16 pt-6">
-      <Link href="/" className="text-sm text-stone-500 hover:text-orange-700">
-        ← Back to menu
-      </Link>
-      <h1 className="mb-6 mt-2 text-2xl font-semibold tracking-tight">Checkout</h1>
       <Suspense fallback={<Loading />}>
-        <Checkout />
+        <Checkout params={params} />
       </Suspense>
     </main>
   );
 }
 
-async function Checkout() {
+async function Checkout({ params }: { params: PageProps<"/s/[store]/checkout">["params"] }) {
   // Request time only: the build must not reach Supabase (the Docker image is built without its address).
   await connection();
-  const [catalog, customer, menu] = await Promise.all([fetchCatalog(), getCurrentCustomer(), getPublicMenu()]);
-  const offer = await welcomeOfferFor(customer);
+  const store = await getStore((await params).store);
+  const [catalog, customer, menu] = await Promise.all([fetchCatalog(store.id), getCurrentCustomer(store.id), getPublicMenu(store.id)]);
+  const offer = await welcomeOfferFor(customer, store.id);
 
   let savedAddresses: CheckoutData["savedAddresses"] = [];
   if (customer) {
@@ -40,6 +42,7 @@ async function Checkout() {
       .schema("store")
       .from("customer_addresses")
       .select("id, label, barangay_id, street_purok, landmark, rider_notes, lat, lng, is_default")
+      .eq("customer_id", customer.id)
       .order("is_default", { ascending: false });
     savedAddresses = (data ?? []).map((a) => ({
       id: a.id,
@@ -54,6 +57,7 @@ async function Checkout() {
   }
 
   const data: CheckoutData = {
+    store: { id: store.id, slug: store.slug, name: store.name },
     customer: customer ? { name: customer.name, phone: customer.phone } : null,
     facebookLogin: readServerPublicEnv().facebookLogin,
     offer,
@@ -65,6 +69,7 @@ async function Checkout() {
       catalog.delivery.kitchen ??
       (catalog.delivery.serviceArea ? serviceAreaCenter(catalog.delivery.serviceArea) : null) ??
       DAANBANTAYAN_CENTER,
+    deliveryEnabled: catalog.delivery.enabled,
     deliveryReady: catalog.delivery.kitchen !== null,
     hours: catalog.hours,
     closures: catalog.closures,
@@ -80,5 +85,13 @@ async function Checkout() {
       kitchenAddress: catalog.delivery.kitchenAddress,
     },
   };
-  return <CheckoutForm data={data} />;
+  return (
+    <>
+      <Link href={storePath(store.slug)} className="text-sm text-stone-500 hover:text-orange-700">
+        ← Back to {store.name}
+      </Link>
+      <h1 className="mb-6 mt-2 text-2xl font-semibold tracking-tight">Checkout</h1>
+      <CheckoutForm data={data} />
+    </>
+  );
 }

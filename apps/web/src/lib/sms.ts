@@ -187,37 +187,39 @@ export const smsProviderName = () => provider().name;
 export const smsMode = () =>
   dryRun() ? (provider().configured() ? "dry_run" : "no_token") : "live";
 
-export async function getSmsSettings(): Promise<SmsSettings | null> {
+export async function getSmsSettings(storeId: string): Promise<SmsSettings | null> {
   const { data } = await createSupabaseAdminClient()
     .schema("ops")
     .from("sms_settings")
     .select("*")
-    .eq("id", true)
+    .eq("store_id", storeId)
     .maybeSingle();
   return data;
 }
 
-/** Texts a customer if that kind of text is switched on. */
+/** Texts a store's customer if that kind of text is switched on for the store. */
 export async function textCustomer(
+  storeId: string,
   kind: CustomerSmsKind,
   phone: string | null | undefined,
   message: string,
   orderCode: string,
 ) {
-  const settings = await getSmsSettings();
+  const settings = await getSmsSettings(storeId);
   if (!settings?.enabled || !settings[kind]) return;
-  await sendSms(kind, phone, message, orderCode);
+  await sendSms(storeId, kind, phone, message, orderCode);
 }
 
-/** Texts the admin number if it's set and that kind of text is switched on. */
-export async function textAdmin(kind: AdminSmsKind, message: string, orderCode: string) {
-  const settings = await getSmsSettings();
+/** Texts the store's admin number if it's set and that kind of text is switched on. */
+export async function textAdmin(storeId: string, kind: AdminSmsKind, message: string, orderCode: string) {
+  const settings = await getSmsSettings(storeId);
   if (!settings?.enabled || !settings[kind] || !settings.admin_phone) return;
-  await sendSms(kind, settings.admin_phone, message, orderCode);
+  await sendSms(storeId, kind, settings.admin_phone, message, orderCode);
 }
 
-/** Sends one text and logs it. Returns an error message, or null when it went out (or was logged in dry-run mode). */
+/** Sends one text and logs it under the store. Returns an error message, or null when it went out (or was logged in dry-run mode). */
 export async function sendSms(
+  storeId: string,
   kind: SmsKind,
   phone: string | null | undefined,
   message: string,
@@ -254,6 +256,7 @@ export async function sendSms(
   try {
     const log = createSupabaseAdminClient().schema("ops").from("sms_log");
     await log.insert({
+      store_id: storeId,
       kind,
       recipient,
       message: text,

@@ -23,7 +23,11 @@ export default function TextsPage() {
 
 // Sample texts so the owner sees exactly what goes out.
 const site = process.env.SITE_URL ?? "http://localhost:3100";
+// Samples use the longest store name, so the length check covers every store.
+const SAMPLE_STORE = "Sweet Treats by Yang";
+
 const sampleOrder = {
+  store: SAMPLE_STORE,
   code: "WEB-10012",
   total: 349,
   fulfillment: "pickup" as const,
@@ -79,6 +83,7 @@ const ADMIN: { key: keyof SmsSettings; label: string; when: string; sample: stri
     label: "New order needs a seafood check",
     when: "Website orders with seafood. The customer is waiting before they can pay.",
     sample: adminSeafoodCheckText({
+      store: SAMPLE_STORE,
       code: "A-012 (WEB-10012)",
       customer: "Maria Santos",
       fulfillment: "delivery",
@@ -91,6 +96,7 @@ const ADMIN: { key: keyof SmsSettings; label: string; when: string; sample: stri
     label: "GCash payment to verify",
     when: "When a customer sends their GCash reference number.",
     sample: adminPaymentText({
+      store: SAMPLE_STORE,
       code: "A-012 (WEB-10012)",
       amount: 849,
       referenceNo: "1012345678901",
@@ -125,15 +131,16 @@ function Toggle({ item, settings }: { item: (typeof CUSTOMER)[number]; settings:
 const daysAgo = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString();
 
 async function TextsContent() {
-  const { supabase } = await requireOwner();
+  const { supabase, storeId } = await requireOwner();
   const ops = supabase.schema("ops");
   const [{ data: settings, error }, { data: log }, { count: sentLast30Days }, status] =
     await Promise.all([
-      ops.from("sms_settings").select("*").eq("id", true).single(),
-      ops.from("sms_log").select("*").order("created_at", { ascending: false }).limit(30),
+      ops.from("sms_settings").select("*").eq("store_id", storeId).single(),
+      ops.from("sms_log").select("*").eq("store_id", storeId).order("created_at", { ascending: false }).limit(30),
       ops
         .from("sms_log")
         .select("id", { count: "exact", head: true })
+        .eq("store_id", storeId)
         .eq("status", "sent")
         .gte("created_at", daysAgo(30)),
       getSmsStatus(),

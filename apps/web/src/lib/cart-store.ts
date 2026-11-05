@@ -13,73 +13,107 @@ export interface CartEntry extends CartLine {
   needsAvailability: boolean;
   requiresCooking: boolean;
   prepMinutes: number;
-  /** Days of advance notice (cakes etc.). Missing in carts saved before sub-brands. */
+  /** Days of advance notice (cakes etc.). Missing in carts saved before made-to-order items. */
   noticeDays?: number;
 }
 
-const KEY = "wfh-cart-v1";
-const listeners = new Set<() => void>();
-let cache: CartEntry[] | null = null;
+export interface Cart {
+  add(entry: CartEntry): void;
+  setQty(lineId: string, qty: number): void;
+  /** Swaps a line for its edited version, keeping its place in the cart. */
+  replace(entry: CartEntry): void;
+  remove(lineId: string): void;
+  clear(): void;
+}
+
+// Each store has its own cart. Weekend Food Hub keeps the key from before stores existed, so carts in
+// progress survive the switch.
+const keyFor = (store: string) => (store === "weekendfoodhub" ? "wfh-cart-v1" : `wfh-cart-v1:${store}`);
+
 const EMPTY: CartEntry[] = [];
 
-function read(): CartEntry[] {
-  if (cache) return cache;
-  try {
-    const raw = localStorage.getItem(KEY);
-    cache = raw ? (JSON.parse(raw) as CartEntry[]) : [];
-  } catch {
-    cache = [];
-  }
-  return cache;
+interface CartStore extends Cart {
+  read(): CartEntry[];
+  subscribe(listener: () => void): () => void;
 }
 
-function write(next: CartEntry[]) {
-  cache = next;
-  try {
-    localStorage.setItem(KEY, JSON.stringify(next));
-  } catch {
-    // Private mode or storage full: the cart still works for this visit.
-  }
-  for (const l of listeners) l();
-}
+const stores = new Map<string, CartStore>();
 
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  const onStorage = (e: StorageEvent) => {
-    if (e.key === KEY) {
-      cache = null;
-      listener();
+function cartStore(store: string): CartStore {
+  const existing = stores.get(store);
+  if (existing) return existing;
+
+  const key = keyFor(store);
+  const listeners = new Set<() => void>();
+  let cache: CartEntry[] | null = null;
+
+  const read = (): CartEntry[] => {
+    if (cache) return cache;
+    try {
+      const raw = localStorage.getItem(key);
+      cache = raw ? (JSON.parse(raw) as CartEntry[]) : [];
+    } catch {
+      cache = [];
     }
+    return cache;
   };
-  window.addEventListener("storage", onStorage);
-  return () => {
-    listeners.delete(listener);
-    window.removeEventListener("storage", onStorage);
+
+  const write = (next: CartEntry[]) => {
+    cache = next;
+    try {
+      localStorage.setItem(key, JSON.stringify(next));
+    } catch {
+      // Private mode or storage full: the cart still works for this visit.
+    }
+    for (const l of listeners) l();
   };
+
+  const created: CartStore = {
+    read,
+    subscribe(listener) {
+      listeners.add(listener);
+      const onStorage = (e: StorageEvent) => {
+        if (e.key === key) {
+          cache = null;
+          listener();
+        }
+      };
+      window.addEventListener("storage", onStorage);
+      return () => {
+        listeners.delete(listener);
+        window.removeEventListener("storage", onStorage);
+      };
+    },
+    add(entry) {
+      write([...read(), entry]);
+    },
+    setQty(lineId, qty) {
+      write(qty <= 0 ? read().filter((l) => l.lineId !== lineId) : read().map((l) => (l.lineId === lineId ? { ...l, qty: Math.min(qty, 50) } : l)));
+    },
+    replace(entry) {
+      write(read().map((l) => (l.lineId === entry.lineId ? entry : l)));
+    },
+    remove(lineId) {
+      write(read().filter((l) => l.lineId !== lineId));
+    },
+    clear() {
+      write([]);
+    },
+  };
+  stores.set(store, created);
+  return created;
 }
 
-export function useCart(): CartEntry[] {
-  return useSyncExternalStore(subscribe, read, () => EMPTY);
+/** The cart actions for a store (by slug). */
+export function cartFor(store: string): Cart {
+  return cartStore(store);
 }
 
-export const cart = {
-  add(entry: CartEntry) {
-    write([...read(), entry]);
-  },
-  setQty(lineId: string, qty: number) {
-    write(qty <= 0 ? read().filter((l) => l.lineId !== lineId) : read().map((l) => (l.lineId === lineId ? { ...l, qty: Math.min(qty, 50) } : l)));
-  },
-  /** Swaps a line for its edited version, keeping its place in the cart. */
-  replace(entry: CartEntry) {
-    write(read().map((l) => (l.lineId === entry.lineId ? entry : l)));
-  },
-  remove(lineId: string) {
-    write(read().filter((l) => l.lineId !== lineId));
-  },
-  clear() {
-    write([]);
-  },
-};
+/** A store's cart lines, kept in sync across tabs. */
+export function useCart(store: string): CartEntry[] {
+  const s = cartStore(store);
+  return useSyncExternalStore(s.subscribe, s.read, () => EMPTY);
+}
 
 export function cartSubtotal(lines: CartEntry[]): number {
   return Math.round(lines.reduce((sum, l) => sum + l.displayUnitPrice * l.qty, 0) * 100) / 100;

@@ -12,12 +12,17 @@ const CHANNEL = "site-visitors";
 
 export type VisitorPage = "menu" | "checkout" | "order" | "account" | "other";
 
-function pageKind(pathname: string): VisitorPage {
-  if (pathname === "/") return "menu";
-  if (pathname.startsWith("/checkout")) return "checkout";
-  if (pathname.startsWith("/o/")) return "order";
-  if (pathname.startsWith("/account") || pathname.startsWith("/login")) return "account";
-  return "other";
+type Visit = { page: VisitorPage; store: string | null };
+
+/** The kind of page, and the store it belongs to (order pages at /o/… don't say which store). */
+function visitOf(pathname: string): Visit {
+  if (pathname.startsWith("/o/")) return { page: "order", store: null };
+  const match = /^\/s\/([^/]+)(\/[^/]*)?/.exec(pathname);
+  if (!match) return { page: "other", store: null };
+  const rest = match[2] ?? "";
+  const page: VisitorPage =
+    rest === "" || rest === "/" ? "menu" : rest === "/checkout" ? "checkout" : rest === "/account" || rest === "/login" ? "account" : "other";
+  return { page, store: match[1]! };
 }
 
 /** On every public page (root layout): reports this tab as a visitor. Admin pages aren't counted. */
@@ -25,7 +30,7 @@ export function TrackVisitor() {
   const pathname = usePathname();
   const isAdmin = pathname.startsWith("/admin");
   const channelRef = useRef<RealtimeChannel | null>(null);
-  const page = pageKind(pathname);
+  const { page, store } = visitOf(pathname);
 
   // One presence entry per tab for as long as it stays on public pages.
   useEffect(() => {
@@ -34,7 +39,7 @@ export function TrackVisitor() {
     const channel = supabase.channel(CHANNEL, { config: { presence: { key: crypto.randomUUID() } } });
     channelRef.current = channel;
     channel.subscribe((status) => {
-      if (status === "SUBSCRIBED") void channel.track({ page: pageKind(window.location.pathname) });
+      if (status === "SUBSCRIBED") void channel.track(visitOf(window.location.pathname));
     });
     return () => {
       channelRef.current = null;
@@ -44,8 +49,8 @@ export function TrackVisitor() {
 
   // Keep the page kind current as the visitor moves around.
   useEffect(() => {
-    void channelRef.current?.track({ page });
-  }, [page]);
+    void channelRef.current?.track({ page, store });
+  }, [page, store]);
 
   return null;
 }
@@ -58,8 +63,8 @@ const PAGE_LABEL: Record<VisitorPage, string> = {
   other: "elsewhere",
 };
 
-/** Admin header: how many people are on the public site right now, and where. */
-export function LiveVisitors() {
+/** Admin header: how many people are on this store's pages right now, and where (order pages count for every store). */
+export function LiveVisitors({ store }: { store: string }) {
   const [counts, setCounts] = useState<Record<VisitorPage, number> | null>(null);
 
   useEffect(() => {
@@ -68,16 +73,18 @@ export function LiveVisitors() {
     channel
       .on("presence", { event: "sync" }, () => {
         const next: Record<VisitorPage, number> = { menu: 0, checkout: 0, order: 0, account: 0, other: 0 };
-        for (const entries of Object.values(channel.presenceState<{ page?: VisitorPage }>())) {
+        for (const entries of Object.values(channel.presenceState<{ page?: VisitorPage; store?: string | null }>())) {
           // One key per tab; use its latest reported page.
-          const page = entries.at(-1)?.page ?? "other";
+          const latest = entries.at(-1);
+          if (latest?.store && latest.store !== store) continue;
+          const page = latest?.page ?? "other";
           next[page in next ? page : "other"]++;
         }
         setCounts(next);
       })
       .subscribe();
     return () => void supabase.removeChannel(channel);
-  }, []);
+  }, [store]);
 
   if (!counts) return null;
   const total = Object.values(counts).reduce((s, n) => s + n, 0);

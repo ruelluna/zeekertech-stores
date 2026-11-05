@@ -38,6 +38,7 @@ const PAYMENTS: { value: Payment; label: string }[] = [
 ];
 
 export function ManualOrderForm({
+  storeId,
   categories,
   barangays,
   kitchen,
@@ -45,6 +46,7 @@ export function ManualOrderForm({
   defaultPrepMinutes,
   addTo,
 }: {
+  storeId: string;
   categories: { id: string; name: string; items: MenuItem[] }[];
   barangays: { id: string; name: string; center: LatLng | null }[];
   kitchen: LatLng | null;
@@ -104,7 +106,7 @@ export function ManualOrderForm({
     fetch("/api/delivery/quote", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lat: pin.lat, lng: pin.lng, barangayId, subtotal: 0 }),
+      body: JSON.stringify({ storeId, lat: pin.lat, lng: pin.lng, barangayId, subtotal: 0 }),
       signal: controller.signal,
     })
       .then((r) => r.json())
@@ -114,7 +116,7 @@ export function ManualOrderForm({
       })
       .catch(() => {});
     return () => controller.abort();
-  }, [quoteKey, pin, barangayId, feeEdited]);
+  }, [quoteKey, pin, barangayId, feeEdited, storeId]);
   const feeDiffers =
     fulfillment === "delivery" && (!currentQuote?.ok || currentQuote.quote.fee !== fee);
 

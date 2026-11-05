@@ -38,13 +38,13 @@ export async function notifyOrder(webOrderId: string, customerId: string | null,
 }
 
 /**
- * Sends a browser notification to every device where active staff with one of these roles turned on phone alerts.
- * `tag` keeps one notification per order instead of replacing the previous order's.
+ * Sends a browser notification to every device where the store's active staff with one of these roles turned on
+ * phone alerts. `tag` keeps one notification per order instead of replacing the previous order's.
  */
-export async function notifyStaff(roles: StaffRole[], message: { title: string; body: string; url: string; tag: string }) {
+export async function notifyStaff(storeId: string, roles: StaffRole[], message: { title: string; body: string; url: string; tag: string }) {
   if (!configure()) return;
   const ops = createSupabaseAdminClient().schema("ops");
-  const { data: staff } = await ops.from("staff_users").select("user_id").in("role", roles).eq("active", true);
+  const { data: staff } = await ops.from("staff_users").select("user_id").eq("store_id", storeId).in("role", roles).eq("active", true);
   if (!staff?.length) return;
   const { data: subs } = await ops
     .from("staff_web_push")

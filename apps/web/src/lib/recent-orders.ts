@@ -5,6 +5,8 @@ export interface RecentOrder {
   code: string;
   url: string;
   placedAt: string;
+  /** Store slug. Missing on orders remembered before stores existed (Weekend Food Hub). */
+  store?: string;
 }
 
 const KEY = "wfh-orders-v1";

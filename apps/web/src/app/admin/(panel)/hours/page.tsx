@@ -2,7 +2,8 @@ import { Suspense } from "react";
 import { ActionForm } from "@/components/action-form";
 import { Card, Checkbox, Field, Input, Loading, PageHeader, Textarea } from "@/components/ui";
 import { requireOwner } from "@/lib/auth";
-import { addClosure, removeClosure, saveHours, savePrintSettings, saveStoreSettings, uploadGcashQr } from "./actions";
+import { getStoreById } from "@/lib/stores";
+import { addClosure, removeClosure, saveHours, savePrintSettings, saveStoreProfile, saveStoreSettings, uploadGcashQr } from "./actions";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const hhmm = (t: string) => t.slice(0, 5);
@@ -22,18 +23,30 @@ export default function HoursPage() {
 }
 
 async function HoursContent() {
-  const { supabase } = await requireOwner();
+  const { supabase, storeId } = await requireOwner();
   const store = supabase.schema("store");
-  const [hours, closures, settings] = await Promise.all([
-    store.from("store_hours").select("*").order("day_of_week"),
-    store.from("store_closures").select("*").order("date"),
-    store.from("store_settings").select("*").eq("id", true).single(),
+  const [hours, closures, settings, profile] = await Promise.all([
+    store.from("store_hours").select("*").eq("store_id", storeId).order("day_of_week"),
+    store.from("store_closures").select("*").eq("store_id", storeId).order("date"),
+    store.from("store_settings").select("*").eq("store_id", storeId).single(),
+    getStoreById(storeId),
   ]);
   if (hours.error || closures.error || settings.error) throw hours.error ?? closures.error ?? settings.error;
   const s = settings.data;
 
   return (
     <>
+      <Card title="Store" description="Shown at the top of the store's menu.">
+        <ActionForm action={saveStoreProfile} className="flex flex-wrap items-end gap-3">
+          <Field label="Store name" className="w-64">
+            <Input name="name" defaultValue={profile?.name ?? ""} required />
+          </Field>
+          <Field label="Tagline" className="min-w-64 flex-1">
+            <Input name="tagline" defaultValue={profile?.tagline ?? ""} placeholder="e.g. Made-to-order cakes and pastries" />
+          </Field>
+        </ActionForm>
+      </Card>
+
       <Card title="Ordering hours" description="Manila time.">
         <ActionForm action={saveHours} submitLabel="Save hours">
           <div className="flex flex-col gap-2">
@@ -106,6 +119,9 @@ async function HoursContent() {
             </Field>
             <Field label="Flag unpaid after (min)">
               <Input name="unpaid_flag_minutes" type="number" min="0" defaultValue={s.unpaid_flag_minutes} />
+            </Field>
+            <Field label="Advance notice (days)" hint="Made-to-order: earliest pickup/delivery is this many days ahead. 0 = same day.">
+              <Input name="notice_days" type="number" min="0" max="60" defaultValue={s.notice_days} />
             </Field>
             <Field label="GCash account name" hint="Shown next to the QR at checkout">
               <Input name="gcash_account_name" defaultValue={s.gcash_account_name ?? ""} />

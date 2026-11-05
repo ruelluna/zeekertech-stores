@@ -38,12 +38,12 @@ export async function saveSmsSettings(
   const parsed = Settings.safeParse(formObject(formData));
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Check the details");
 
-  const { supabase } = await requireOwner();
+  const { supabase, storeId } = await requireOwner();
   const { error } = await supabase
     .schema("ops")
     .from("sms_settings")
     .update({ ...parsed.data, updated_at: new Date().toISOString() })
-    .eq("id", true);
+    .eq("store_id", storeId);
   if (error) return fail(error.message);
   refresh();
   return ok();
@@ -52,12 +52,13 @@ export async function saveSmsSettings(
 export async function sendTestSms(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const phone = phMobile.safeParse(formData.get("phone"));
   if (!phone.success || !phone.data) return fail("Enter a mobile number like 09171234567");
-  await requireOwner();
+  const { storeId, store } = await requireOwner();
 
   const error = await sendSms(
+    storeId,
     "test",
     phone.data,
-    "Weekend Food Hub: This is a test text from your ordering system. Texts are working!",
+    `${store.name}: This is a test text from your ordering system. Texts are working!`,
   );
   refresh();
   if (error) return fail(`Not sent: ${error}`);

@@ -7,6 +7,8 @@ type Product = Tables<{ schema: "store" }, "products">;
 
 export interface ProductFormData {
   product: Product | null;
+  /** The store's default advance notice, used when the product leaves it blank. */
+  storeNoticeDays: number;
   categories: { id: string; name: string }[];
   ingredients: { id: string; name: string; availability_mode: string }[];
   groups: { id: string; name: string; modifiers: { id: string; name: string; price_delta: number | null }[] }[];
@@ -23,7 +25,7 @@ const TYPE_LABELS = {
   bundle: "Bundle",
 } as const;
 
-export function ProductForm({ product: p, categories, ingredients, groups, linkedIngredientIds, linkedGroupIds, showWhen }: ProductFormData) {
+export function ProductForm({ product: p, storeNoticeDays, categories, ingredients, groups, linkedIngredientIds, linkedGroupIds, showWhen }: ProductFormData) {
   return (
     <ActionForm action={saveProduct} submitLabel={p ? "Save product" : "Create product"} className="flex flex-col">
       {p && <input type="hidden" name="id" value={p.id} />}
@@ -94,7 +96,7 @@ export function ProductForm({ product: p, categories, ingredients, groups, linke
           <Field label="Order in category">
             <Input name="sort_order" type="number" defaultValue={p?.sort_order ?? 0} />
           </Field>
-          <Field label="Advance notice (days)" hint="For made-to-order cakes etc. Blank = the brand's notice (none for the main menu).">
+          <Field label="Advance notice (days)" hint={`Made-to-order items. Blank = the store's notice (${storeNoticeDays === 1 ? "1 day" : `${storeNoticeDays} days`}).`}>
             <Input name="notice_days" type="number" min="0" max="60" defaultValue={p?.notice_days ?? ""} />
           </Field>
           <Field label="Notes label" hint="Replaces “Notes” when adding to cart, e.g. Message on the cake" className="sm:col-span-2">

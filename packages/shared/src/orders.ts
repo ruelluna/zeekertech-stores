@@ -66,8 +66,6 @@ export const OrderItem = z.object({
   /** False for frozen "As is" packs: they skip the kitchen queue. */
   requiresCooking: z.boolean(),
   prepMinutes: z.number().int().nonnegative(),
-  /** Sub-brand name (e.g. "Sweet Treats by Yang"); null for the main menu. Missing in older payloads. */
-  brand: z.string().nullable().default(null),
 });
 export type OrderItem = z.infer<typeof OrderItem>;
 
@@ -97,6 +95,8 @@ export type Totals = z.infer<typeof Totals>;
 export const WebOrder = z
   .object({
     orderId: z.string().min(1),
+    /** The store the order was placed in. Missing in orders placed before stores existed (Weekend Food Hub). */
+    storeId: z.uuid().optional(),
     customer: CustomerSnapshot,
     fulfillment: Fulfillment,
     scheduledFor: z.iso.datetime({ offset: true }),

@@ -14,6 +14,7 @@ import { fetchCatalog, type CatalogProduct } from "@/lib/catalog";
 import { getCurrentCustomer } from "@/lib/customer";
 import { quoteDelivery } from "@/lib/delivery";
 import { discountAmount, duplicateDiscountFlag, welcomeOfferFor } from "@/lib/discounts";
+import { listStores } from "@/lib/stores";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { enqueueWebEvent, flushOutboxes } from "@/lib/webhooks/outbox";
 import { CheckoutInput, type PlaceOrderResult } from "./schema";
@@ -23,7 +24,7 @@ const SLOT_ERRORS = {
   outside_hours: "That time is outside our pickup and delivery hours. Please pick another time.",
   too_soon: "That time is too soon to prepare your order. Please pick a later time.",
   uncertain_items_cutoff: "Seafood dishes can't be ordered for today anymore. Please pick tomorrow.",
-  needs_notice: "Cakes and pastries are made to order. Please pick a later date.",
+  needs_notice: "Some items are made to order and need more notice. Please pick a later date.",
 } as const;
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -37,7 +38,10 @@ export async function placeOrder(raw: unknown): Promise<PlaceOrderResult> {
   const phone = normalizePhMobile(input.phone);
   if (!phone) return { ok: false, errors: ["Enter a valid mobile number, e.g. 0917 123 4567"] };
 
-  const [catalog, customer] = await Promise.all([fetchCatalog(), getCurrentCustomer()]);
+  const store = (await listStores()).find((s) => s.slug === input.store && s.active);
+  if (!store) return { ok: false, errors: ["This store isn't taking orders."] };
+
+  const [catalog, customer] = await Promise.all([fetchCatalog(store.id), getCurrentCustomer(store.id)]);
   const now = new Date();
 
   // Store open / paused / pre-orders
@@ -61,6 +65,7 @@ export async function placeOrder(raw: unknown): Promise<PlaceOrderResult> {
   let barangayName: string | null = null;
   const flags: string[] = [];
   if (input.fulfillment === "delivery") {
+    if (!catalog.delivery.enabled) return { ok: false, errors: ["This store is pickup only."] };
     if (!input.address) return { ok: false, errors: ["Add your delivery address"] };
     const result = await quoteDelivery(catalog, {
       lat: input.address.lat,
@@ -96,7 +101,7 @@ export async function placeOrder(raw: unknown): Promise<PlaceOrderResult> {
   if (!slotCheck.ok) return { ok: false, errors: [SLOT_ERRORS[slotCheck.reason]] };
 
   // Welcome discount (logged-in customers only)
-  const offer = await welcomeOfferFor(customer);
+  const offer = await welcomeOfferFor(customer, store.id);
   const discount = discountAmount(offer, priced.subtotal);
   if (offer && discount > 0 && customer) {
     const pin = input.address ? { lat: input.address.lat, lng: input.address.lng } : null;
@@ -112,10 +117,11 @@ export async function placeOrder(raw: unknown): Promise<PlaceOrderResult> {
     : null;
 
   // Save the order
-  const store = createSupabaseAdminClient().schema("store");
-  const { data: row, error: insertError } = await store
+  const db = createSupabaseAdminClient().schema("store");
+  const { data: row, error: insertError } = await db
     .from("web_orders")
     .insert({
+      store_id: store.id,
       customer_id: customer?.id ?? null,
       fulfillment: input.fulfillment,
       scheduled_for: slot.toISOString(),
@@ -137,6 +143,7 @@ export async function placeOrder(raw: unknown): Promise<PlaceOrderResult> {
 
   const order = WebOrder.parse({
     orderId: row.order_code,
+    storeId: store.id,
     customer: { id: customer?.id ?? null, name: input.name, phone, facebookId: null },
     fulfillment: input.fulfillment,
     scheduledFor: slot.toISOString(),
@@ -166,19 +173,19 @@ export async function placeOrder(raw: unknown): Promise<PlaceOrderResult> {
     flags,
   });
 
-  const { error: updateError } = await store.from("web_orders").update({ order }).eq("id", row.id);
+  const { error: updateError } = await db.from("web_orders").update({ order }).eq("id", row.id);
   if (updateError) throw updateError;
 
   if (customer) {
     if (offer && discount > 0) {
-      await store
+      await db
         .from("promotion_redemptions")
         .insert({ promotion_id: offer.promotionId, customer_id: customer.id, web_order_id: row.id, amount: discount });
     }
-    await store.from("customers").update({ phone, name: customer.name || input.name }).eq("id", customer.id);
+    await db.from("customers").update({ phone, name: customer.name || input.name }).eq("id", customer.id);
     if (input.address?.save && input.fulfillment === "delivery") {
-      const { count } = await store.from("customer_addresses").select("id", { count: "exact", head: true }).eq("customer_id", customer.id);
-      await store.from("customer_addresses").insert({
+      const { count } = await db.from("customer_addresses").select("id", { count: "exact", head: true }).eq("customer_id", customer.id);
+      await db.from("customer_addresses").insert({
         customer_id: customer.id,
         label: count ? `Address ${count + 1}` : "Home",
         barangay_id: input.address.barangayId,

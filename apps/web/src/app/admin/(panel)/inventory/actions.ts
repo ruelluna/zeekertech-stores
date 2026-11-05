@@ -13,9 +13,11 @@ export async function saveCounts(_prev: ActionState, formData: FormData): Promis
   const itemIds = z.array(z.uuid()).safeParse(formData.getAll("itemId"));
   if (!date.success || !itemIds.success) return fail("Invalid sheet");
 
-  const { supabase, userId } = await requireStaff();
+  const { supabase, userId, storeId } = await requireStaff();
+  const { data: own } = await supabase.schema("ops").from("inventory_items").select("id").eq("store_id", storeId).in("id", itemIds.data);
+  const ownIds = new Set((own ?? []).map((i) => i.id));
   const rows = [];
-  for (const id of itemIds.data) {
+  for (const id of itemIds.data.filter((i) => ownIds.has(i))) {
     const parsed = z
       .object({ beginning: amount, received: amount, wasted: amount, ending: amount })
       .safeParse({
@@ -63,10 +65,10 @@ export async function saveItem(_prev: ActionState, formData: FormData): Promise<
   const parsed = ItemInput.safeParse(formObject(formData));
   if (!parsed.success) return fail(zodMessage(parsed.error));
 
-  const { supabase } = await requireOwner();
+  const { supabase, storeId } = await requireOwner();
   const { id, ...fields } = parsed.data;
   const items = supabase.schema("ops").from("inventory_items");
-  const { error } = id ? await items.update(fields).eq("id", id) : await items.insert(fields);
+  const { error } = id ? await items.update(fields).eq("id", id).eq("store_id", storeId) : await items.insert({ ...fields, store_id: storeId });
   if (error) return fail(error.code === "23505" ? "An item with that name already exists" : error.message);
   refresh();
   return ok(id ? "Saved" : "Item added");

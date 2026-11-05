@@ -19,13 +19,14 @@ export default function AddOnsPage() {
 }
 
 async function Groups() {
-  const { supabase } = await requireOwner();
+  const { supabase, storeId } = await requireOwner();
   const { data: groups, error } = await supabase
     .schema("store")
     .from("modifier_groups")
     .select(
       "id, name, required, min_select, max_select, sort_order, modifiers(id, name, price_delta, requires_cooking, active, sort_order), product_modifier_groups(products(name))",
     )
+    .eq("store_id", storeId)
     .order("name");
   if (error) throw error;
 

@@ -55,7 +55,7 @@ export async function createManualOrder(raw: unknown): Promise<ManualOrderResult
   const parsed = ManualOrderInput.safeParse(raw);
   if (!parsed.success) return { ok: false, errors: parsed.error.issues.map((i) => i.message) };
   const input = parsed.data;
-  const { userId } = await requireStaff();
+  const { userId, storeId } = await requireStaff();
 
   const ops = createSupabaseAdminClient().schema("ops");
   const errors: string[] = [];
@@ -79,6 +79,7 @@ export async function createManualOrder(raw: unknown): Promise<ManualOrderResult
       .from("orders")
       .select("id, queue_code, status, customer_name, customer_phone, fulfillment, scheduled_for, address, barangay, lat, lng")
       .eq("id", input.parentOrderId)
+      .eq("store_id", storeId)
       .maybeSingle();
     if (!data) return { ok: false, errors: ["The original order wasn't found"] };
     if (CLOSED_FOR_ADDONS.includes(data.status)) {
@@ -103,7 +104,7 @@ export async function createManualOrder(raw: unknown): Promise<ManualOrderResult
   }
 
   // Price every line against the current menu. Uncertain items count as confirmed (staff can check now).
-  const catalog = await fetchCatalog();
+  const catalog = await fetchCatalog(storeId);
   const products = new Map<string, PricingProduct>(
     catalog.products.map((p) => [p.id, { ...p, badge: p.badge === "subject_to_availability" ? "available" : p.badge }]),
   );
@@ -174,6 +175,7 @@ export async function createManualOrder(raw: unknown): Promise<ManualOrderResult
   const { data: order, error } = await ops
     .from("orders")
     .insert({
+      store_id: storeId,
       source: input.source,
       client_id: crypto.randomUUID(),
       parent_order_id: parent?.id ?? null,
@@ -233,7 +235,6 @@ export async function createManualOrder(raw: unknown): Promise<ManualOrderResult
       needs_availability: false,
       requires_cooking: i.requiresCooking,
       prep_minutes: i.prepMinutes,
-      brand: i.brand,
       item_status: handedOverNow || !i.requiresCooking ? ("handed_over" as const) : ("pending" as const),
       sort_order: index,
     })),

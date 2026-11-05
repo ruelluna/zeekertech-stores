@@ -15,14 +15,17 @@ export interface Customer {
   isStaff: boolean;
 }
 
-/** Creates or refreshes the customer profile for a signed-in user (Facebook, or the dev test login). */
-export async function ensureCustomer(user: User): Promise<void> {
+/**
+ * Creates or refreshes a signed-in user's customer profile in one store (Facebook, or the dev test
+ * login). Customer accounts are separate per store, so the same login gets one profile per store.
+ */
+export async function ensureCustomer(user: User, storeId: string): Promise<void> {
   const db = createSupabaseAdminClient().schema("store");
   const facebook = user.identities?.find((i) => i.provider === "facebook");
   const meta = user.user_metadata ?? {};
   const name = (meta.full_name ?? meta.name ?? user.email?.split("@")[0] ?? "Customer") as string;
 
-  const { data: existing } = await db.from("customers").select("id").eq("user_id", user.id).maybeSingle();
+  const { data: existing } = await db.from("customers").select("id").eq("store_id", storeId).eq("user_id", user.id).maybeSingle();
   if (existing) {
     await db
       .from("customers")
@@ -31,6 +34,7 @@ export async function ensureCustomer(user: User): Promise<void> {
     return;
   }
   await db.from("customers").insert({
+    store_id: storeId,
     user_id: user.id,
     facebook_id: facebook?.id ?? null,
     name,
@@ -41,22 +45,39 @@ export async function ensureCustomer(user: User): Promise<void> {
   });
 }
 
-/** The signed-in customer, or null for guests. Request-time only. */
-export async function getCurrentCustomer(): Promise<Customer | null> {
+/**
+ * The signed-in customer in a store, or null for guests. Someone signed in from another store gets a
+ * profile in this one the first time they visit it. Request-time only.
+ */
+export async function getCurrentCustomer(storeId: string): Promise<Customer | null> {
   await connection();
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase.auth.getUser();
   if (!data.user) return null;
 
-  const { data: row } = await supabase
-    .schema("store")
-    .from("customers")
-    .select("id, name, email, avatar_url, phone, created_at")
-    .eq("user_id", data.user.id)
-    .maybeSingle();
+  const find = () =>
+    supabase
+      .schema("store")
+      .from("customers")
+      .select("id, name, email, avatar_url, phone, created_at")
+      .eq("store_id", storeId)
+      .eq("user_id", data.user.id)
+      .maybeSingle();
+  let { data: row } = await find();
+  if (!row) {
+    // Only customers (who signed in through a storefront) get a profile here, not staff browsing the menu.
+    const { count } = await createSupabaseAdminClient()
+      .schema("store")
+      .from("customers")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", data.user.id);
+    if (!count) return null;
+    await ensureCustomer(data.user, storeId);
+    ({ data: row } = await find());
+  }
   if (!row) return null;
 
-  const { data: role } = await supabase.schema("ops").rpc("current_staff_role");
+  const { data: isStaff } = await supabase.schema("ops").rpc("is_store_staff", { p_store: storeId });
   return {
     id: row.id,
     userId: data.user.id,
@@ -65,6 +86,6 @@ export async function getCurrentCustomer(): Promise<Customer | null> {
     avatarUrl: row.avatar_url,
     phone: row.phone,
     createdAt: row.created_at,
-    isStaff: Boolean(role),
+    isStaff: Boolean(isStaff),
   };
 }

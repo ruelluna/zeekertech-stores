@@ -66,8 +66,8 @@ function PromotionFields({ p }: { p?: Promotion }) {
 }
 
 async function PromotionList() {
-  const { supabase } = await requireOwner();
-  const { data: promotions, error } = await supabase.schema("store").from("promotions").select("*").order("created_at");
+  const { supabase, storeId } = await requireOwner();
+  const { data: promotions, error } = await supabase.schema("store").from("promotions").select("*").eq("store_id", storeId).order("created_at");
   if (error) throw error;
 
   return (

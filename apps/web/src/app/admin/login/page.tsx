@@ -3,13 +3,13 @@ import { ActionForm } from "@/components/action-form";
 import { Field, Input } from "@/components/ui";
 import { signIn } from "./actions";
 
-export const metadata = { title: "Admin sign in · Weekend Food Hub" };
+export const metadata = { title: "Admin sign in" };
 
 export default function LoginPage({ searchParams }: PageProps<"/admin/login">) {
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-16">
       <div className="w-full max-w-sm rounded-xl border border-stone-200 bg-white p-6 shadow-sm dark:border-stone-800 dark:bg-stone-900">
-        <h1 className="text-xl font-semibold">Weekend Food Hub admin</h1>
+        <h1 className="text-xl font-semibold">Store admin</h1>
         <p className="mb-5 mt-1 text-sm text-stone-600 dark:text-stone-400">Sign in with your staff account.</p>
         <Suspense>
           <LoginForm searchParams={searchParams} />

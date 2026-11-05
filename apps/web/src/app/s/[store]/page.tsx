@@ -1,89 +1,66 @@
+import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import Link from "next/link";
 import { Badge, peso } from "@/components/ui";
 import { getPublicMenu, type MenuItem, type PublicMenu } from "@/lib/menu";
-import Link from "next/link";
-import { AddToCart } from "./add-to-cart";
-import { CartBar } from "./cart-bar";
-import { StoreStatusPill } from "./store-status";
+import { getStore, storePath, type Store } from "@/lib/stores";
+import { AddToCart } from "../../add-to-cart";
+import { CartBar } from "../../cart-bar";
+import { StoreStatusPill } from "../../store-status";
 
-export default function Home() {
+export async function generateMetadata({ params }: PageProps<"/s/[store]">): Promise<Metadata> {
+  const store = await getStore((await params).store);
+  return { title: store.name, description: store.tagline ?? undefined };
+}
+
+export default function StoreHome({ params }: PageProps<"/s/[store]">) {
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-16 pt-10">
-      <header className="mb-8">
-        <div className="flex items-start justify-between gap-3">
-          <h1 className="text-3xl font-semibold tracking-tight">Weekend Food Hub</h1>
-          <Link href="/account" className="mt-2 shrink-0 text-sm text-stone-600 hover:text-orange-700 dark:text-stone-400">
-            My orders
-          </Link>
-        </div>
-        <p className="mt-1 text-stone-600 dark:text-stone-400">Chaofan, silog, paluto and frozen food · Tapilon, Daanbantayan</p>
-      </header>
       <Suspense fallback={<p className="text-sm text-stone-500">Loading the menu…</p>}>
-        <Menu />
+        <Menu params={params} />
       </Suspense>
     </main>
   );
 }
 
-async function Menu() {
+async function Menu({ params }: { params: PageProps<"/s/[store]">["params"] }) {
   // Read at request time (not at build), then served from the cache.
   await connection();
-  const menu = await getPublicMenu();
-  const mainCategories = menu.categories.filter((c) => c.brandId === null);
+  const store = await getStore((await params).store);
+  const menu = await getPublicMenu(store.id);
+  const hasSeafood = menu.categories.some((c) => c.items.some((i) => i.badge === "subject_to_availability"));
 
   return (
     <>
+      <StoreHeader store={store} />
       <div className="mb-6 flex flex-col gap-3">
         <StoreStatusPill hours={menu.hours} closures={menu.closures} paused={menu.orderingPaused} />
         <p className="rounded-lg bg-orange-50 p-3 text-sm text-orange-900 dark:bg-orange-950 dark:text-orange-200">
-          Pickup in Tapilon, or delivery anywhere in mainland Daanbantayan from {peso(menu.baseDeliveryFee)}.
-          {menu.allowPreorders ? " Closed? You can still pre-order for later." : ""}
+          {menu.deliveryEnabled ? `Pickup, or delivery in mainland Daanbantayan from ${peso(menu.baseDeliveryFee)}.` : "Pickup only for now."}
+          {menu.noticeDays > 0
+            ? ` Made to order: please order at least ${noticeText(menu.noticeDays)} before your pickup${menu.deliveryEnabled ? " or delivery" : ""} date.`
+            : menu.allowPreorders
+              ? " Closed? You can still pre-order for later."
+              : ""}
         </p>
       </div>
 
       <nav className="sticky top-0 z-10 -mx-4 mb-6 flex gap-2 overflow-x-auto bg-stone-50/95 px-4 py-2 backdrop-blur dark:bg-stone-950/95">
-        {mainCategories.map((c) => (
+        {menu.categories.map((c) => (
           <a key={c.id} href={`#${c.id}`} className="shrink-0 rounded-full border border-stone-300 px-3 py-1 text-sm hover:border-orange-500 dark:border-stone-700">
             {c.name}
           </a>
         ))}
-        {menu.brands.map((b) => (
-          <a
-            key={b.id}
-            href={`#${b.id}`}
-            className="shrink-0 rounded-full border border-pink-300 bg-pink-50 px-3 py-1 text-sm text-pink-800 hover:border-pink-500 dark:border-pink-800 dark:bg-pink-950 dark:text-pink-200"
-          >
-            {b.name}
-          </a>
-        ))}
       </nav>
 
-      {mainCategories.map((c) => (
-        <CategorySection key={c.id} category={c} canOrder={!menu.orderingPaused} />
-      ))}
-
-      {menu.brands.map((b) => (
-        <section key={b.id} id={b.id} className="mb-10 scroll-mt-16 rounded-2xl border border-pink-200 bg-pink-50/60 p-4 dark:border-pink-900 dark:bg-pink-950/30">
-          <header className="mb-5">
-            <h2 className="text-2xl font-semibold tracking-tight text-pink-900 dark:text-pink-200">{b.name}</h2>
-            {b.tagline && <p className="mt-1 text-stone-600 dark:text-stone-400">{b.tagline}</p>}
-            {b.noticeDays > 0 && (
-              <p className="mt-2 text-sm text-pink-900 dark:text-pink-200">
-                Baked to order. Please order at least {noticeText(b.noticeDays)} before your pickup or delivery date.
-              </p>
-            )}
-          </header>
-          {menu.categories
-            .filter((c) => c.brandId === b.id)
-            .map((c) => (
-              <CategorySection key={c.id} category={c} canOrder={!menu.orderingPaused} />
-            ))}
-        </section>
+      {menu.categories.length === 0 && <p className="mb-10 text-stone-500">The menu is being prepared. Please check back soon.</p>}
+      {menu.categories.map((c) => (
+        <CategorySection key={c.id} category={c} canOrder={!menu.orderingPaused} store={store.slug} />
       ))}
 
       <footer className="border-t border-stone-200 pt-6 text-sm text-stone-500 dark:border-stone-800">
-        <p>🟡 “Subject to availability” dishes use seasonal seafood. We confirm before you pay.</p>
+        {hasSeafood && <p>🟡 “Subject to availability” dishes use seasonal seafood. We confirm before you pay.</p>}
         <p className="mt-2">
           <Link href="/privacy" className="hover:text-orange-700">Privacy</Link> ·{" "}
           <Link href="/terms" className="hover:text-orange-700">Terms</Link> ·{" "}
@@ -91,18 +68,32 @@ async function Menu() {
         </p>
       </footer>
       <div className="h-20" />
-      <CartBar />
+      <CartBar store={store.slug} />
     </>
   );
 }
 
-function CategorySection({ category: c, canOrder }: { category: PublicMenu["categories"][number]; canOrder: boolean }) {
+function StoreHeader({ store }: { store: Store }) {
   return (
-    <section id={c.id} className="mb-10 scroll-mt-16 last:mb-0">
+    <header className="mb-8">
+      <div className="flex items-start justify-between gap-3">
+        <h1 className="text-3xl font-semibold tracking-tight">{store.name}</h1>
+        <Link href={storePath(store.slug, "/account")} className="mt-2 shrink-0 text-sm text-stone-600 hover:text-orange-700 dark:text-stone-400">
+          My orders
+        </Link>
+      </div>
+      {store.tagline && <p className="mt-1 text-stone-600 dark:text-stone-400">{store.tagline}</p>}
+    </header>
+  );
+}
+
+function CategorySection({ category: c, canOrder, store }: { category: PublicMenu["categories"][number]; canOrder: boolean; store: string }) {
+  return (
+    <section id={c.id} className="mb-10 scroll-mt-16">
       <h2 className="mb-3 text-xl font-semibold">{c.name}</h2>
       <ul className="grid gap-3 sm:grid-cols-2">
         {c.items.map((item) => (
-          <MenuCard key={item.id} item={item} canOrder={canOrder} />
+          <MenuCard key={item.id} item={item} canOrder={canOrder} store={store} />
         ))}
       </ul>
     </section>
@@ -111,7 +102,7 @@ function CategorySection({ category: c, canOrder }: { category: PublicMenu["cate
 
 const noticeText = (days: number) => (days === 1 ? "1 day" : `${days} days`);
 
-function MenuCard({ item, canOrder }: { item: MenuItem; canOrder: boolean }) {
+function MenuCard({ item, canOrder, store }: { item: MenuItem; canOrder: boolean; store: string }) {
   const dimmed = item.badge === "sold_out" || item.badge === "unavailable";
   return (
     <li
@@ -138,7 +129,7 @@ function MenuCard({ item, canOrder }: { item: MenuItem; canOrder: boolean }) {
             : {g.options.map((o) => (o.priceDelta > 0 ? `${o.name} +${peso(o.priceDelta)}` : o.name)).join(" · ")}
           </p>
         ))}
-      <AddToCart item={item} canOrder={canOrder} />
+      <AddToCart item={item} canOrder={canOrder} store={store} />
     </li>
   );
 }

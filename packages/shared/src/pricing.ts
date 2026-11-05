@@ -56,8 +56,6 @@ export interface PricingProduct {
   prepMinutes: number | null;
   badge: MenuBadge;
   groups: PricingGroup[];
-  /** Sub-brand name; null for the main menu. */
-  brand: string | null;
   /** Calendar days of advance notice (made-to-order cakes etc.); 0 = same day is fine. */
   noticeDays: number;
 }
@@ -146,7 +144,6 @@ export function priceLine(product: PricingProduct, line: CartLine): PriceLineRes
         needsAvailability: product.badge === "subject_to_availability" || product.priceMode === "market",
         requiresCooking,
         prepMinutes: requiresCooking ? (product.prepMinutes ?? 0) : 0,
-        brand: product.brand,
       },
       displayUnitPrice: (unitPrice ?? estimatedUnitPrice)!,
       requiresCooking,

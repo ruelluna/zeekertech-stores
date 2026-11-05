@@ -7,37 +7,46 @@ import { welcomeOfferFor } from "@/lib/discounts";
 import { STATUS_TEXT } from "@/lib/order-status";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { OrderStatus } from "@wfh/shared";
+import type { Metadata } from "next";
+import { getStore, storePath } from "@/lib/stores";
 import { customerSignOut } from "../login/actions";
 import { deleteAccount, deleteAddress, setDefaultAddress, updateProfile } from "./actions";
 import { GuestOrders } from "./guest-orders";
 
-export const metadata = { title: "My account · Weekend Food Hub" };
+export async function generateMetadata({ params }: PageProps<"/s/[store]/account">): Promise<Metadata> {
+  const store = await getStore((await params).store);
+  return { title: `My account · ${store.name}` };
+}
 
-export default function AccountPage() {
+export default function AccountPage({ params }: PageProps<"/s/[store]/account">) {
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-16 pt-6">
-      <Link href="/" className="text-sm text-stone-500 hover:text-orange-700">
-        ← Menu
-      </Link>
       <Suspense fallback={<Loading />}>
-        <Account />
+        <Account params={params} />
       </Suspense>
     </main>
   );
 }
 
-async function Account() {
-  const customer = await getCurrentCustomer();
+async function Account({ params }: { params: PageProps<"/s/[store]/account">["params"] }) {
+  const store = await getStore((await params).store);
+  const customer = await getCurrentCustomer(store.id);
+  const back = (
+    <Link href={storePath(store.slug)} className="text-sm text-stone-500 hover:text-orange-700">
+      ← {store.name}
+    </Link>
+  );
 
   if (!customer) {
     return (
       <>
+        {back}
         <h1 className="mb-6 mt-2 text-2xl font-semibold tracking-tight">My orders</h1>
         <Card title="Orders from this device">
-          <GuestOrders />
+          <GuestOrders store={store.slug} />
         </Card>
         <Card title="Log in" description="Save your details and addresses, and see your orders on any device.">
-          <Link href="/login?next=/account" className="inline-block rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700">
+          <Link href={storePath(store.slug, `/login?next=${storePath(store.slug, "/account")}`)} className="inline-block rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700">
             Log in
           </Link>
         </Card>
@@ -46,23 +55,29 @@ async function Account() {
   }
 
   const supabase = await createSupabaseServerClient();
-  const store = supabase.schema("store");
+  const db = supabase.schema("store");
   const [orders, addresses, offer] = await Promise.all([
-    store
+    db
       .from("web_orders")
       .select("order_code, access_token, status, total, created_at, fulfillment")
       .eq("customer_id", customer.id)
       .order("created_at", { ascending: false })
       .limit(30),
-    store.from("customer_addresses").select("id, label, street_purok, landmark, is_default, barangays(name)").order("is_default", { ascending: false }),
-    welcomeOfferFor(customer),
+    db
+      .from("customer_addresses")
+      .select("id, label, street_purok, landmark, is_default, barangays(name)")
+      .eq("customer_id", customer.id)
+      .order("is_default", { ascending: false }),
+    welcomeOfferFor(customer, store.id),
   ]);
 
   return (
     <>
+      {back}
       <div className="mb-6 mt-2 flex items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">Hi, {customer.name.split(" ")[0]}</h1>
         <form action={customerSignOut}>
+          <input type="hidden" name="store" value={store.slug} />
           <button type="submit" className="text-sm text-stone-500 hover:text-red-700">
             Log out
           </button>
@@ -106,6 +121,7 @@ async function Account() {
 
       <Card title="Your details">
         <ActionForm action={updateProfile}>
+          <input type="hidden" name="store" value={store.slug} />
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Name">
               <Input name="name" defaultValue={customer.name} required />
@@ -131,10 +147,12 @@ async function Account() {
                 <span className="flex gap-2">
                   {!a.is_default && (
                     <ActionForm action={setDefaultAddress} submitLabel="Make default" className="flex items-center gap-2">
+                      <input type="hidden" name="store" value={store.slug} />
                       <input type="hidden" name="id" value={a.id} />
                     </ActionForm>
                   )}
                   <ActionForm action={deleteAddress} submitLabel="Remove" danger className="flex items-center gap-2">
+                    <input type="hidden" name="store" value={store.slug} />
                     <input type="hidden" name="id" value={a.id} />
                   </ActionForm>
                 </span>
@@ -144,8 +162,12 @@ async function Account() {
         )}
       </Card>
 
-      <Card title="Delete my account" description="Removes your login, profile and saved addresses. Past orders are kept for our business records.">
+      <Card
+        title="Delete my account"
+        description="Removes your login, profile and saved addresses in every store. Past orders are kept for the stores' records."
+      >
         <ActionForm action={deleteAccount} submitLabel="Delete my account" danger className="flex flex-wrap items-end gap-3">
+          <input type="hidden" name="store" value={store.slug} />
           <Field label='Type "DELETE" to confirm' className="w-48">
             <Input name="confirm" autoComplete="off" />
           </Field>

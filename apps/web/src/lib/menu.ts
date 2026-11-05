@@ -45,35 +45,28 @@ export interface MenuItem {
   notePrompt: string | null;
 }
 
-export interface MenuBrand {
-  id: string;
-  name: string;
-  tagline: string | null;
-  noticeDays: number;
-}
-
 export interface PublicMenu {
-  /** Every category with items; brandId null = the main Weekend Food Hub menu. */
-  categories: { id: string; name: string; brandId: string | null; items: MenuItem[] }[];
-  /** Sub-brands with at least one category on the menu. */
-  brands: MenuBrand[];
+  categories: { id: string; name: string; items: MenuItem[] }[];
   hours: StoreHoursDay[];
   closures: string[];
   orderingPaused: boolean;
   allowPreorders: boolean;
+  /** Store default advance notice in days (made-to-order stores). */
+  noticeDays: number;
+  deliveryEnabled: boolean;
   baseDeliveryFee: number;
 }
 
 /**
- * Everything the public menu shows, cached until an admin change (updateTag), a staff-app update
- * (revalidateTag from the webhook), or a few minutes pass.
+ * Everything one store's public menu shows, cached until an admin change (updateTag), a staff-app
+ * update (revalidateTag from the webhook), or a few minutes pass.
  */
-export async function getPublicMenu(): Promise<PublicMenu> {
+export async function getPublicMenu(storeId: string): Promise<PublicMenu> {
   "use cache";
   cacheTag(MENU_TAG);
   cacheLife("minutes");
 
-  const catalog = await fetchCatalog();
+  const catalog = await fetchCatalog(storeId);
   const items = catalog.products.map(
     (p): MenuItem & { categoryId: string } => ({
       categoryId: p.categoryId,
@@ -107,17 +100,16 @@ export async function getPublicMenu(): Promise<PublicMenu> {
     }),
   );
 
-  const categories = catalog.categories
-    .map((c) => ({ id: c.id, name: c.name, brandId: c.brandId, items: items.filter((i) => i.categoryId === c.id) }))
-    .filter((c) => c.items.length > 0);
-
   return {
-    categories,
-    brands: catalog.brands.filter((b) => categories.some((c) => c.brandId === b.id)),
+    categories: catalog.categories
+      .map((c) => ({ id: c.id, name: c.name, items: items.filter((i) => i.categoryId === c.id) }))
+      .filter((c) => c.items.length > 0),
     hours: catalog.hours,
     closures: catalog.closures,
     orderingPaused: catalog.settings.orderingPaused,
     allowPreorders: catalog.settings.allowPreorders,
+    noticeDays: catalog.settings.noticeDays,
+    deliveryEnabled: catalog.delivery.enabled && catalog.delivery.kitchen !== null,
     baseDeliveryFee: catalog.delivery.baseFee,
   };
 }

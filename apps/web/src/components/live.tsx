@@ -109,18 +109,18 @@ type OpsOrderRow = {
 };
 
 /**
- * Admin Orders page: live via database changes on ops orders (row-level security: staff only).
+ * Admin Orders page: live via database changes on the store's ops orders (row-level security: staff only).
  * Toasts (and a chime) for what customers do: new orders, payments sent, decisions, cancellations.
  */
-export function LiveOrders({ known }: { known: Record<string, KnownOrder> }) {
+export function LiveOrders({ known, storeId }: { known: Record<string, KnownOrder>; storeId: string }) {
   const seen = useLatest(known);
   useLiveRefresh(
     true,
     (onChange) => {
       const supabase = getSupabaseBrowserClient();
       const channel = supabase
-        .channel("admin-orders")
-        .on("postgres_changes", { event: "*", schema: "ops", table: "orders" }, (change) => {
+        .channel(`admin-orders-${storeId}`)
+        .on("postgres_changes", { event: "*", schema: "ops", table: "orders", filter: `store_id=eq.${storeId}` }, (change) => {
           const o = change.new as OpsOrderRow;
           const before = seen.current[o.id];
           const label = `${o.queue_code}`;
