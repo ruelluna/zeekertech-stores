@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { TERMINAL_ORDER_STATUSES, formatManilaTime, manilaParts, type OrderStatus } from "@wfh/shared";
 import { ActionForm } from "@/components/action-form";
 import { ContactLink } from "@/components/contact-link";
+import { FacebookPrompt } from "@/components/facebook-prompt";
 import { StoreHeader } from "@/components/store-header";
 import { StoreTheme } from "@/components/store-theme";
 import { Badge, Loading, peso } from "@/components/ui";
@@ -99,6 +100,9 @@ async function Order({ params }: { params: PageProps<"/o/[token]">["params"] }) 
           <NotifyButton token={token} />
         </div>
       )}
+
+      {/* After ordering: ask for a Page like (not on cancelled or rejected orders). */}
+      {!sad && store?.facebook_url && <FacebookPrompt url={store.facebook_url} storeName={store.name} className="mb-6" />}
 
       {needsDecision && revised && (
         <section className="mb-5 rounded-xl border-2 border-accent bg-surface p-4 dark:bg-ink-900">

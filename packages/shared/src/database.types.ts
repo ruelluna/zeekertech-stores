@@ -1960,6 +1960,7 @@ export type Database = {
           active: boolean;
           contact: string | null;
           created_at: string;
+          facebook_url: string | null;
           id: string;
           logo_url: string | null;
           name: string;
@@ -1974,6 +1975,7 @@ export type Database = {
           active?: boolean;
           contact?: string | null;
           created_at?: string;
+          facebook_url?: string | null;
           id?: string;
           logo_url?: string | null;
           name: string;
@@ -1987,6 +1989,7 @@ export type Database = {
           active?: boolean;
           contact?: string | null;
           created_at?: string;
+          facebook_url?: string | null;
           id?: string;
           logo_url?: string | null;
           name?: string;

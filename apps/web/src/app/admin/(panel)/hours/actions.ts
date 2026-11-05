@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { DEFAULT_ACCENT, normalizeHex } from "@wfh/shared";
+import { DEFAULT_ACCENT, normalizeFacebookUrl, normalizeHex } from "@wfh/shared";
 import { fail, form, formObject, ok, zodMessage, type ActionState } from "@/lib/action-state";
 import { requireOwner } from "@/lib/auth";
 import { menuChanged } from "@/lib/menu-tag";
@@ -138,6 +138,12 @@ const ProfileInput = z.object({
   name: form.text.pipe(z.string().min(1, "Enter the store name").max(80)),
   tagline: form.optText,
   contact: form.optText.pipe(z.string().max(200, "Contact: at most 200 characters").nullable()),
+  facebook_url: form.optText.transform((v, ctx) => {
+    if (v === null) return null;
+    const url = normalizeFacebookUrl(v);
+    if (!url) ctx.addIssue({ code: "custom", message: "Facebook Page: paste the link to your Page, e.g. facebook.com/yourstore" });
+    return url;
+  }),
   accent_color: form.text.transform((v, ctx) => {
     const hex = normalizeHex(v);
     if (!hex) ctx.addIssue({ code: "custom", message: "Accent colour: pick a swatch or enter a hex code like #EA580C" });

@@ -215,6 +215,7 @@ Every store on the site shares one web theme drawn from this identity: the kitch
 ### Shapes and rules
 - **Notched ticket card** (`.ticket-card`): menu items, the checkout summary and the order card. Concave 12 px corner cuts with a 1 px rule that follows them, painted as background layers on the card itself so dialogs opened from inside a card still cover the page. Other cards, inputs and buttons keep plain rounded corners.
 - **Dotted rule** (`.rule-dotted`): round dots in the store's accent, under the store header.
+- **Facebook prompt** (`src/components/facebook-prompt.tsx`): a kraft-soft note, "Hey, like our page if you haven't already. That will help us a lot.", with an outline button that opens the store's Facebook Page (`store.stores.facebook_url`). Shown under "Place order" at checkout and under the status on the order page (not on cancelled or rejected orders). A plain link: nothing loads from Facebook, whose external Like button was retired in February 2026.
 - **Store header** (`src/components/store-header.tsx`): the name in script (or the logo), the tagline in stamped caps on the menu page, then the dotted rule. Every store page (menu, checkout, account, login, order status, legal pages opened from a store) starts with it.
 
 ### What stays out of the theme

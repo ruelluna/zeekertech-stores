@@ -63,6 +63,13 @@ async function HoursContent() {
           >
             <Input name="contact" defaultValue={profile?.contact ?? ""} maxLength={200} placeholder="e.g. facebook.com/yourstore or 0917 123 4567" />
           </Field>
+          <Field
+            label="Facebook Page"
+            hint="Customers see “like our page” at checkout and after ordering, with a button that opens this Page. Leave blank to hide it."
+            className="w-full"
+          >
+            <Input name="facebook_url" defaultValue={profile?.facebook_url ?? ""} maxLength={200} placeholder="e.g. facebook.com/yourstore" />
+          </Field>
           <AccentPicker defaultValue={profile?.accent_color ?? DEFAULT_ACCENT} storeName={profile?.name ?? ""} />
         </ActionForm>
       </Card>

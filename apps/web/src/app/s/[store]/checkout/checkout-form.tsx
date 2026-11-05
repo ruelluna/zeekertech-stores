@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { FacebookPrompt } from "@/components/facebook-prompt";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useSyncExternalStore, useTransition } from "react";
 import {
@@ -25,7 +26,7 @@ import { placeOrder } from "./actions";
 type LatLng = { lat: number; lng: number };
 
 export interface CheckoutData {
-  store: { id: string; slug: string; name: string };
+  store: { id: string; slug: string; name: string; facebookUrl: string | null };
   customer: { name: string; phone: string | null } | null;
   facebookLogin: boolean;
   offer: WelcomeOffer | null;
@@ -514,6 +515,8 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
           {pending ? "Placing order…" : `Place order · ${isEstimate ? "~" : ""}${peso(total)}`}
         </button>
       </section>
+
+      {data.store.facebookUrl && <FacebookPrompt url={data.store.facebookUrl} storeName={data.store.name} />}
     </div>
   );
 }

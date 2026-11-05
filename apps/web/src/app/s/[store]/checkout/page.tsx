@@ -58,7 +58,7 @@ async function Checkout({ params }: { params: PageProps<"/s/[store]/checkout">["
   }
 
   const data: CheckoutData = {
-    store: { id: store.id, slug: store.slug, name: store.name },
+    store: { id: store.id, slug: store.slug, name: store.name, facebookUrl: store.facebook_url },
     customer: customer ? { name: customer.name, phone: customer.phone } : null,
     facebookLogin: readServerPublicEnv().facebookLogin,
     offer,
