@@ -3,10 +3,10 @@ import type { OrderStatus } from "@wfh/shared";
 /** Customer-facing wording for each order status. */
 export const STATUS_TEXT: Record<OrderStatus, { title: string; body: string }> = {
   received: { title: "Order received", body: "We've got your order." },
-  awaiting_availability: { title: "Checking availability", body: "We're checking the seafood with our supplier. You'll pay only after we confirm." },
+  awaiting_availability: { title: "Checking availability", body: "We're checking that we can get every item. You'll pay only after we confirm." },
   awaiting_customer: { title: "Please review your order", body: "Some items or prices changed. Continue or cancel." },
   pending_payment: { title: "Ready for payment", body: "Pay with GCash and send us the reference number." },
-  queued: { title: "Payment confirmed", body: "Your order is in the kitchen queue." },
+  queued: { title: "Payment confirmed", body: "Your order is confirmed and in our queue." },
   preparing: { title: "Preparing", body: "We're cooking your order." },
   ready: { title: "Ready", body: "Your order is ready." },
   out_for_delivery: { title: "Out for delivery", body: "Our rider is on the way." },

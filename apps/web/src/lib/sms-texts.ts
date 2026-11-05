@@ -35,12 +35,12 @@ export function customerStatusText(
       if (previous !== "awaiting_availability") return null;
       return {
         kind: "customer_review",
-        message: `${store}: Seafood confirmed for ${code}. Please pay ${smsPeso(order.total)} by GCash: ${link}`,
+        message: `${store}: Your order ${code} is confirmed. Please pay ${smsPeso(order.total)} by GCash: ${link}`,
       };
     case "queued":
       return {
         kind: "customer_payment_confirmed",
-        message: `${store}: We received your payment for order ${code}. It's in the kitchen queue now. Salamat!`,
+        message: `${store}: We received your payment for order ${code}. Your order is confirmed. Salamat!`,
       };
     case "rejected":
       return {
@@ -61,7 +61,7 @@ export function customerStatusText(
     case "denied":
       return {
         kind: "customer_cancelled",
-        message: `${store}: Sorry, we couldn't source the seafood for order ${code}, so it was cancelled. Nothing was charged.`,
+        message: `${store}: Sorry, some items in order ${code} aren't available, so it was cancelled. Nothing was charged.`,
       };
     case "expired":
       return {
@@ -71,7 +71,7 @@ export function customerStatusText(
     case "cancelled":
       return {
         kind: "customer_cancelled",
-        message: `${store}: Sorry, we had to cancel order ${code}. Please message our Facebook page if you have questions.`,
+        message: `${store}: Sorry, we had to cancel order ${code}. Details: ${link}`,
       };
     default:
       return null;
@@ -89,7 +89,7 @@ export function adminSeafoodCheckText(o: {
 }) {
   return {
     kind: "admin_seafood_check" as AdminSmsKind,
-    message: `${o.store}: New order ${o.code} needs a seafood check. ${o.customer}, ${o.fulfillment}, ${smsPeso(o.total)}\n${o.adminUrl}`,
+    message: `${o.store}: New order ${o.code} needs an availability check. ${o.customer}, ${o.fulfillment}, ${smsPeso(o.total)}\n${o.adminUrl}`,
   };
 }
 

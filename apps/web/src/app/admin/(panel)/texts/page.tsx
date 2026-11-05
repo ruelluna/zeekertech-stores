@@ -41,8 +41,8 @@ const customerSample = (
 const CUSTOMER: { key: keyof SmsSettings; label: string; when: string; sample: string }[] = [
   {
     key: "customer_review",
-    label: "Seafood check result",
-    when: "After the seafood check: pay now, or review items that changed. They may have left the page while waiting.",
+    label: "Availability check result",
+    when: "After the availability check: pay now, or review items that changed. They may have left the page while waiting.",
     sample: customerSample("pending_payment", "awaiting_availability"),
   },
   {
@@ -66,7 +66,7 @@ const CUSTOMER: { key: keyof SmsSettings; label: string; when: string; sample: s
   {
     key: "customer_cancelled",
     label: "Cancelled by the store",
-    when: "Seafood can't be sourced, no reply in time, or staff cancelled it. Not when customers cancel themselves.",
+    when: "Items aren't available, no reply in time, or staff cancelled it. Not when customers cancel themselves.",
     sample: customerSample("denied", "awaiting_availability"),
   },
   {
@@ -80,8 +80,8 @@ const CUSTOMER: { key: keyof SmsSettings; label: string; when: string; sample: s
 const ADMIN: { key: keyof SmsSettings; label: string; when: string; sample: string }[] = [
   {
     key: "admin_seafood_check",
-    label: "New order needs a seafood check",
-    when: "Website orders with seafood. The customer is waiting before they can pay.",
+    label: "New order needs an availability check",
+    when: "Website orders with “subject to availability” items. The customer is waiting before they can pay.",
     sample: adminSeafoodCheckText({
       store: SAMPLE_STORE,
       code: "A-012 (WEB-10012)",

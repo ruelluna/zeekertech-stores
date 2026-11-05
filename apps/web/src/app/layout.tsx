@@ -16,8 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Weekend Food Hub",
-  description: "Order chaofan, silog, paluto and frozen food in Daanbantayan, Cebu.",
+  // Store pages set their own title and description; this covers shared pages (order status, legal, admin).
+  title: "Order online · Zeeker Tech",
+  description: "Order ahead from local stores for pickup and delivery.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

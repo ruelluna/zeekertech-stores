@@ -45,6 +45,8 @@ export interface Catalog {
   delivery: DeliverySettings & {
     /** Off = pickup only. */
     enabled: boolean;
+    /** Where the store delivers, in words, e.g. "mainland Daanbantayan". */
+    areaName: string | null;
     kitchen: { lat: number; lng: number } | null;
     kitchenAddress: string | null;
     serviceArea: ServiceAreaGeoJSON | null;
@@ -178,6 +180,7 @@ export async function fetchCatalog(storeId: string): Promise<Catalog> {
     },
     delivery: {
       enabled: d.delivery_enabled,
+      areaName: d.area_name,
       baseFee: d.base_fee,
       includedKm: d.included_km,
       perKm: d.per_km,

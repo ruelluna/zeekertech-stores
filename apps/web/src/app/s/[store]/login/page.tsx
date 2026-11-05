@@ -19,11 +19,24 @@ export default function LoginPage({ params, searchParams }: PageProps<"/s/[store
         <Suspense>
           <LoginOptions params={params} searchParams={searchParams} />
         </Suspense>
-        <p className="mt-6 text-xs text-stone-500">
-          By logging in you agree to our <Link href="/privacy" className="underline">privacy notice</Link>. You can also order as a guest.
-        </p>
+        <Suspense>
+          <PrivacyLine params={params} />
+        </Suspense>
       </div>
     </main>
+  );
+}
+
+async function PrivacyLine({ params }: { params: PageProps<"/s/[store]/login">["params"] }) {
+  const { store } = await params;
+  return (
+    <p className="mt-6 text-xs text-stone-500">
+      By logging in you agree to our{" "}
+      <Link href={`/privacy?store=${store}`} className="underline">
+        privacy notice
+      </Link>
+      . You can also order as a guest.
+    </p>
   );
 }
 

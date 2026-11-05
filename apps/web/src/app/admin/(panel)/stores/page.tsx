@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { ActionForm } from "@/components/action-form";
-import { Badge, Card, Field, Input, Loading, PageHeader } from "@/components/ui";
+import { Badge, Card, Checkbox, Field, Input, Loading, PageHeader } from "@/components/ui";
 import { requireSuperAdmin } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { addStoreOwner, createStore, setStoreActive } from "./actions";
@@ -106,6 +106,15 @@ async function Stores() {
           <Field label="Advance notice (days)" hint="0 = same day" className="w-36">
             <Input name="notice_days" type="number" min="0" max="60" defaultValue={0} />
           </Field>
+          <Field label="Contact for customers" hint="Facebook Page link or mobile number" className="w-64">
+            <Input name="contact" placeholder="e.g. facebook.com/yourstore" maxLength={200} />
+          </Field>
+          <div className="w-full">
+            <Checkbox
+              name="copy_area"
+              label="Same delivery area as Weekend Food Hub (mainland Daanbantayan barangays and map). Leave unticked for a store elsewhere."
+            />
+          </div>
         </ActionForm>
       </Card>
     </>

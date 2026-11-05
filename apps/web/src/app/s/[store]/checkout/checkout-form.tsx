@@ -357,7 +357,7 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
             )}
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="flex flex-col gap-1 text-sm">
-                <span className="font-medium">Barangay (Daanbantayan)</span>
+                <span className="font-medium">Barangay</span>
                 <select className={inputClass} value={barangayId} onChange={(e) => chooseBarangay(e.target.value)}>
                   <option value="">Choose…</option>
                   {data.barangays.map((b) => (
@@ -459,7 +459,7 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
         )}
         {hasUncertain && (
           <p className="mt-3 text-sm text-amber-800 dark:text-amber-300">
-            Your order has seafood or market-price items. We&apos;ll confirm availability and the final price first, then you pay.
+            Your order has items that depend on availability or market price. We&apos;ll confirm them and the final price first, then you pay.
           </p>
         )}
       </section>
@@ -490,7 +490,7 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
           <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 accent-orange-600" />
           <span>
             I agree to the{" "}
-            <Link href="/privacy" className="underline" target="_blank">
+            <Link href={`/privacy?store=${data.store.slug}`} className="underline" target="_blank">
               privacy notice
             </Link>
             . My name, number and address are used only for this order.

@@ -52,7 +52,8 @@ export async function quoteDelivery(
   const { kitchen, serviceArea, excludedAreas } = catalog.delivery;
   if (!kitchen) return { ok: false, error: "Delivery isn't set up yet. Please choose pickup." };
 
-  const outside = "Sorry, we only deliver within mainland Daanbantayan (not the islands).";
+  const area = catalog.delivery.areaName;
+  const outside = area ? `Sorry, we only deliver within ${area}.` : "Sorry, that address is outside our delivery area.";
   if (serviceArea && !isInServiceArea(input, serviceArea)) return { ok: false, error: outside };
   if (excludedAreas && isInServiceArea(input, excludedAreas)) return { ok: false, error: outside };
 

@@ -54,6 +54,8 @@ export interface PublicMenu {
   /** Store default advance notice in days (made-to-order stores). */
   noticeDays: number;
   deliveryEnabled: boolean;
+  /** Where the store delivers, in words. */
+  deliveryArea: string | null;
   baseDeliveryFee: number;
 }
 
@@ -110,6 +112,7 @@ export async function getPublicMenu(storeId: string): Promise<PublicMenu> {
     allowPreorders: catalog.settings.allowPreorders,
     noticeDays: catalog.settings.noticeDays,
     deliveryEnabled: catalog.delivery.enabled && catalog.delivery.kitchen !== null,
+    deliveryArea: catalog.delivery.areaName,
     baseDeliveryFee: catalog.delivery.baseFee,
   };
 }

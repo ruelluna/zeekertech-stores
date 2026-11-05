@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { formatManilaTime, manilaParts, type ModifierSelection } from "@wfh/shared";
 import { peso } from "@/components/ui";
 import { requireStaff } from "@/lib/auth";
+import { getStoreById } from "@/lib/stores";
 import { PrintNow } from "./print-now";
 
 export const metadata = { title: "Print", robots: { index: false } };
@@ -45,7 +46,7 @@ async function Print({ params, searchParams }: { params: PageProps<"/admin/print
   const kind = query.type === "labels" ? "labels" : "ticket";
   const auto = query.autoprint === "1";
 
-  const [{ data: order }, { data: settings }] = await Promise.all([
+  const [{ data: order }, { data: settings }, store] = await Promise.all([
     supabase
       .schema("ops")
       .from("orders")
@@ -63,6 +64,7 @@ async function Print({ params, searchParams }: { params: PageProps<"/admin/print
       .select("print_ticket_width_mm, print_label_width_mm, print_label_height_mm, print_labels_per_unit")
       .eq("store_id", storeId)
       .single(),
+    getStoreById(storeId),
   ]);
   if (!order || !settings) notFound();
 
@@ -108,7 +110,7 @@ async function Print({ params, searchParams }: { params: PageProps<"/admin/print
         {kind === "ticket" ? (
           <div className="ticket mx-auto print:mx-0 print:px-[3mm] print:py-[2mm]">
             <div style={{ textAlign: "center" }}>
-              <div>WEEKEND FOOD HUB</div>
+              {store && <div>{store.name.toUpperCase()}</div>}
               <div style={{ fontSize: "28pt", fontWeight: 700, lineHeight: 1.1 }}>{order.queue_code}</div>
               <div style={{ fontWeight: 700 }}>
                 {delivery ? "DELIVERY" : "PICKUP"} · {when(order.scheduled_for)}

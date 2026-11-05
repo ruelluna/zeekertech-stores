@@ -1,0 +1,20 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "menlo",
+        "createdAt": "2026-11-05T16:32:14.232Z",
+        "reason": "Claude: pre-existing thermal-printer ticket font in the print-only view (admin/print), not app UI typography"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "arial",
+        "createdAt": "2026-11-05T16:32:14.467Z",
+        "reason": "Claude: pre-existing sticker-label font in the print-only view (admin/print), not app UI typography"
+      }
+    ]
+  }
+}

@@ -20,17 +20,20 @@ const StoreInput = z.object({
   ),
   tagline: form.optText,
   notice_days: form.int.pipe(z.number().int().min(0).max(60, "At most 60 days").nullable()).transform((n) => n ?? 0),
+  contact: form.optText.pipe(z.string().max(200, "Contact: at most 200 characters").nullable()),
+  copy_area: form.bool,
 });
 
 /**
  * Creates a store at /s/<slug> with its own settings: open 8 AM – 8 PM every day, pre-orders on, pickup only
- * (delivery fees and service area copied from Weekend Food Hub, ready to switch on), and texts off.
+ * (delivery fee formula copied from Weekend Food Hub, ready to switch on), and texts off. Weekend Food Hub's
+ * barangays and service-area map are copied only when asked (a store in the same town).
  */
 export async function createStore(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const parsed = StoreInput.safeParse(formObject(formData));
   if (!parsed.success) return fail(zodMessage(parsed.error));
   await requireSuperAdmin();
-  const { notice_days, ...fields } = parsed.data;
+  const { notice_days, copy_area, ...fields } = parsed.data;
 
   const db = createSupabaseAdminClient();
   const store = db.schema("store");
@@ -68,12 +71,15 @@ export async function createStore(_prev: ActionState, formData: FormData): Promi
       round_to: delivery?.round_to,
       min_fee: delivery?.min_fee,
       max_km: delivery?.max_km,
-      service_area_geojson: delivery?.service_area_geojson ?? null,
-      excluded_areas_geojson: delivery?.excluded_areas_geojson ?? null,
+      area_name: copy_area ? (delivery?.area_name ?? null) : null,
+      service_area_geojson: copy_area ? (delivery?.service_area_geojson ?? null) : null,
+      excluded_areas_geojson: copy_area ? (delivery?.excluded_areas_geojson ?? null) : null,
       rider_share_percent: delivery?.rider_share_percent,
       rider_min_pay: delivery?.rider_min_pay,
     }),
-    store.from("barangays").insert((barangays ?? []).map((b) => ({ ...b, store_id: storeId }))),
+    copy_area && barangays?.length
+      ? store.from("barangays").insert(barangays.map((b) => ({ ...b, store_id: storeId })))
+      : Promise.resolve({ error: null }),
     db.schema("ops").from("sms_settings").insert({ store_id: storeId, enabled: false }),
   ]);
   const failed = steps.find((s) => s.error);

@@ -129,7 +129,7 @@ async function Orders() {
         <Badge>Ready / out {dispatch.length}</Badge>
       </div>
 
-      <Section title="Sourcing" description="Check the seafood and market prices, then send the result to the customer." empty="Nothing to check.">
+      <Section title="Sourcing" description="Check availability and market prices, then send the result to the customer." empty="Nothing to check.">
         {sourcing.map((o) => (
           <OrderCard key={o.id} o={o} canCancel={canCancel} links={links}>
             <ActionForm action={submitAvailability} submitLabel="Send result to customer">

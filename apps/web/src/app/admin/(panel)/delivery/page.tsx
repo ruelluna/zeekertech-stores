@@ -12,7 +12,7 @@ export default function DeliveryPage() {
     <>
       <PageHeader
         title="Delivery"
-        description="Mainland Daanbantayan only. The fee is calculated from road distance at checkout; staff can still change it on an order."
+        description="The fee is calculated from road distance at checkout; staff can still change it on an order."
       />
       <Suspense fallback={<Loading />}>
         <DeliveryContent />
@@ -41,6 +41,12 @@ async function DeliveryContent() {
             label="Offer delivery (untick for pickup only). Delivery also needs the kitchen location below."
             defaultChecked={s.delivery_enabled}
           />
+          <Field
+            label="Delivery area"
+            hint="Shown on the menu (“delivery in …”) and when an address is outside it. Leave blank to just say “delivery”."
+          >
+            <Input name="area_name" defaultValue={s.area_name ?? ""} maxLength={80} placeholder="e.g. mainland Daanbantayan" />
+          </Field>
           <div className="grid gap-4 sm:grid-cols-3">
             <Field label="Base fee">
               <PesoInput name="base_fee" defaultValue={s.base_fee} required />
@@ -110,11 +116,12 @@ async function DeliveryContent() {
 
       <Card
         title="Barangays"
-        description="Untick a barangay to pause deliveries there. A fixed fee replaces the formula; a surcharge is added on top of it. Islands (Carnaza, Malapascua) aren't served."
+        description="Untick a barangay to pause deliveries there. A fixed fee replaces the formula; a surcharge is added on top of it."
       >
         {s.service_area_geojson === null && (
           <p className="mb-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200">
-            The Daanbantayan map boundary isn&apos;t loaded yet. It&apos;s imported before checkout goes live (Phase 2).
+            This store has no delivery area map yet, so addresses aren&apos;t checked against a boundary. Ask the site admin to load one before
+            turning delivery on.
           </p>
         )}
         <ul className="divide-y divide-stone-100 dark:divide-stone-800">

@@ -23,7 +23,7 @@ const SLOT_ERRORS = {
   closed_that_day: "We're closed on that day. Please pick another date.",
   outside_hours: "That time is outside our pickup and delivery hours. Please pick another time.",
   too_soon: "That time is too soon to prepare your order. Please pick a later time.",
-  uncertain_items_cutoff: "Seafood dishes can't be ordered for today anymore. Please pick tomorrow.",
+  uncertain_items_cutoff: "Items that depend on availability can't be ordered for today anymore. Please pick tomorrow.",
   needs_notice: "Some items are made to order and need more notice. Please pick a later date.",
 } as const;
 

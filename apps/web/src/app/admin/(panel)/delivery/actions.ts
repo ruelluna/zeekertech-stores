@@ -10,6 +10,7 @@ const requiredPeso = form.num.pipe(z.number().nonnegative({ message: "Required" 
 
 const SettingsInput = z.object({
   delivery_enabled: form.bool,
+  area_name: form.optText.pipe(z.string().max(80, "Delivery area: at most 80 characters").nullable()),
   kitchen_address: form.optText,
   kitchen_lat: form.num.pipe(z.number().min(-90).max(90).nullable()),
   kitchen_lng: form.num.pipe(z.number().min(-180).max(180).nullable()),

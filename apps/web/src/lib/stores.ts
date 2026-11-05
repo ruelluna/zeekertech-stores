@@ -12,6 +12,8 @@ export interface Store {
   slug: string;
   name: string;
   tagline: string | null;
+  /** How customers reach the store (Facebook Page link or mobile number). */
+  contact: string | null;
   active: boolean;
 }
 
@@ -24,7 +26,7 @@ export async function listStores(): Promise<Store[]> {
   const { data, error } = await createSupabasePublicClient()
     .schema("store")
     .from("stores")
-    .select("id, slug, name, tagline, active")
+    .select("id, slug, name, tagline, contact, active")
     .order("sort_order");
   if (error) throw error;
   return data;

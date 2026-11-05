@@ -135,7 +135,7 @@ export async function ingestWebEvent(event: WebToOpsEvent): Promise<void> {
             adminUrl: adminUrl(),
           });
           await notifyStaff(created.store_id, [...SOURCING_ROLES], {
-            title: `🦐 Seafood check: ${created.queue_code}`,
+            title: `Availability check: ${created.queue_code}`,
             body: `${event.order.customer.name} · ${event.order.fulfillment} · ₱${event.order.totals.total}. The customer is waiting to pay.`,
             url: adminUrl(),
             tag: `order-${event.order.orderId}`,

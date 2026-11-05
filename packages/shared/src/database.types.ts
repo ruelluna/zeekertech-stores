@@ -1244,6 +1244,7 @@ export type Database = {
       };
       delivery_settings: {
         Row: {
+          area_name: string | null;
           base_fee: number;
           delivery_enabled: boolean;
           excluded_areas_geojson: Json | null;
@@ -1264,6 +1265,7 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          area_name?: string | null;
           base_fee?: number;
           delivery_enabled?: boolean;
           excluded_areas_geojson?: Json | null;
@@ -1283,6 +1285,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          area_name?: string | null;
           base_fee?: number;
           delivery_enabled?: boolean;
           excluded_areas_geojson?: Json | null;
@@ -1954,6 +1957,7 @@ export type Database = {
       stores: {
         Row: {
           active: boolean;
+          contact: string | null;
           created_at: string;
           id: string;
           name: string;
@@ -1965,6 +1969,7 @@ export type Database = {
         ComputedFields: never;
         Insert: {
           active?: boolean;
+          contact?: string | null;
           created_at?: string;
           id?: string;
           name: string;
@@ -1975,6 +1980,7 @@ export type Database = {
         };
         Update: {
           active?: boolean;
+          contact?: string | null;
           created_at?: string;
           id?: string;
           name?: string;

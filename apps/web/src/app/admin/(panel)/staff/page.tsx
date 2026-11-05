@@ -17,7 +17,7 @@ export default function StaffPage() {
 }
 
 const ROLES = [
-  { value: "kitchen", label: "Kitchen", description: "Orders (seafood check, cooking, dispatch, printing, walk-in orders, cash) and inventory." },
+  { value: "kitchen", label: "Kitchen", description: "Orders (availability check, cooking, dispatch, printing, walk-in orders, cash) and inventory." },
   { value: "verifier", label: "Payments", description: "Everything Kitchen does, plus confirming GCash payments and cancelling orders." },
   { value: "counter", label: "Counter", description: "Everything Kitchen does, plus cancelling orders. Can't confirm GCash payments." },
   { value: "rider", label: "Rider", description: "Only their own deliveries: address, map, customer number, amount to collect, Delivered, and their earnings." },

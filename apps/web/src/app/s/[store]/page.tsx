@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import Link from "next/link";
+import { ContactLink } from "@/components/contact-link";
 import { Badge, peso } from "@/components/ui";
 import { getPublicMenu, type MenuItem, type PublicMenu } from "@/lib/menu";
 import { getStore, storePath, type Store } from "@/lib/stores";
@@ -29,7 +30,8 @@ async function Menu({ params }: { params: PageProps<"/s/[store]">["params"] }) {
   await connection();
   const store = await getStore((await params).store);
   const menu = await getPublicMenu(store.id);
-  const hasSeafood = menu.categories.some((c) => c.items.some((i) => i.badge === "subject_to_availability"));
+  const hasUncertain = menu.categories.some((c) => c.items.some((i) => i.badge === "subject_to_availability"));
+  const legal = (path: string) => `${path}?store=${store.slug}`;
 
   return (
     <>
@@ -37,7 +39,9 @@ async function Menu({ params }: { params: PageProps<"/s/[store]">["params"] }) {
       <div className="mb-6 flex flex-col gap-3">
         <StoreStatusPill hours={menu.hours} closures={menu.closures} paused={menu.orderingPaused} />
         <p className="rounded-lg bg-orange-50 p-3 text-sm text-orange-900 dark:bg-orange-950 dark:text-orange-200">
-          {menu.deliveryEnabled ? `Pickup, or delivery in mainland Daanbantayan from ${peso(menu.baseDeliveryFee)}.` : "Pickup only for now."}
+          {menu.deliveryEnabled
+            ? `Pickup, or delivery${menu.deliveryArea ? ` in ${menu.deliveryArea}` : ""} from ${peso(menu.baseDeliveryFee)}.`
+            : "Pickup only for now."}
           {menu.noticeDays > 0
             ? ` Made to order: please order at least ${noticeText(menu.noticeDays)} before your pickup${menu.deliveryEnabled ? " or delivery" : ""} date.`
             : menu.allowPreorders
@@ -60,11 +64,16 @@ async function Menu({ params }: { params: PageProps<"/s/[store]">["params"] }) {
       ))}
 
       <footer className="border-t border-stone-200 pt-6 text-sm text-stone-500 dark:border-stone-800">
-        {hasSeafood && <p>🟡 “Subject to availability” dishes use seasonal seafood. We confirm before you pay.</p>}
+        {hasUncertain && <p>🟡 “Subject to availability” items depend on what we can get that day. We confirm before you pay.</p>}
+        {store.contact && (
+          <p className="mt-2">
+            Questions? Contact {store.name}: <ContactLink contact={store.contact} />
+          </p>
+        )}
         <p className="mt-2">
-          <Link href="/privacy" className="hover:text-orange-700">Privacy</Link> ·{" "}
-          <Link href="/terms" className="hover:text-orange-700">Terms</Link> ·{" "}
-          <Link href="/data-deletion" className="hover:text-orange-700">Data deletion</Link>
+          <Link href={legal("/privacy")} className="hover:text-orange-700">Privacy</Link> ·{" "}
+          <Link href={legal("/terms")} className="hover:text-orange-700">Terms</Link> ·{" "}
+          <Link href={legal("/data-deletion")} className="hover:text-orange-700">Data deletion</Link>
         </p>
       </footer>
       <div className="h-20" />

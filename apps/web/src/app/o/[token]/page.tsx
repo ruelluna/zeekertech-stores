@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { TERMINAL_ORDER_STATUSES, formatManilaTime, manilaParts, type OrderStatus } from "@wfh/shared";
 import { ActionForm } from "@/components/action-form";
+import { ContactLink } from "@/components/contact-link";
 import { Badge, Loading, peso } from "@/components/ui";
 import { fetchCatalog } from "@/lib/catalog";
 import { getStoreById, storePath } from "@/lib/stores";
@@ -81,6 +82,11 @@ async function Order({ params }: { params: PageProps<"/o/[token]">["params"] }) 
           </p>
         )}
         {row.status_note && <p className="mt-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200">{row.status_note}</p>}
+        {store?.contact && (
+          <p className="mt-2 text-sm text-stone-500">
+            Questions about this order? Contact {store.name}: <ContactLink contact={store.contact} />
+          </p>
+        )}
       </div>
 
       {!sad && stepIndex >= 0 && (

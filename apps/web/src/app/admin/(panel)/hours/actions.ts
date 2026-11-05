@@ -136,9 +136,10 @@ export async function savePrintSettings(_prev: ActionState, formData: FormData):
 const ProfileInput = z.object({
   name: form.text.pipe(z.string().min(1, "Enter the store name").max(80)),
   tagline: form.optText,
+  contact: form.optText.pipe(z.string().max(200, "Contact: at most 200 characters").nullable()),
 });
 
-/** The store's name and tagline, shown at the top of its menu. */
+/** The store's name, tagline and contact, shown on its menu. */
 export async function saveStoreProfile(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const parsed = ProfileInput.safeParse(formObject(formData));
   if (!parsed.success) return fail(zodMessage(parsed.error));

@@ -36,13 +36,20 @@ async function HoursContent() {
 
   return (
     <>
-      <Card title="Store" description="Shown at the top of the store's menu.">
+      <Card title="Store" description="Shown on the store's menu.">
         <ActionForm action={saveStoreProfile} className="flex flex-wrap items-end gap-3">
           <Field label="Store name" className="w-64">
             <Input name="name" defaultValue={profile?.name ?? ""} required />
           </Field>
           <Field label="Tagline" className="min-w-64 flex-1">
             <Input name="tagline" defaultValue={profile?.tagline ?? ""} placeholder="e.g. Made-to-order cakes and pastries" />
+          </Field>
+          <Field
+            label="How customers contact you"
+            hint="Facebook Page link or mobile number. Shown at the bottom of the menu and on the privacy page, for questions, refunds and data requests."
+            className="w-full"
+          >
+            <Input name="contact" defaultValue={profile?.contact ?? ""} maxLength={200} placeholder="e.g. facebook.com/yourstore or 0917 123 4567" />
           </Field>
         </ActionForm>
       </Card>

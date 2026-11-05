@@ -9,7 +9,7 @@ export default function IngredientsPage() {
     <>
       <PageHeader
         title="Ingredients"
-        description="Mark seafood and other seasonal items as “subject to availability”: dishes using them wait for staff to confirm before the customer pays. Today's status is set on the staff app's daily board."
+        description="Mark seafood, seasonal fruit and other items that depend on supply as “subject to availability”: dishes using them wait for staff to confirm before the customer pays. Today's status is set on the staff app's daily board."
       />
       <Suspense fallback={<Loading />}>
         <IngredientList />
