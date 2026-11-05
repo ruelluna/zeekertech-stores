@@ -34,7 +34,7 @@ export default function PrivacyPage({ searchParams }: PageProps<"/privacy">) {
         Only the staff of the store you ordered from who handle your order, and its delivery riders (name, number and address only). Each store
         sees only its own customers and orders. Customer accounts are separate for each store. Zeeker Tech can access the data only to run and
         support the website. The website runs on servers Zeeker Tech manages. OpenStreetMap-based maps and a routing service calculate delivery
-        distance (only the map pin is sent).
+        distance, and OpenStreetMap fills in your address when you tap “Use my location” (only the map pin is sent).
       </p>
       <h2>How long it&apos;s kept</h2>
       <p>

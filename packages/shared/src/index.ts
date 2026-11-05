@@ -6,6 +6,7 @@ export * from "./availability";
 export * from "./inventory";
 export * from "./delivery/fee";
 export * from "./delivery/geo";
+export * from "./delivery/address";
 export * from "./pricing";
 export * from "./sms";
 export * from "./schedule/hours";

@@ -91,6 +91,7 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
   const [focus, setFocus] = useState<LatLng>(pin ?? data.mapCenter);
   const [saveAddress, setSaveAddress] = useState<boolean>(Boolean(data.customer) && !firstSaved);
   const [locating, setLocating] = useState(false);
+  const [locationNote, setLocationNote] = useState<string | null>(null);
   const [quoteResult, setQuoteResult] = useState<{ key: string; value: QuoteState } | null>(null);
 
   const [dateKey, setDateKey] = useState<string>("");
@@ -202,12 +203,14 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
   function useMyLocation() {
     if (!navigator.geolocation) return setErrors(["Your browser can't share its location. Tap the map instead."]);
     setLocating(true);
+    setLocationNote(null);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setPin(p);
         setFocus(p);
-        setLocating(false);
+        if (savedId !== "new") setSavedId("new");
+        void fillAddressFrom(p).finally(() => setLocating(false));
       },
       () => {
         setLocating(false);
@@ -215,6 +218,34 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
       },
       { enableHighAccuracy: true, timeout: 10_000 },
     );
+  }
+
+  /**
+   * Fills the barangay (and purok/street and landmark, if still empty) from the pin's address on
+   * OpenStreetMap. Anything it can't find stays for the customer to fill in.
+   */
+  async function fillAddressFrom(p: LatLng) {
+    try {
+      const res = await fetch("/api/address/lookup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storeId: data.store.id, lat: p.lat, lng: p.lng }),
+      });
+      const guess = (await res.json()) as { ok: boolean; barangayId: string | null; streetPurok: string | null; landmark: string | null };
+      if (!guess.ok) throw new Error("lookup failed");
+      if (guess.barangayId) setBarangayId(guess.barangayId);
+      if (guess.streetPurok) setStreetPurok((current) => (current.trim() ? current : guess.streetPurok!));
+      if (guess.landmark) setLandmark((current) => (current.trim() ? current : guess.landmark!));
+      setLocationNote(
+        guess.barangayId
+          ? guess.streetPurok
+            ? "We filled in your address from your location. Please check it."
+            : "We filled in your barangay. Please add your purok or street."
+          : "Pin placed. Please choose your barangay and add your purok or street.",
+      );
+    } catch {
+      setLocationNote("Pin placed. Please choose your barangay and add your purok or street.");
+    }
   }
 
   function submit() {
@@ -389,6 +420,11 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
                   {locating ? "Locating…" : "Use my location"}
                 </button>
               </div>
+              {locationNote && (
+                <p className="mb-2 text-sm text-muted" aria-live="polite">
+                  {locationNote}
+                </p>
+              )}
               <MapPicker
                 value={pin}
                 focus={focus}
