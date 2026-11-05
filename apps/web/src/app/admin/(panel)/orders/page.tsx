@@ -18,7 +18,7 @@ export default function OrdersPage() {
         title="Orders"
         description="Updates live. Actions here reach the customer's order page right away."
         actions={
-          <Link href="/admin/orders/new" className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700">
+          <Link href="/admin/orders/new" className="rounded-lg bg-accent-button px-4 py-2 text-sm font-medium text-on-accent hover:brightness-95">
             New order
           </Link>
         }
@@ -137,7 +137,7 @@ async function Orders() {
               {o.order_items
                 .filter((i) => i.needs_availability && i.item_status !== "removed")
                 .map((i) => (
-                  <fieldset key={i.id} className="rounded-lg border border-stone-200 p-3 dark:border-stone-700">
+                  <fieldset key={i.id} className="rounded-lg border border-ink-200 p-3 dark:border-ink-700">
                     <input type="hidden" name="itemId" value={i.id} />
                     <input type="hidden" name={`market_${i.id}`} value={i.price_mode === "market" ? "1" : "0"} />
                     <legend className="px-1 text-sm font-medium">
@@ -182,7 +182,7 @@ async function Orders() {
               <Info label="Sender name" value={o.payment_sender_name ?? "—"} />
             </dl>
             {proofUrls.get(o.id) && (
-              <a href={proofUrls.get(o.id)} target="_blank" rel="noreferrer" className="mb-3 inline-block text-sm text-orange-700 underline">
+              <a href={proofUrls.get(o.id)} target="_blank" rel="noreferrer" className="mb-3 inline-block text-sm underline decoration-ink-400 underline-offset-2 hover:decoration-accent dark:decoration-ink-500">
                 View payment screenshot
               </a>
             )}
@@ -204,7 +204,7 @@ async function Orders() {
                 </ActionForm>
               </div>
             ) : (
-              <p className="text-sm text-stone-500">Only the owner or a verifier can confirm payments.</p>
+              <p className="text-sm text-muted">Only the owner or a verifier can confirm payments.</p>
             )}
           </OrderCard>
         ))}
@@ -282,7 +282,7 @@ type Order = {
 function Section({ title, description, empty, children }: { title: string; description?: string; empty: string; children: React.ReactNode[] }) {
   return (
     <Card title={`${title} (${children.length})`} description={description}>
-      {children.length === 0 ? <p className="text-sm text-stone-500">{empty}</p> : <div className="flex flex-col gap-4">{children}</div>}
+      {children.length === 0 ? <p className="text-sm text-muted">{empty}</p> : <div className="flex flex-col gap-4">{children}</div>}
     </Card>
   );
 }
@@ -300,22 +300,22 @@ function OrderCard({ o, children, canCancel, links }: { o: Order; children?: Rea
   const payment = PAYMENT_LABEL[o.payment_status] ?? { label: o.payment_status, tone: "neutral" as const };
 
   return (
-    <article className={`rounded-xl border border-l-4 bg-white dark:bg-stone-900 ${STATUS_BADGE[o.status]?.border ?? "border-stone-200 dark:border-stone-700"}`}>
+    <article className={`rounded-xl border border-l-4 bg-surface dark:bg-ink-900 ${STATUS_BADGE[o.status]?.border ?? "border-ink-200 dark:border-ink-700"}`}>
       {/* Who/when: order code and status on the left, pickup/delivery time on the right */}
-      <header className="flex flex-wrap items-start justify-between gap-2 border-b border-stone-100 px-3 py-2 dark:border-stone-800">
+      <header className="flex flex-wrap items-start justify-between gap-2 border-b border-ink-100 px-3 py-2 dark:border-ink-800">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-2xl font-bold leading-none">{o.queue_code}</span>
           <StatusBadge status={o.status} />
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className={`rounded-md px-2 py-1 text-xs font-bold ${delivery ? "bg-orange-600 text-white" : "bg-stone-800 text-white dark:bg-stone-200 dark:text-stone-900"}`}>
+          <span className={`rounded-md px-2 py-1 text-xs font-bold ${delivery ? "bg-accent-button text-on-accent" : "bg-ink-800 text-white dark:bg-ink-200 dark:text-ink-900"}`}>
             {delivery ? "DELIVERY" : "PICKUP"}
           </span>
           <span className={`text-sm font-semibold ${today ? "text-amber-700 dark:text-amber-400" : ""}`}>
             {today ? "Today" : slot.toLocaleDateString("en-PH", { weekday: "short", month: "short", day: "numeric", timeZone: "Asia/Manila" })} {formatManilaTime(slot)}
           </span>
         </div>
-        <div className="flex w-full flex-wrap items-center gap-2 text-xs text-stone-500">
+        <div className="flex w-full flex-wrap items-center gap-2 text-xs text-muted">
           <span>{o.external_id ?? "Walk-in"}</span>
           {parentCode && <Badge tone="orange">ADD-ON to {parentCode}</Badge>}
           {addOnCodes.map((code) => (
@@ -339,7 +339,7 @@ function OrderCard({ o, children, canCancel, links }: { o: Order; children?: Rea
             const removed = i.item_status === "removed" || i.order_item_availability?.status === "cant_source";
             return (
               <li key={i.id} className={`flex gap-3 ${removed ? "opacity-50" : ""}`}>
-                <span className="flex h-8 min-w-8 items-center justify-center rounded-lg bg-orange-100 px-2 text-base font-bold text-orange-900 dark:bg-orange-950 dark:text-orange-200">
+                <span className="flex h-8 min-w-8 items-center justify-center rounded-lg bg-accent-soft px-2 text-base font-bold text-foreground">
                   {i.qty}×
                 </span>
                 <div className="min-w-0">
@@ -348,7 +348,7 @@ function OrderCard({ o, children, canCancel, links }: { o: Order; children?: Rea
                     {i.weight_kg ? <span className="font-normal"> · {i.weight_kg} kg</span> : null}
                     {removed && <span className="ml-2 text-xs font-normal text-red-700 no-underline dark:text-red-400">not available</span>}
                   </p>
-                  {mods.length > 0 && <p className="text-sm text-stone-600 dark:text-stone-300">{mods.join(" · ")}</p>}
+                  {mods.length > 0 && <p className="text-sm text-ink-600 dark:text-ink-300">{mods.join(" · ")}</p>}
                   {i.notes && (
                     <p className="mt-0.5 inline-block whitespace-pre-line rounded bg-amber-100 px-1.5 text-sm font-medium text-amber-900 dark:bg-amber-950 dark:text-amber-200">“{i.notes}”</p>
                   )}
@@ -356,48 +356,48 @@ function OrderCard({ o, children, canCancel, links }: { o: Order; children?: Rea
               </li>
             );
           })}
-          {o.notes && <li className="whitespace-pre-line rounded-lg bg-stone-100 p-2 text-sm dark:bg-stone-800">📝 {o.notes}</li>}
+          {o.notes && <li className="whitespace-pre-line rounded-lg bg-ink-100 p-2 text-sm dark:bg-ink-800">📝 {o.notes}</li>}
         </ul>
 
         {/* Customer, address and payment */}
-        <aside className="flex flex-col gap-3 text-sm sm:border-l sm:border-stone-100 sm:pl-4 dark:sm:border-stone-800">
+        <aside className="flex flex-col gap-3 text-sm sm:border-l sm:border-ink-100 sm:pl-4 dark:sm:border-ink-800">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-stone-500">Customer</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted">Customer</p>
             <p className="font-semibold">{o.customer_name ?? "—"}</p>
             {o.customer_phone && (
-              <a href={`tel:${o.customer_phone}`} className="text-orange-700 underline">
+              <a href={`tel:${o.customer_phone}`} className="underline decoration-ink-400 underline-offset-2 hover:decoration-accent dark:decoration-ink-500">
                 {o.customer_phone}
               </a>
             )}
           </div>
           {delivery && address && (
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-stone-500">Deliver to</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted">Deliver to</p>
               <p>{[address.streetPurok, o.barangay].filter(Boolean).join(", ")}</p>
-              {address.landmark && <p className="text-stone-600 dark:text-stone-400">Near {address.landmark}</p>}
-              <p className="text-stone-600 dark:text-stone-400">
+              {address.landmark && <p className="text-muted">Near {address.landmark}</p>}
+              <p className="text-muted">
                 {o.distance_km !== null && `${o.distance_km} km`}
                 {address.lat !== undefined && (
                   <>
                     {o.distance_km !== null && " · "}
-                    <a href={`https://www.google.com/maps?q=${address.lat},${address.lng}`} target="_blank" rel="noreferrer" className="text-orange-700 underline">
+                    <a href={`https://www.google.com/maps?q=${address.lat},${address.lng}`} target="_blank" rel="noreferrer" className="underline decoration-ink-400 underline-offset-2 hover:decoration-accent dark:decoration-ink-500">
                       Map
                     </a>
                   </>
                 )}
               </p>
-              {address.riderNotes && <p className="text-xs text-stone-500">Rider notes: {address.riderNotes}</p>}
-              {o.rider_name && <p className="text-xs text-stone-500">Rider: {o.rider_name}</p>}
+              {address.riderNotes && <p className="text-xs text-muted">Rider notes: {address.riderNotes}</p>}
+              {o.rider_name && <p className="text-xs text-muted">Rider: {o.rider_name}</p>}
             </div>
           )}
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-stone-500">Payment</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted">Payment</p>
             <p className="text-lg font-bold leading-tight">
               {o.is_estimate ? "~" : ""}
               {peso(o.total)}
             </p>
             {(delivery || o.discount_amount > 0) && (
-              <p className="text-xs text-stone-500">
+              <p className="text-xs text-muted">
                 {delivery && `incl. delivery ${peso(o.delivery_fee)}`}
                 {delivery && o.discount_amount > 0 && " · "}
                 {o.discount_amount > 0 && `discount ${peso(o.discount_amount)}`}
@@ -411,7 +411,7 @@ function OrderCard({ o, children, canCancel, links }: { o: Order; children?: Rea
       </div>
 
       {/* Actions */}
-      <footer className="flex flex-col gap-3 border-t border-stone-100 px-3 py-2 dark:border-stone-800">
+      <footer className="flex flex-col gap-3 border-t border-ink-100 px-3 py-2 dark:border-ink-800">
         {children}
         {o.flags.includes("collect_payment") && o.payment_status !== "confirmed" && !terminal && (
           <ActionForm action={markPaid} submitLabel={`Mark paid (${peso(o.total)} collected)`} className="flex flex-wrap items-end gap-3">
@@ -424,7 +424,7 @@ function OrderCard({ o, children, canCancel, links }: { o: Order; children?: Rea
             {canAddItems && (
               <Link
                 href={`/admin/orders/new?addTo=${o.id}`}
-                className="rounded-lg border border-stone-300 px-3 py-1.5 text-xs font-medium hover:border-orange-500 dark:border-stone-700"
+                className="rounded-lg border border-ink-300 px-3 py-1.5 text-xs font-medium hover:border-accent dark:border-ink-700"
               >
                 + Add items
               </Link>
@@ -432,7 +432,7 @@ function OrderCard({ o, children, canCancel, links }: { o: Order; children?: Rea
           </div>
           {!terminal && canCancel && (
             <details className="text-sm">
-              <summary className="cursor-pointer text-stone-500">Cancel order…</summary>
+              <summary className="cursor-pointer text-muted">Cancel order…</summary>
               <ActionForm action={staffCancelOrder} submitLabel="Cancel order" danger className="mt-2 flex flex-wrap items-end gap-3">
                 <input type="hidden" name="orderId" value={o.id} />
                 <Field label="Reason (customer sees it)" className="w-72">
@@ -464,13 +464,13 @@ const STATUS_BADGE: Record<string, { label: string; tone: "neutral" | "green" | 
   preparing: { label: "Preparing", tone: "orange" },
   ready: { label: "Ready", tone: "green" },
   out_for_delivery: { label: "Out for delivery", tone: "orange" },
-  picked_up: { label: "✓ Picked up", tone: "green", border: "border-stone-200 border-l-green-600 dark:border-stone-700 dark:border-l-green-500" },
-  delivered: { label: "✓ Delivered", tone: "green", border: "border-stone-200 border-l-green-600 dark:border-stone-700 dark:border-l-green-500" },
-  completed: { label: "✓ Completed", tone: "green", border: "border-stone-200 border-l-green-600 dark:border-stone-700 dark:border-l-green-500" },
-  cancelled: { label: "✕ Cancelled", tone: "red", border: "border-stone-200 border-l-red-600 dark:border-stone-700 dark:border-l-red-500" },
-  expired: { label: "✕ Expired", tone: "red", border: "border-stone-200 border-l-red-600 dark:border-stone-700 dark:border-l-red-500" },
-  denied: { label: "✕ Couldn't source", tone: "red", border: "border-stone-200 border-l-red-600 dark:border-stone-700 dark:border-l-red-500" },
-  rejected: { label: "✕ Payment rejected", tone: "red", border: "border-stone-200 border-l-red-600 dark:border-stone-700 dark:border-l-red-500" },
+  picked_up: { label: "✓ Picked up", tone: "green", border: "border-ink-200 border-l-green-600 dark:border-ink-700 dark:border-l-green-500" },
+  delivered: { label: "✓ Delivered", tone: "green", border: "border-ink-200 border-l-green-600 dark:border-ink-700 dark:border-l-green-500" },
+  completed: { label: "✓ Completed", tone: "green", border: "border-ink-200 border-l-green-600 dark:border-ink-700 dark:border-l-green-500" },
+  cancelled: { label: "✕ Cancelled", tone: "red", border: "border-ink-200 border-l-red-600 dark:border-ink-700 dark:border-l-red-500" },
+  expired: { label: "✕ Expired", tone: "red", border: "border-ink-200 border-l-red-600 dark:border-ink-700 dark:border-l-red-500" },
+  denied: { label: "✕ Couldn't source", tone: "red", border: "border-ink-200 border-l-red-600 dark:border-ink-700 dark:border-l-red-500" },
+  rejected: { label: "✕ Payment rejected", tone: "red", border: "border-ink-200 border-l-red-600 dark:border-ink-700 dark:border-l-red-500" },
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -531,7 +531,7 @@ function Advance({ o, riders }: { o: Order; riders: Rider[] }) {
 function Info({ label, value, strong, warn }: { label: string; value: string; strong?: boolean; warn?: boolean }) {
   return (
     <div className="flex justify-between gap-3">
-      <dt className="text-stone-500">{label}</dt>
+      <dt className="text-muted">{label}</dt>
       <dd className={`${strong ? "font-semibold" : ""} ${warn ? "text-red-700 dark:text-red-400" : ""}`}>{value}</dd>
     </div>
   );

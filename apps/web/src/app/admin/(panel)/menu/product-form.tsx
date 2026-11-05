@@ -132,19 +132,19 @@ export function ProductForm({ product: p, storeNoticeDays, categories, ingredien
       >
         <div className="flex flex-col gap-3">
           {groups.map((g) => (
-            <div key={g.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-stone-100 p-2 dark:border-stone-800">
+            <div key={g.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-ink-100 p-2 dark:border-ink-800">
               <Checkbox
                 name="group_ids"
                 value={g.id}
                 label={`${g.name}: ${g.modifiers.map((m) => `${m.name}${m.price_delta ? ` +${peso(m.price_delta)}` : ""}`).join(", ")}`}
                 defaultChecked={linkedGroupIds.includes(g.id)}
               />
-              <label className="flex items-center gap-2 text-xs text-stone-500">
+              <label className="flex items-center gap-2 text-xs text-muted">
                 Show
                 <select
                   name={`show_when_${g.id}`}
                   defaultValue={showWhen[g.id] ?? ""}
-                  className="rounded-lg border border-stone-300 bg-white px-2 py-1 text-xs dark:border-stone-700 dark:bg-stone-950"
+                  className="rounded-lg border border-ink-300 bg-surface px-2 py-1 text-xs dark:border-ink-700 dark:bg-ink-950"
                 >
                   <option value="">always</option>
                   {groups

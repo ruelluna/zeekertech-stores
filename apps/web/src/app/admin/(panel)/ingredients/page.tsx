@@ -54,14 +54,14 @@ async function IngredientList() {
   return (
     <>
       <Card title="All ingredients">
-        <ul className="divide-y divide-stone-100 dark:divide-stone-800">
+        <ul className="divide-y divide-ink-100 dark:divide-ink-800">
           {ingredients.map((i) => (
             <li key={i.id} className="py-3">
               <ActionForm action={saveIngredient} className="flex flex-wrap items-end gap-3">
                 <input type="hidden" name="id" value={i.id} />
                 <IngredientFields i={i} />
               </ActionForm>
-              <p className="mt-1 text-xs text-stone-500">
+              <p className="mt-1 text-xs text-muted">
                 Used in: {i.product_ingredients.map((l) => l.products?.name).filter(Boolean).join(", ") || "no products"}
               </p>
             </li>

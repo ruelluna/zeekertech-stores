@@ -57,7 +57,7 @@ export function PhoneAlerts() {
   if (state === "unsupported") return null;
   if (state === "denied") {
     return (
-      <p className="text-xs text-stone-500">
+      <p className="text-xs text-muted">
         Phone alerts are blocked in this browser&apos;s site settings.
       </p>
     );
@@ -69,7 +69,7 @@ export function PhoneAlerts() {
         <button
           type="button"
           onClick={turnOff}
-          className="text-xs text-stone-500 underline hover:text-stone-700"
+          className="text-xs text-muted underline hover:text-ink-700"
         >
           Turn off
         </button>
@@ -81,7 +81,7 @@ export function PhoneAlerts() {
       type="button"
       onClick={turnOn}
       disabled={state === "working"}
-      className="rounded-lg border border-orange-600 px-3 py-1.5 text-sm font-medium text-orange-700 hover:bg-orange-50 disabled:opacity-60 dark:hover:bg-orange-950"
+      className="rounded-lg border border-accent px-3 py-1.5 text-sm font-medium text-foreground hover:bg-accent-soft disabled:opacity-60"
     >
       🔔 Turn on phone alerts
     </button>

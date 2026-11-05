@@ -2,6 +2,7 @@
 
 import { refresh } from "next/cache";
 import { z } from "zod";
+import { DEFAULT_ACCENT, normalizeHex } from "@wfh/shared";
 import { fail, form, formObject, ok, zodMessage, type ActionState } from "@/lib/action-state";
 import { requireSuperAdmin } from "@/lib/auth";
 import { menuChanged } from "@/lib/menu-tag";
@@ -22,6 +23,7 @@ const StoreInput = z.object({
   notice_days: form.int.pipe(z.number().int().min(0).max(60, "At most 60 days").nullable()).transform((n) => n ?? 0),
   contact: form.optText.pipe(z.string().max(200, "Contact: at most 200 characters").nullable()),
   copy_area: form.bool,
+  accent_color: form.text.transform((v) => normalizeHex(v) ?? DEFAULT_ACCENT),
 });
 
 /**

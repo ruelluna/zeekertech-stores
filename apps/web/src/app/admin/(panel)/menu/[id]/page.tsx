@@ -9,7 +9,7 @@ import { ProductForm } from "../product-form";
 export default function EditProductPage({ params }: PageProps<"/admin/menu/[id]">) {
   return (
     <>
-      <Link href="/admin/menu" className="text-sm text-stone-500 hover:text-orange-700">
+      <Link href="/admin/menu" className="text-sm text-muted hover:underline hover:decoration-accent">
         ← Menu & prices
       </Link>
       <Suspense fallback={<Loading />}>
@@ -34,7 +34,7 @@ async function EditProduct({ params }: { params: PageProps<"/admin/menu/[id]">["
               // eslint-disable-next-line @next/next/no-img-element
               <img src={data.product.image_url} alt={data.product.name} className="size-32 rounded-lg object-cover" />
             ) : (
-              <p className="flex size-32 items-center justify-center rounded-lg bg-stone-100 text-sm text-stone-500 dark:bg-stone-800">No photo</p>
+              <p className="flex size-32 items-center justify-center rounded-lg bg-ink-100 text-sm text-muted dark:bg-ink-800">No photo</p>
             )}
             <div className="flex flex-col gap-3">
               <ActionForm action={uploadProductPhoto} submitLabel="Upload photo">

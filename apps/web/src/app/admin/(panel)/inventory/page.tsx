@@ -44,17 +44,17 @@ async function Inventory({ searchParams }: { searchParams: PageProps<"/admin/inv
   return (
     <>
       <div className="mb-6 flex flex-wrap items-center gap-3 text-sm">
-        <Link href={`/admin/inventory?date=${shiftDate(date, -1)}`} className="rounded-lg border border-stone-300 px-3 py-1.5 dark:border-stone-700">
+        <Link href={`/admin/inventory?date=${shiftDate(date, -1)}`} className="rounded-lg border border-ink-300 px-3 py-1.5 dark:border-ink-700">
           ← Previous day
         </Link>
         <strong className="text-base">{prettyDate(date)}</strong>
         {date !== today && (
-          <Link href="/admin/inventory" className="text-orange-700 underline">
+          <Link href="/admin/inventory" className="underline decoration-ink-400 underline-offset-2 hover:decoration-accent dark:decoration-ink-500">
             Today
           </Link>
         )}
         {date < today && (
-          <Link href={`/admin/inventory?date=${shiftDate(date, 1)}`} className="rounded-lg border border-stone-300 px-3 py-1.5 dark:border-stone-700">
+          <Link href={`/admin/inventory?date=${shiftDate(date, 1)}`} className="rounded-lg border border-ink-300 px-3 py-1.5 dark:border-ink-700">
             Next day →
           </Link>
         )}
@@ -65,13 +65,13 @@ async function Inventory({ searchParams }: { searchParams: PageProps<"/admin/inv
         description="Based on tonight's ending count (or this morning's count plus purchases until then), each item's target, reorder point and average daily use."
       >
         {toBuy.length === 0 ? (
-          <p className="text-sm text-stone-500">Nothing to buy based on the counts so far.</p>
+          <p className="text-sm text-muted">Nothing to buy based on the counts so far.</p>
         ) : (
-          <ul className="divide-y divide-stone-100 dark:divide-stone-800">
+          <ul className="divide-y divide-ink-100 dark:divide-ink-800">
             {toBuy.map((r) => (
               <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
                 <span>
-                  <strong>{r.name}</strong> <span className="text-stone-500">· {r.suggestion.reason}</span>
+                  <strong>{r.name}</strong> <span className="text-muted">· {r.suggestion.reason}</span>
                 </span>
                 <Badge tone="amber">
                   Buy {r.suggestion.quantity} {r.unit}
@@ -81,7 +81,7 @@ async function Inventory({ searchParams }: { searchParams: PageProps<"/admin/inv
           </ul>
         )}
         {notSet.length > 0 && (
-          <p className="mt-3 text-xs text-stone-500">
+          <p className="mt-3 text-xs text-muted">
             No suggestion yet for {notSet.length} item{notSet.length === 1 ? "" : "s"} ({notSet.map((r) => r.name).slice(0, 4).join(", ")}
             {notSet.length > 4 ? "…" : ""}): count them for a couple of days or set a target below.
           </p>
@@ -93,8 +93,8 @@ async function Inventory({ searchParams }: { searchParams: PageProps<"/admin/inv
           <input type="hidden" name="date" value={date} />
           {categories.map((category) => (
             <div key={category}>
-              <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500">{category}</h3>
-              <div className="flex flex-col divide-y divide-stone-100 dark:divide-stone-800">
+              <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted">{category}</h3>
+              <div className="flex flex-col divide-y divide-ink-100 dark:divide-ink-800">
                 {active
                   .filter((r) => r.category === category)
                   .map((r) => (
@@ -110,10 +110,10 @@ async function Inventory({ searchParams }: { searchParams: PageProps<"/admin/inv
         <Card title="Items" description="Target = stock to start a day with. Reorder at = alert when the ending count drops to this. Buy for = days one purchase covers.">
           <div className="flex flex-col gap-2">
             {rows.map((r) => (
-              <details key={r.id} className="rounded-lg border border-stone-200 p-3 dark:border-stone-700">
+              <details key={r.id} className="rounded-lg border border-ink-200 p-3 dark:border-ink-700">
                 <summary className="cursor-pointer text-sm">
                   <strong>{r.name}</strong>{" "}
-                  <span className="text-stone-500">
+                  <span className="text-muted">
                     · {r.unit} · target {qty(r.parLevel, r.unit)} · reorder at {qty(r.reorderPoint, r.unit)} · buy for {r.buyForDays} day
                     {r.buyForDays === 1 ? "" : "s"}
                   </span>{" "}
@@ -122,8 +122,8 @@ async function Inventory({ searchParams }: { searchParams: PageProps<"/admin/inv
                 <ItemForm r={r} />
               </details>
             ))}
-            <details className="rounded-lg border border-dashed border-stone-300 p-3 dark:border-stone-700">
-              <summary className="cursor-pointer text-sm font-medium text-orange-700">+ Add item</summary>
+            <details className="rounded-lg border border-dashed border-ink-300 p-3 dark:border-ink-700">
+              <summary className="cursor-pointer text-sm font-medium underline decoration-ink-400 underline-offset-2 hover:decoration-accent dark:decoration-ink-500">+ Add item</summary>
               <ItemForm />
             </details>
           </div>
@@ -140,7 +140,7 @@ function CountRow({ r }: { r: InventoryRow }) {
       <input type="hidden" name="itemId" value={r.id} />
       <div className="min-w-40 flex-1">
         <p className="font-medium">{r.name}</p>
-        <p className="text-xs text-stone-500">
+        <p className="text-xs text-muted">
           Used today: {qty(r.usage, r.unit)} · avg {qty(r.avgUsage, r.unit)}/day
           {r.suggestion.status === "buy" && (
             <>

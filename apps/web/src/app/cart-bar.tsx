@@ -11,10 +11,10 @@ export function CartBar({ store }: { store: string }) {
   const count = lines.reduce((n, l) => n + l.qty, 0);
   const estimate = lines.some((l) => l.isEstimate);
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 border-t border-stone-200 bg-white/95 p-3 backdrop-blur dark:border-stone-800 dark:bg-stone-900/95">
+    <div className="fixed inset-x-0 bottom-0 z-30 border-t border-ink-200 bg-surface p-3 dark:border-ink-800">
       <Link
         href={`/s/${store}/checkout`}
-        className="mx-auto flex max-w-3xl items-center justify-between rounded-xl bg-orange-600 px-4 py-3 font-medium text-white hover:bg-orange-700"
+        className="mx-auto flex max-w-3xl items-center justify-between rounded-xl bg-accent-button px-4 py-3 font-medium text-on-accent hover:brightness-95"
       >
         <span>
           View cart · {count} item{count === 1 ? "" : "s"}

@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { DEFAULT_ACCENT, normalizeHex } from "@wfh/shared";
 import { fail, form, formObject, ok, zodMessage, type ActionState } from "@/lib/action-state";
 import { requireOwner } from "@/lib/auth";
 import { menuChanged } from "@/lib/menu-tag";
@@ -137,9 +138,14 @@ const ProfileInput = z.object({
   name: form.text.pipe(z.string().min(1, "Enter the store name").max(80)),
   tagline: form.optText,
   contact: form.optText.pipe(z.string().max(200, "Contact: at most 200 characters").nullable()),
+  accent_color: form.text.transform((v, ctx) => {
+    const hex = normalizeHex(v);
+    if (!hex) ctx.addIssue({ code: "custom", message: "Accent colour: pick a swatch or enter a hex code like #EA580C" });
+    return hex ?? DEFAULT_ACCENT;
+  }),
 });
 
-/** The store's name, tagline and contact, shown on its menu. */
+/** The store's name, tagline, contact and accent colour, shown on its menu. */
 export async function saveStoreProfile(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const parsed = ProfileInput.safeParse(formObject(formData));
   if (!parsed.success) return fail(zodMessage(parsed.error));
@@ -148,4 +154,27 @@ export async function saveStoreProfile(_prev: ActionState, formData: FormData): 
   if (error) return fail(error.message);
   menuChanged();
   return ok();
+}
+
+/** A logo shown at the top of the menu instead of the store name in script. */
+export async function uploadStoreLogo(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const { supabase, storeId } = await requireOwner();
+  const file = formData.get("logo");
+  if (!(file instanceof File)) return fail("Choose the logo image");
+  const uploaded = await uploadPublicImage(file, "logos");
+  if (!uploaded.ok) return fail(uploaded.error);
+
+  const { error } = await supabase.schema("store").from("stores").update({ logo_url: uploaded.url }).eq("id", storeId);
+  if (error) return fail(error.message);
+  menuChanged();
+  return ok("Logo uploaded");
+}
+
+/** Goes back to showing the store name in script. */
+export async function removeStoreLogo(): Promise<ActionState> {
+  const { supabase, storeId } = await requireOwner();
+  const { error } = await supabase.schema("store").from("stores").update({ logo_url: null }).eq("id", storeId);
+  if (error) return fail(error.message);
+  menuChanged();
+  return ok("Logo removed");
 }

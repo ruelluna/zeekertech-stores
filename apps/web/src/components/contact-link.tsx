@@ -4,7 +4,7 @@
  */
 export function ContactLink({ contact }: { contact: string }) {
   const text = contact.trim();
-  const className = "underline hover:text-orange-700";
+  const className = "underline decoration-ink-400 underline-offset-2 hover:decoration-accent dark:decoration-ink-500";
 
   if (/^(https?:\/\/|www\.|(m\.)?facebook\.com\/|fb\.com\/|m\.me\/)/i.test(text) && !/\s/.test(text)) {
     const href = /^https?:\/\//i.test(text) ? text : `https://${text}`;

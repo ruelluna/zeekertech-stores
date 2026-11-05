@@ -8,10 +8,12 @@ import { STATUS_TEXT } from "@/lib/order-status";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { OrderStatus } from "@wfh/shared";
 import type { Metadata } from "next";
-import { getStore, storePath } from "@/lib/stores";
+import { getStore, storePath, type Store } from "@/lib/stores";
 import { customerSignOut } from "../login/actions";
 import { deleteAccount, deleteAddress, setDefaultAddress, updateProfile } from "./actions";
 import { GuestOrders } from "./guest-orders";
+import { StoreHeader } from "@/components/store-header";
+import { StoreTheme } from "@/components/store-theme";
 
 export async function generateMetadata({ params }: PageProps<"/s/[store]/account">): Promise<Metadata> {
   const store = await getStore((await params).store);
@@ -30,12 +32,16 @@ export default function AccountPage({ params }: PageProps<"/s/[store]/account">)
 
 async function Account({ params }: { params: PageProps<"/s/[store]/account">["params"] }) {
   const store = await getStore((await params).store);
-  const customer = await getCurrentCustomer(store.id);
-  const back = (
-    <Link href={storePath(store.slug)} className="text-sm text-stone-500 hover:text-orange-700">
-      ← {store.name}
-    </Link>
+  return (
+    <StoreTheme accent={store.accent_color}>
+      <AccountBody store={store} />
+    </StoreTheme>
   );
+}
+
+async function AccountBody({ store }: { store: Store }) {
+  const customer = await getCurrentCustomer(store.id);
+  const back = <StoreHeader store={store} size="sm" />;
 
   if (!customer) {
     return (
@@ -46,7 +52,7 @@ async function Account({ params }: { params: PageProps<"/s/[store]/account">["pa
           <GuestOrders store={store.slug} />
         </Card>
         <Card title="Log in" description="Save your details and addresses, and see your orders on any device.">
-          <Link href={storePath(store.slug, `/login?next=${storePath(store.slug, "/account")}`)} className="inline-block rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700">
+          <Link href={storePath(store.slug, `/login?next=${storePath(store.slug, "/account")}`)} className="inline-block rounded-lg bg-accent-button px-4 py-2 text-sm font-medium text-on-accent hover:brightness-95">
             Log in
           </Link>
         </Card>
@@ -78,7 +84,7 @@ async function Account({ params }: { params: PageProps<"/s/[store]/account">["pa
         <h1 className="text-2xl font-semibold tracking-tight">Hi, {customer.name.split(" ")[0]}</h1>
         <form action={customerSignOut}>
           <input type="hidden" name="store" value={store.slug} />
-          <button type="submit" className="text-sm text-stone-500 hover:text-red-700">
+          <button type="submit" className="text-sm text-muted hover:text-red-700">
             Log out
           </button>
         </form>
@@ -93,23 +99,23 @@ async function Account({ params }: { params: PageProps<"/s/[store]/account">["pa
 
       <Card title="Your orders">
         {(orders.data ?? []).length === 0 ? (
-          <p className="text-sm text-stone-500">No orders yet.</p>
+          <p className="text-sm text-muted">No orders yet.</p>
         ) : (
-          <ul className="divide-y divide-stone-100 dark:divide-stone-800">
+          <ul className="divide-y divide-ink-100 dark:divide-ink-800">
             {orders.data!.map((o) => (
               <li key={o.order_code} className="flex items-center justify-between gap-3 py-2 text-sm">
                 <div>
                   <p>
                     <strong>{o.order_code}</strong> · {peso(o.total)}
                   </p>
-                  <p className="text-xs text-stone-500">
+                  <p className="text-xs text-muted">
                     {new Date(o.created_at).toLocaleDateString("en-PH", { month: "short", day: "numeric", timeZone: "Asia/Manila" })} ·{" "}
                     {o.fulfillment === "pickup" ? "Pickup" : "Delivery"}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Badge>{STATUS_TEXT[o.status as OrderStatus].title}</Badge>
-                  <Link href={`/o/${o.access_token}`} className="text-orange-700 hover:underline">
+                  <Link href={`/o/${o.access_token}`} className="underline decoration-ink-400 underline-offset-2 hover:decoration-accent dark:decoration-ink-500">
                     View
                   </Link>
                 </div>
@@ -135,7 +141,7 @@ async function Account({ params }: { params: PageProps<"/s/[store]/account">["pa
 
       <Card title="Saved addresses" description="New addresses are saved from checkout.">
         {(addresses.data ?? []).length === 0 ? (
-          <p className="text-sm text-stone-500">No saved addresses yet.</p>
+          <p className="text-sm text-muted">No saved addresses yet.</p>
         ) : (
           <ul className="flex flex-col gap-3">
             {addresses.data!.map((a) => (

@@ -52,7 +52,7 @@ components:
 
 # Design System: Weekend Food Hub
 
-<!-- Scope: this records the brand identity (logo system) shipped in public/brand/, src/app/icon.svg and the staff app icons. The storefront UI does not use it yet: src/app/globals.css is still stone neutrals with an orange accent and Geist type. Applying this identity to the storefront is a separate, unbuilt surface. -->
+<!-- Scope: the first part records Weekend Food Hub's brand identity (logo system) shipped in public/brand/, src/app/icon.svg and the staff app icons. "Storefront theme" at the end records how that identity became the shared web theme for every store on the site (src/app/globals.css, @wfh/shared theme.ts), each store with its own accent. -->
 
 ## Overview
 
@@ -95,7 +95,7 @@ A flat print palette: warm charcoal ink on white, kraft or orange, with one satu
 ### Named Rules
 **The One Field Rule.** Orange appears as a whole ground or as a hairline dotted rule, never as type. Letters on orange are charcoal; kraft or mist on orange falls near 2:1 and is not used.
 
-**The One Job Rule.** Dill is sprigs, ruby is the Sweet Treats band. Neither becomes a text, border or background colour elsewhere.
+**The One Job Rule.** In the marks, dill is sprigs and ruby is the Sweet Treats band. Neither becomes a text, border or background colour elsewhere. (On the website, ruby is Sweet Treats by Yang's store accent; see "Storefront theme".)
 
 **The Black Means Black Rule.** One-colour versions are pure black, not charcoal, so thermal printers render them solid.
 
@@ -106,7 +106,7 @@ A flat print palette: warm charcoal ink on white, kraft or orange, with one satu
 
 **Character:** A quick, confident marker hand for names over the flat, even capitals of a rubber stamp for facts. The script is personal; the caps are matter-of-fact.
 
-Both faces are outlined to paths in every logo file, so the marks do not depend on font loading. The web app does not load either face yet (it uses Geist).
+Both faces are outlined to paths in every logo file, so the marks do not depend on font loading. The web app loads both (next/font) for the storefront theme, with Geist for UI text; see "Storefront theme".
 
 ### Hierarchy
 - **Script Name** (Yellowtail, 400): the brand or sub-brand name only ("Weekend", "Sweet Treats"), set large. In the primary lockup the d's exit stroke is redrawn as the swash.
@@ -186,3 +186,37 @@ Rules are dotted (evenly spaced small round dots) in colour and solid bars in bl
 - **Don't** add shadows, gradients or textures to any version of the mark.
 - **Don't** run the swash through FOOD HUB with a knockout; it was tested and cost legibility at the 44 px header size.
 - **Don't** lift the label's caption row into web pages as a small-caps eyebrow over sections; it belongs to the printed label.
+
+## Storefront theme
+
+Every store on the site shares one web theme drawn from this identity: the kitchen-label look with each store's own accent. It is the same idea as the sub-brand label (shared charcoal letters and notched ticket, its own band colour), applied to a screen. A new store looks finished on day one and belongs to the same family without looking like a Weekend Food Hub branch.
+
+### Colour
+- **Ink:** every letter is Ink Charcoal on white or Mist. The page ground is Mist, cards and inputs are white (`surface`). Warm greys come from the `ink-50…950` ramp in `src/app/globals.css`, where `ink-900` is Ink Charcoal.
+- **Dark mode is the reverse lockup:** a charcoal ground (`ink-950`, cards `ink-900`) with Mist letters.
+- **Store accent:** each store picks one accent (`store.stores.accent_color`; Weekend Food Hub Market Orange `#EA580C`, Sweet Treats by Yang Cabbage Ruby `#B21E4B`). `accentTheme()` in `packages/shared/src/theme.ts` turns it into CSS variables, set on a `.store-theme` wrapper (store pages) or streamed onto `:root` (admin):
+  - `accent` (Tailwind colour; CSS `--accent-line`): dotted rules, progress bars, borders, focus rings and hover underlines. It is the store's colour, or the nearest lighter or darker shade that reaches 3:1 on the page and cards (Mist and white in light mode; charcoal page and cards in dark mode), so a pale or very dark accent never vanishes.
+  - `accent-button` and `on-accent`: the button field and its letters. Letters are Ink Charcoal or white, whichever contrasts more; if neither reaches 4.5:1 on the accent, the button uses the nearest shade that does. In dark mode the field must also stand 3:1 off the charcoal grounds. Market Orange buttons are `#F5621F` with charcoal letters (4.5:1) in both modes; ruby buttons are the accent with white letters, lifted to `#CE3D61` in dark mode.
+  - `accent-soft`: a pale tint (deep tint in dark mode) for notes and the selected-state ground, always with ink or mist letters.
+  - Each value has a light and dark version (`--accent-line-light`/`-dark` and so on); `globals.css` picks the active one per colour scheme.
+- **Kraft soft** (`kraft-soft`): the ground for the store's standing notes (pickup, delivery and notice text).
+- **Secondary text** uses `muted` (ink-600 in light, ink-400 in dark): at least 5.5:1 everywhere. Lighter greys are for borders and disabled states only. Input borders are ink-500 (ink-400 in dark) so fields read at 3:1.
+- **Status colours** stay semantic and flat: green (available, open), amber (subject to availability, paused), red (sold out, errors).
+
+### Named Rules
+**The One Field Rule, on screen.** The accent is a field (buttons, the cart bar, selected chips, progress bars, dotted rules) and never letters. Links are charcoal with an ink underline (`linkClass`), turning to the accent only on hover. Admins pick the accent in Hours & settings, which shows a live preview and blocks nothing: the contrast rule adjusts the button shade instead.
+
+**The Two Voices Rule, on screen.** Yellowtail is only for the store's name in the store header (or the store's uploaded logo instead). Zilla Slab caps (`.stamp`) are for short facts: tagline, category chips and headings, badges, the open/closed pill, order codes. Body text, forms and prices use Geist, the one UI text face, for reading on phones.
+
+**The Printed Matter Rule, on screen.** No shadows or glass (backdrop blur) anywhere, including dialogs, menus, toasts and the cart bar: separation comes from borders and solid grounds.
+
+**The Thumb Rule.** Anything tapped on a phone (chips, quantity steppers, close buttons, header and footer links) is at least 44 px tall. Emoji are not used as icons.
+
+### Shapes and rules
+- **Notched ticket card** (`.ticket-card`): menu items, the checkout summary and the order card. Concave 12 px corner cuts with a 1 px rule that follows them, painted as background layers on the card itself so dialogs opened from inside a card still cover the page. Other cards, inputs and buttons keep plain rounded corners.
+- **Dotted rule** (`.rule-dotted`): round dots in the store's accent, under the store header.
+- **Store header** (`src/components/store-header.tsx`): the name in script (or the logo), the tagline in stamped caps on the menu page, then the dotted rule. Every store page (menu, checkout, account, login, order status, legal pages opened from a store) starts with it.
+
+### What stays out of the theme
+- Kraft as a card ground, dill sprigs and the label's caption rows belong to printed labels and logo files, not web pages.
+- The kitchen ticket and item labels (`/admin/print`) stay pure black for thermal printers.

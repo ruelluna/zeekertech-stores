@@ -1,13 +1,14 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { TERMINAL_ORDER_STATUSES, formatManilaTime, manilaParts, type OrderStatus } from "@wfh/shared";
 import { ActionForm } from "@/components/action-form";
 import { ContactLink } from "@/components/contact-link";
+import { StoreHeader } from "@/components/store-header";
+import { StoreTheme } from "@/components/store-theme";
 import { Badge, Loading, peso } from "@/components/ui";
 import { fetchCatalog } from "@/lib/catalog";
-import { getStoreById, storePath } from "@/lib/stores";
+import { getStoreById } from "@/lib/stores";
 import { STATUS_TEXT } from "@/lib/order-status";
 import { loadWebOrderByToken, revisedOrder } from "@/lib/web-order";
 import { cancelOrder, decide, submitPayment } from "./actions";
@@ -56,25 +57,18 @@ async function Order({ params }: { params: PageProps<"/o/[token]">["params"] }) 
   const cancellable = ["received", "awaiting_availability", "awaiting_customer", "pending_payment"].includes(status) && !["submitted", "confirmed"].includes(row.payment_status);
 
   return (
-    <>
+    <StoreTheme accent={store?.accent_color}>
       <LiveOrder token={token} active={!terminal} status={status} paymentStatus={row.payment_status} />
-      {store && (
-        <Link href={storePath(store.slug)} className="text-sm text-stone-500 hover:text-orange-700">
-          ← {store.name}
-        </Link>
-      )}
-      <div className="mb-6 mt-3">
-        <p className="text-sm text-stone-500">
-          {store ? `${store.name} · ` : ""}Order {row.order_code}
-        </p>
+      {store && <StoreHeader store={store} size="sm" />}
+      <div className="mb-6">
+        <p className="stamp text-xs text-ink-600 dark:text-ink-300">Order {row.order_code}</p>
         <h1 className="text-2xl font-semibold tracking-tight">{text.title}</h1>
-        <p className="mt-1 text-stone-600 dark:text-stone-400">
+        <p className="mt-1 text-muted">
           {status === "awaiting_availability" && order.confirmWaitMinutes ? `Usually within ~${order.confirmWaitMinutes} minutes. ` : ""}
           {text.body}
         </p>
         {row.rider_name && ["out_for_delivery", "delivered"].includes(status) && (
           <p className="mt-3 flex items-center gap-2 rounded-lg bg-green-50 p-3 text-sm text-green-900 dark:bg-green-950 dark:text-green-200">
-            <span aria-hidden="true">🛵</span>
             <span>
               Your rider: <strong>{row.rider_name}</strong>
               {status === "out_for_delivery" ? " is on the way." : ""}
@@ -83,7 +77,7 @@ async function Order({ params }: { params: PageProps<"/o/[token]">["params"] }) 
         )}
         {row.status_note && <p className="mt-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200">{row.status_note}</p>}
         {store?.contact && (
-          <p className="mt-2 text-sm text-stone-500">
+          <p className="mt-2 text-sm text-muted">
             Questions about this order? Contact {store.name}: <ContactLink contact={store.contact} />
           </p>
         )}
@@ -93,8 +87,8 @@ async function Order({ params }: { params: PageProps<"/o/[token]">["params"] }) 
         <ol className="mb-6 grid grid-cols-5 gap-1 text-center text-xs">
           {STEPS.map((s, i) => (
             <li key={s.key} className="flex flex-col items-center gap-1">
-              <span className={`h-1.5 w-full rounded-full ${i <= stepIndex ? "bg-orange-600" : "bg-stone-200 dark:bg-stone-800"}`} />
-              <span className={i === stepIndex ? "font-semibold" : "text-stone-500"}>{s.label}</span>
+              <span className={`h-1.5 w-full rounded-full ${i <= stepIndex ? "bg-accent" : "bg-ink-200 dark:bg-ink-800"}`} />
+              <span className={i === stepIndex ? "font-semibold" : "text-muted"}>{s.label}</span>
             </li>
           ))}
         </ol>
@@ -107,7 +101,7 @@ async function Order({ params }: { params: PageProps<"/o/[token]">["params"] }) 
       )}
 
       {needsDecision && revised && (
-        <section className="mb-5 rounded-xl border-2 border-orange-500 bg-white p-4 dark:bg-stone-900">
+        <section className="mb-5 rounded-xl border-2 border-accent bg-surface p-4 dark:bg-ink-900">
           <h2 className="mb-2 font-semibold">We checked your order</h2>
           <ul className="mb-3 flex flex-col gap-1 text-sm">
             {order.items.map((i) => {
@@ -151,7 +145,7 @@ async function Order({ params }: { params: PageProps<"/o/[token]">["params"] }) 
       )}
 
       {needsPayment && settings && (
-        <section className="mb-5 rounded-xl border-2 border-orange-500 bg-white p-4 dark:bg-stone-900">
+        <section className="mb-5 rounded-xl border-2 border-accent bg-surface p-4 dark:bg-ink-900">
           <h2 className="mb-1 font-semibold">Pay {peso(row.total)} with GCash</h2>
           {row.payment_status === "rejected" && (
             <p className="mb-2 text-sm text-red-700 dark:text-red-400">We couldn&apos;t confirm your last payment. Please check and send it again.</p>
@@ -159,13 +153,13 @@ async function Order({ params }: { params: PageProps<"/o/[token]">["params"] }) 
           <div className="my-3 flex flex-col items-center gap-2">
             {settings.gcashQrUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={settings.gcashQrUrl} alt="GCash QR code" className="w-56 rounded-lg border border-stone-200" />
+              <img src={settings.gcashQrUrl} alt="GCash QR code" className="w-56 rounded-lg border border-ink-200" />
             ) : (
-              <p className="text-sm text-stone-500">The GCash QR will appear here. Please message us for payment details.</p>
+              <p className="text-sm text-muted">The GCash QR will appear here. Please message us for payment details.</p>
             )}
             {settings.gcashAccountName && <p className="text-sm">Account name: {settings.gcashAccountName}</p>}
           </div>
-          <ol className="mb-3 list-decimal pl-5 text-sm text-stone-600 dark:text-stone-400">
+          <ol className="mb-3 list-decimal pl-5 text-sm text-muted">
             <li>Scan the QR in GCash and pay exactly {peso(row.total)}.</li>
             <li>Copy the reference number from the GCash receipt.</li>
             <li>Send it below. A screenshot helps us confirm faster.</li>
@@ -174,11 +168,11 @@ async function Order({ params }: { params: PageProps<"/o/[token]">["params"] }) 
             <input type="hidden" name="token" value={token} />
             <label className="flex flex-col gap-1 text-sm">
               <span className="font-medium">GCash reference number</span>
-              <input name="referenceNo" inputMode="numeric" required className="rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-700 dark:bg-stone-950" />
+              <input name="referenceNo" inputMode="numeric" required className="rounded-lg border border-ink-300 bg-surface px-3 py-2 dark:border-ink-700 dark:bg-ink-950" />
             </label>
             <label className="flex flex-col gap-1 text-sm">
               <span className="font-medium">Name on your GCash account</span>
-              <input name="senderName" required defaultValue={order.customer.name} className="rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-700 dark:bg-stone-950" />
+              <input name="senderName" required defaultValue={order.customer.name} className="rounded-lg border border-ink-300 bg-surface px-3 py-2 dark:border-ink-700 dark:bg-ink-950" />
             </label>
             <label className="flex flex-col gap-1 text-sm">
               <span className="font-medium">Screenshot (optional)</span>
@@ -189,12 +183,12 @@ async function Order({ params }: { params: PageProps<"/o/[token]">["params"] }) 
       )}
 
       {status === "pending_payment" && row.payment_status === "submitted" && (
-        <p className="mb-5 rounded-xl bg-orange-50 p-4 text-sm text-orange-900 dark:bg-orange-950 dark:text-orange-200">
+        <p className="mb-5 rounded-xl bg-accent-soft p-4 text-sm text-foreground">
           Payment details received. We&apos;re checking it in GCash now.
         </p>
       )}
 
-      <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
+      <section className="ticket-card mb-5 p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-semibold">{order.fulfillment === "pickup" ? "Pickup" : "Delivery"}</h2>
           <Badge tone="orange">
@@ -203,23 +197,23 @@ async function Order({ params }: { params: PageProps<"/o/[token]">["params"] }) 
           </Badge>
         </div>
         {order.address && (
-          <p className="mb-3 text-sm text-stone-600 dark:text-stone-400">
+          <p className="mb-3 text-sm text-muted">
             {[order.address.streetPurok, order.address.barangay, order.address.landmark && `near ${order.address.landmark}`].filter(Boolean).join(", ")}
           </p>
         )}
-        <ul className="divide-y divide-stone-100 text-sm dark:divide-stone-800">
+        <ul className="divide-y divide-ink-100 text-sm dark:divide-ink-800">
           {order.items.map((i) => {
             const r = results.get(i.lineId);
             const price = i.unitPrice ?? i.estimatedUnitPrice ?? 0;
             return (
-              <li key={i.lineId} className={`flex justify-between gap-3 py-2 ${r?.status === "cant_source" ? "text-stone-400 line-through" : ""}`}>
+              <li key={i.lineId} className={`flex justify-between gap-3 py-2 ${r?.status === "cant_source" ? "text-muted line-through" : ""}`}>
                 <div>
                   <p>
                     {i.qty}× {i.name}
                     {i.weightKg ? ` (${i.weightKg} kg)` : ""}
                   </p>
-                  {i.modifiers.length > 0 && <p className="text-xs text-stone-500">{i.modifiers.map((m) => m.option).join(" · ")}</p>}
-                  {i.notes && <p className="text-xs text-stone-500">“{i.notes}”</p>}
+                  {i.modifiers.length > 0 && <p className="text-xs text-muted">{i.modifiers.map((m) => m.option).join(" · ")}</p>}
+                  {i.notes && <p className="text-xs text-muted">“{i.notes}”</p>}
                 </div>
                 <span>
                   {i.unitPrice === null ? "~" : ""}
@@ -229,20 +223,20 @@ async function Order({ params }: { params: PageProps<"/o/[token]">["params"] }) 
             );
           })}
         </ul>
-        <dl className="mt-3 flex flex-col gap-1 border-t border-stone-200 pt-3 text-sm dark:border-stone-700">
+        <dl className="mt-3 flex flex-col gap-1 border-t border-ink-200 pt-3 text-sm dark:border-ink-700">
           <div className="flex justify-between">
-            <dt className="text-stone-500">Subtotal</dt>
+            <dt className="text-muted">Subtotal</dt>
             <dd>{peso(row.subtotal)}</dd>
           </div>
           {row.discount_amount > 0 && (
             <div className="flex justify-between">
-              <dt className="text-stone-500">Discount</dt>
+              <dt className="text-muted">Discount</dt>
               <dd>−{peso(row.discount_amount)}</dd>
             </div>
           )}
           {order.fulfillment === "delivery" && (
             <div className="flex justify-between">
-              <dt className="text-stone-500">Delivery fee</dt>
+              <dt className="text-muted">Delivery fee</dt>
               <dd>{peso(row.delivery_fee)}</dd>
             </div>
           )}
@@ -254,7 +248,7 @@ async function Order({ params }: { params: PageProps<"/o/[token]">["params"] }) 
             </dd>
           </div>
         </dl>
-        {row.is_estimate && <p className="mt-2 text-xs text-stone-500">~ Estimated: we confirm market prices before you pay.</p>}
+        {row.is_estimate && <p className="mt-2 text-xs text-muted">~ Estimated: we confirm market prices before you pay.</p>}
       </section>
 
       {cancellable && (
@@ -263,7 +257,7 @@ async function Order({ params }: { params: PageProps<"/o/[token]">["params"] }) 
         </ActionForm>
       )}
 
-      <p className="mt-6 text-xs text-stone-500">Keep this page&apos;s link to check your order. Anyone with the link can see it.</p>
-    </>
+      <p className="mt-6 text-xs text-muted">Keep this page&apos;s link to check your order. Anyone with the link can see it.</p>
+    </StoreTheme>
   );
 }

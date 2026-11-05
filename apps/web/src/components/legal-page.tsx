@@ -1,7 +1,8 @@
-import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 import { ContactLink } from "@/components/contact-link";
-import { listStores, storePath } from "@/lib/stores";
+import { StoreHeader } from "@/components/store-header";
+import { StoreTheme } from "@/components/store-theme";
+import { listStores } from "@/lib/stores";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -16,8 +17,8 @@ export function LegalPage({ title, updated, searchParams, children }: { title: s
         <StoreContext searchParams={searchParams} />
       </Suspense>
       <h1 className="mb-1 mt-2 text-2xl font-semibold tracking-tight">{title}</h1>
-      <p className="mb-6 text-sm text-stone-500">Last updated {updated}</p>
-      <div className="flex flex-col gap-4 text-sm leading-6 text-stone-700 dark:text-stone-300 [&_h2]:mt-2 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-stone-900 dark:[&_h2]:text-stone-100 [&_ul]:list-disc [&_ul]:pl-5">
+      <p className="mb-6 text-sm text-muted">Last updated {updated}</p>
+      <div className="flex flex-col gap-4 text-sm leading-6 text-ink-700 dark:text-ink-300 [&_h2]:mt-2 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-ink-900 dark:[&_h2]:text-ink-100 [&_ul]:list-disc [&_ul]:pl-5">
         {children}
       </div>
     </main>
@@ -30,11 +31,9 @@ async function StoreContext({ searchParams }: { searchParams: SearchParams }) {
   if (!store) return null;
 
   return (
-    <>
-      <Link href={storePath(store.slug)} className="text-sm text-stone-500 hover:text-orange-700">
-        ← {store.name}
-      </Link>
-      <p className="mt-4 rounded-lg bg-stone-100 p-3 text-sm text-stone-700 dark:bg-stone-900 dark:text-stone-300">
+    <StoreTheme accent={store.accent_color}>
+      <StoreHeader store={store} size="sm" />
+      <p className="rounded-lg bg-kraft-soft p-3 text-sm text-foreground">
         You&apos;re ordering from <strong>{store.name}</strong>.{" "}
         {store.contact ? (
           <>
@@ -44,6 +43,6 @@ async function StoreContext({ searchParams }: { searchParams: SearchParams }) {
           "Their contact details are on their menu page."
         )}
       </p>
-    </>
+    </StoreTheme>
   );
 }

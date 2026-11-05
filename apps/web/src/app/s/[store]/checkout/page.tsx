@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { serviceAreaCenter } from "@wfh/shared";
@@ -8,10 +7,12 @@ import { DAANBANTAYAN_CENTER, fetchCatalog } from "@/lib/catalog";
 import { getCurrentCustomer } from "@/lib/customer";
 import { welcomeOfferFor } from "@/lib/discounts";
 import { getPublicMenu } from "@/lib/menu";
-import { getStore, storePath } from "@/lib/stores";
+import { getStore } from "@/lib/stores";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { CheckoutForm, type CheckoutData } from "./checkout-form";
 import { readServerPublicEnv } from "@/lib/supabase/env";
+import { StoreHeader } from "@/components/store-header";
+import { StoreTheme } from "@/components/store-theme";
 
 export async function generateMetadata({ params }: PageProps<"/s/[store]/checkout">): Promise<Metadata> {
   const store = await getStore((await params).store);
@@ -86,12 +87,10 @@ async function Checkout({ params }: { params: PageProps<"/s/[store]/checkout">["
     },
   };
   return (
-    <>
-      <Link href={storePath(store.slug)} className="text-sm text-stone-500 hover:text-orange-700">
-        ← Back to {store.name}
-      </Link>
-      <h1 className="mb-6 mt-2 text-2xl font-semibold tracking-tight">Checkout</h1>
+    <StoreTheme accent={store.accent_color}>
+      <StoreHeader store={store} size="sm" />
+      <h1 className="mb-6 text-2xl font-semibold tracking-tight">Checkout</h1>
       <CheckoutForm data={data} />
-    </>
+    </StoreTheme>
   );
 }

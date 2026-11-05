@@ -21,9 +21,9 @@ export function StoreStatusPill({ hours, closures, paused }: { hours: StoreHours
       ? ["bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300", `Open now · until ${formatManilaTime(status.closesAt)}`]
       : status.state === "paused"
         ? ["bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300", "Ordering paused for a while"]
-        : ["bg-stone-200 text-stone-700 dark:bg-stone-800 dark:text-stone-300", closedLabel(status.opensAt)];
+        : ["bg-ink-200 text-ink-700 dark:bg-ink-800 dark:text-ink-300", closedLabel(status.opensAt)];
 
-  return <span className={`inline-flex rounded-full px-3 py-1 text-sm font-medium ${tone}`}>{text}</span>;
+  return <span className={`stamp inline-flex self-start rounded-full px-3 py-1 text-xs ${tone}`}>{text}</span>;
 }
 
 function closedLabel(opensAt: Date | null): string {

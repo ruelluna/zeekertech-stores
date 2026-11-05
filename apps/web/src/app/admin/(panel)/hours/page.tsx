@@ -3,7 +3,19 @@ import { ActionForm } from "@/components/action-form";
 import { Card, Checkbox, Field, Input, Loading, PageHeader, Textarea } from "@/components/ui";
 import { requireOwner } from "@/lib/auth";
 import { getStoreById } from "@/lib/stores";
-import { addClosure, removeClosure, saveHours, savePrintSettings, saveStoreProfile, saveStoreSettings, uploadGcashQr } from "./actions";
+import { DEFAULT_ACCENT } from "@wfh/shared";
+import { AccentPicker } from "@/components/accent-picker";
+import {
+  addClosure,
+  removeClosure,
+  removeStoreLogo,
+  saveHours,
+  savePrintSettings,
+  saveStoreProfile,
+  saveStoreSettings,
+  uploadGcashQr,
+  uploadStoreLogo,
+} from "./actions";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const hhmm = (t: string) => t.slice(0, 5);
@@ -51,7 +63,25 @@ async function HoursContent() {
           >
             <Input name="contact" defaultValue={profile?.contact ?? ""} maxLength={200} placeholder="e.g. facebook.com/yourstore or 0917 123 4567" />
           </Field>
+          <AccentPicker defaultValue={profile?.accent_color ?? DEFAULT_ACCENT} storeName={profile?.name ?? ""} />
         </ActionForm>
+      </Card>
+
+      <Card title="Logo" description="Optional. Shown at the top of the menu instead of the store name in script. A wide logo on a transparent background works best.">
+        <div className="flex flex-wrap items-start gap-6">
+          {profile?.logo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={profile.logo_url} alt="Current logo" className="max-h-20 max-w-60 object-contain" />
+          ) : (
+            <p className="font-script text-3xl leading-none">{profile?.name}</p>
+          )}
+          <div className="flex flex-col gap-3">
+            <ActionForm action={uploadStoreLogo} submitLabel="Upload logo">
+              <input type="file" name="logo" accept="image/*" required className="text-sm" />
+            </ActionForm>
+            {profile?.logo_url && <ActionForm action={removeStoreLogo} submitLabel="Use the name instead" variant="secondary" />}
+          </div>
+        </div>
       </Card>
 
       <Card title="Ordering hours" description="Manila time.">
@@ -65,7 +95,7 @@ async function HoursContent() {
                     <Checkbox name={`is_open_${day}`} label={name} defaultChecked={row?.is_open ?? false} />
                   </div>
                   <Input name={`opens_at_${day}`} type="time" defaultValue={hhmm(row?.opens_at ?? "13:00")} className="w-32" aria-label={`${name} opens`} />
-                  <span className="text-sm text-stone-500">to</span>
+                  <span className="text-sm text-muted">to</span>
                   <Input name={`closes_at_${day}`} type="time" defaultValue={hhmm(row?.closes_at ?? "21:00")} className="w-32" aria-label={`${name} closes`} />
                 </div>
               );
@@ -75,20 +105,20 @@ async function HoursContent() {
       </Card>
 
       <Card title="Closed dates" description="Holidays and days off. The menu shows when you open next.">
-        {closures.data.length === 0 && <p className="mb-3 text-sm text-stone-500">No closed dates.</p>}
+        {closures.data.length === 0 && <p className="mb-3 text-sm text-muted">No closed dates.</p>}
         <ul className="mb-3 flex flex-col gap-2">
           {closures.data.map((c) => (
             <li key={c.date}>
               <ActionForm action={removeClosure} submitLabel="Remove" danger className="flex flex-wrap items-center gap-3">
                 <input type="hidden" name="date" value={c.date} />
                 <span className="w-56 text-sm">
-                  <strong>{c.date}</strong> {c.reason && <span className="text-stone-500">· {c.reason}</span>}
+                  <strong>{c.date}</strong> {c.reason && <span className="text-muted">· {c.reason}</span>}
                 </span>
               </ActionForm>
             </li>
           ))}
         </ul>
-        <ActionForm action={addClosure} submitLabel="Add closed date" className="flex flex-wrap items-end gap-3 border-t border-stone-100 pt-3 dark:border-stone-800">
+        <ActionForm action={addClosure} submitLabel="Add closed date" className="flex flex-wrap items-end gap-3 border-t border-ink-100 pt-3 dark:border-ink-800">
           <Field label="Date" className="w-44">
             <Input name="date" type="date" required />
           </Field>
@@ -163,7 +193,7 @@ async function HoursContent() {
         <div className="flex flex-wrap items-start gap-6">
           {s.gcash_qr_url ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={s.gcash_qr_url} alt="Current GCash QR" className="w-40 rounded-lg border border-stone-200" />
+            <img src={s.gcash_qr_url} alt="Current GCash QR" className="w-40 rounded-lg border border-ink-200" />
           ) : (
             <p className="w-40 rounded-lg bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200">No QR uploaded yet.</p>
           )}

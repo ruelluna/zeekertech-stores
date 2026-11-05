@@ -53,7 +53,7 @@ async function Groups() {
               </div>
             </ActionForm>
 
-            <ul className="divide-y divide-stone-100 border-t border-stone-100 dark:divide-stone-800 dark:border-stone-800">
+            <ul className="divide-y divide-ink-100 border-t border-ink-100 dark:divide-ink-800 dark:border-ink-800">
               {options.map((m) => (
                 <li key={m.id} className="py-3">
                   <ActionForm action={saveModifier} className="flex flex-wrap items-end gap-3">
@@ -76,7 +76,7 @@ async function Groups() {
               ))}
             </ul>
 
-            <ActionForm action={saveModifier} submitLabel="Add option" className="mt-3 flex flex-wrap items-end gap-3 border-t border-stone-100 pt-3 dark:border-stone-800">
+            <ActionForm action={saveModifier} submitLabel="Add option" className="mt-3 flex flex-wrap items-end gap-3 border-t border-ink-100 pt-3 dark:border-ink-800">
               <input type="hidden" name="group_id" value={g.id} />
               <input type="hidden" name="sort_order" value={options.length + 1} />
               <input type="hidden" name="active" value="on" />

@@ -76,14 +76,14 @@ async function Staff() {
 
       {riders.length > 0 && (
         <Card title="Rider pay" description="Earnings from delivered trips that haven’t been handed over yet. Mark paid out once you’ve paid the rider.">
-          <ul className="divide-y divide-stone-100 dark:divide-stone-800">
+          <ul className="divide-y divide-ink-100 dark:divide-ink-800">
             {riders.map((r) => {
               const o = owed(r.user_id);
               return (
                 <li key={r.user_id} className="flex flex-wrap items-center justify-between gap-3 py-2 text-sm">
                   <span>
                     <strong>{r.display_name}</strong>{" "}
-                    <span className="text-stone-500">
+                    <span className="text-muted">
                       · {o.count} deliver{o.count === 1 ? "y" : "ies"} unpaid
                     </span>
                   </span>
@@ -105,9 +105,9 @@ async function Staff() {
       <Card title={`Team (${staff.length})`}>
         <div className="flex flex-col gap-3">
           {staff.map((s) => (
-            <details key={s.user_id} className="rounded-lg border border-stone-200 p-3 dark:border-stone-700">
+            <details key={s.user_id} className="rounded-lg border border-ink-200 p-3 dark:border-ink-700">
               <summary className="cursor-pointer text-sm">
-                <strong>{s.display_name}</strong> <span className="text-stone-500">· {emails.get(s.user_id)}</span>{" "}
+                <strong>{s.display_name}</strong> <span className="text-muted">· {emails.get(s.user_id)}</span>{" "}
                 <Badge tone={s.role === "owner" ? "orange" : "neutral"}>{ROLES.find((r) => r.value === s.role)?.label ?? s.role}</Badge>{" "}
                 {!s.active && <Badge tone="red">Disabled</Badge>}
                 {s.user_id === me && <Badge tone="green">You</Badge>}

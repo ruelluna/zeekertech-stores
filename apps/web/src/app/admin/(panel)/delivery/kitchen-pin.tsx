@@ -31,7 +31,7 @@ export function KitchenPin({ initial, fallbackCenter }: { initial: LatLng | null
 
   return (
     <div className="flex flex-col gap-3 sm:col-span-3">
-      <MapPicker value={pin} focus={focus} onChange={fromMap} className="h-64 w-full overflow-hidden rounded-xl border border-stone-300 dark:border-stone-700" />
+      <MapPicker value={pin} focus={focus} onChange={fromMap} className="h-64 w-full overflow-hidden rounded-xl border border-ink-300 dark:border-ink-700" />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Latitude">
           <Input name="kitchen_lat" type="number" step="any" value={lat} onChange={(e) => fromInputs(e.target.value, lng)} />

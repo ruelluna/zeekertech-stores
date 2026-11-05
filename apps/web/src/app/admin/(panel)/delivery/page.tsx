@@ -72,7 +72,7 @@ async function DeliveryContent() {
           </div>
 
           <h3 className="mt-2 font-medium">Rider pay</h3>
-          <p className="-mt-2 text-sm text-stone-600 dark:text-stone-400">
+          <p className="-mt-2 text-sm text-muted">
             Riders earn a share of each delivery fee; the rest stays with the store. Pay is fixed when an order goes out for delivery, so
             changes apply to new deliveries only. Add-on orders on the same trip earn nothing extra.
           </p>
@@ -86,7 +86,7 @@ async function DeliveryContent() {
           </div>
 
           <h3 className="mt-2 font-medium">Kitchen location</h3>
-          <p className="-mt-2 text-sm text-stone-600 dark:text-stone-400">Distances are measured from here. Tap the map on the kitchen, or paste the numbers from Google Maps.</p>
+          <p className="-mt-2 text-sm text-muted">Distances are measured from here. Tap the map on the kitchen, or paste the numbers from Google Maps.</p>
           <div className="grid gap-4 sm:grid-cols-3">
             <Field label="Address" className="sm:col-span-3">
               <Input name="kitchen_address" defaultValue={s.kitchen_address ?? ""} />
@@ -124,7 +124,7 @@ async function DeliveryContent() {
             turning delivery on.
           </p>
         )}
-        <ul className="divide-y divide-stone-100 dark:divide-stone-800">
+        <ul className="divide-y divide-ink-100 dark:divide-ink-800">
           {barangays.map((b) => (
             <li key={b.id} className="py-3">
               <ActionForm action={saveBarangay} className="flex flex-wrap items-end gap-3">

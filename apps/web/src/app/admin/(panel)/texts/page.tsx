@@ -117,10 +117,10 @@ function Toggle({ item, settings }: { item: (typeof CUSTOMER)[number]; settings:
   return (
     <li className="py-3">
       <Checkbox name={item.key} label={item.label} defaultChecked={Boolean(settings[item.key])} />
-      <p className="mt-1 ml-6 text-sm text-stone-600 dark:text-stone-400">{item.when}</p>
-      <p className="mt-1 ml-6 rounded-lg bg-stone-100 px-3 py-2 font-mono text-xs break-words text-stone-700 dark:bg-stone-800 dark:text-stone-300">
+      <p className="mt-1 ml-6 text-sm text-muted">{item.when}</p>
+      <p className="mt-1 ml-6 rounded-lg bg-ink-100 px-3 py-2 font-mono text-xs break-words text-ink-700 dark:bg-ink-800 dark:text-ink-300">
         {text}
-        <span className={parts > 1 ? "ml-2 text-amber-700" : "ml-2 text-stone-400"}>
+        <span className={parts > 1 ? "ml-2 text-amber-700" : "ml-2 text-muted"}>
           · {text.length} chars, {parts} SMS
         </span>
       </p>
@@ -168,10 +168,10 @@ async function TextsContent() {
               <strong className={status.ok ? "" : "text-red-700 dark:text-red-400"}>
                 {status.label}
               </strong>
-              {status.detail && <span className="text-stone-500"> · {status.detail}</span>}
+              {status.detail && <span className="text-muted"> · {status.detail}</span>}
             </span>
           )}
-          <span className="text-stone-500">
+          <span className="text-muted">
             Sender:{" "}
             {provider === "textbee"
               ? "your phone's own number"
@@ -180,7 +180,7 @@ async function TextsContent() {
         </div>
         {mode === "no_token" &&
           (provider === "textbee" ? (
-            <ol className="mt-3 list-decimal pl-5 text-sm text-stone-600 dark:text-stone-400">
+            <ol className="mt-3 list-decimal pl-5 text-sm text-muted">
               <li>
                 Sign up at textbee.dev and install the textbee app on a spare Android phone with a
                 SIM.
@@ -196,7 +196,7 @@ async function TextsContent() {
               <li>Put an unli-text promo on the SIM so texts don&apos;t eat your load.</li>
             </ol>
           ) : (
-            <p className="mt-3 text-sm text-stone-600 dark:text-stone-400">
+            <p className="mt-3 text-sm text-muted">
               Set PHILSMS_API_TOKEN in the server&apos;s environment to send texts.
             </p>
           ))}
@@ -225,7 +225,7 @@ async function TextsContent() {
 
           <div>
             <h3 className="font-medium">To customers (website orders)</h3>
-            <ul className="divide-y divide-stone-100 dark:divide-stone-800">
+            <ul className="divide-y divide-ink-100 dark:divide-ink-800">
               {CUSTOMER.map((item) => (
                 <Toggle key={item.key} item={item} settings={settings} />
               ))}
@@ -233,12 +233,12 @@ async function TextsContent() {
           </div>
           <div>
             <h3 className="font-medium">To you (admin number)</h3>
-            <p className="text-sm text-stone-600 dark:text-stone-400">
+            <p className="text-sm text-muted">
               Usually not needed: turn on <strong>phone alerts</strong> on the Orders page (on each
               staff phone) and these arrive as free notifications. Payment alerts go to Owner and
               Payments staff only.
             </p>
-            <ul className="divide-y divide-stone-100 dark:divide-stone-800">
+            <ul className="divide-y divide-ink-100 dark:divide-ink-800">
               {ADMIN.map((item) => (
                 <Toggle key={item.key} item={item} settings={settings} />
               ))}
@@ -278,13 +278,13 @@ async function TextsContent() {
         description={`Last 30 texts (kept for 90 days). ${sentLast30Days ?? 0} sent in the last 30 days.`}
       >
         {!log?.length ? (
-          <p className="text-sm text-stone-500">No texts yet.</p>
+          <p className="text-sm text-muted">No texts yet.</p>
         ) : (
-          <ul className="divide-y divide-stone-100 text-sm dark:divide-stone-800">
+          <ul className="divide-y divide-ink-100 text-sm dark:divide-ink-800">
             {log.map((l) => (
               <li key={l.id} className="flex flex-col gap-1 py-2">
                 <span className="flex flex-wrap items-center gap-2">
-                  <span className="text-stone-500">
+                  <span className="text-muted">
                     {new Date(l.created_at).toLocaleString("en-PH", {
                       month: "short",
                       day: "numeric",
@@ -294,7 +294,7 @@ async function TextsContent() {
                     })}
                   </span>
                   <strong>{KIND_LABEL[l.kind] ?? l.kind}</strong>
-                  <span className="text-stone-500">
+                  <span className="text-muted">
                     → 0{l.recipient.slice(2)}
                     {l.order_code && ` · ${l.order_code}`}
                   </span>
@@ -304,7 +304,7 @@ async function TextsContent() {
                     {l.status === "dry_run" ? "dry run" : l.status}
                   </Badge>
                 </span>
-                <span className="text-stone-600 dark:text-stone-400">{l.message}</span>
+                <span className="text-muted">{l.message}</span>
                 {l.error && <span className="text-red-700 dark:text-red-400">{l.error}</span>}
               </li>
             ))}

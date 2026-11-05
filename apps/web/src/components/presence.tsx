@@ -96,29 +96,29 @@ export function LiveVisitors({ store }: { store: string }) {
   return (
     <details className="relative text-sm">
       <summary
-        className="flex cursor-pointer list-none items-center gap-1.5 rounded-full bg-stone-100 px-2.5 py-1 text-stone-700 dark:bg-stone-800 dark:text-stone-200"
+        className="flex cursor-pointer list-none items-center gap-1.5 rounded-full bg-ink-100 px-2.5 py-1 text-ink-700 dark:bg-ink-800 dark:text-ink-200"
         title={breakdown || "No one on the site right now"}
         aria-live="polite"
       >
-        <span className={`size-2 rounded-full ${total > 0 ? "animate-pulse bg-green-500" : "bg-stone-400"}`} aria-hidden="true" />
+        <span className={`size-2 rounded-full ${total > 0 ? "animate-pulse bg-green-500" : "bg-ink-400"}`} aria-hidden="true" />
         {total} on the site now
       </summary>
-      <div className="absolute right-0 z-20 mt-2 w-60 rounded-xl border border-stone-200 bg-white p-3 text-xs shadow-lg dark:border-stone-700 dark:bg-stone-900">
+      <div className="absolute right-0 z-20 mt-2 w-60 rounded-xl border border-ink-200 bg-surface p-3 text-xs dark:border-ink-700 dark:bg-ink-900">
         {total === 0 ? (
-          <p className="text-stone-500">No one on the site right now.</p>
+          <p className="text-muted">No one on the site right now.</p>
         ) : (
           <ul className="flex flex-col gap-1">
             {(Object.keys(counts) as VisitorPage[])
               .filter((p) => counts[p] > 0)
               .map((p) => (
                 <li key={p} className="flex justify-between gap-3">
-                  <span className="text-stone-600 dark:text-stone-300">{PAGE_LABEL[p]}</span>
+                  <span className="text-ink-600 dark:text-ink-300">{PAGE_LABEL[p]}</span>
                   <strong>{counts[p]}</strong>
                 </li>
               ))}
           </ul>
         )}
-        <p className="mt-2 text-stone-400">Each open browser tab counts once. Staff pages aren&apos;t counted.</p>
+        <p className="mt-2 text-muted">Each open browser tab counts once. Staff pages aren&apos;t counted.</p>
       </div>
     </details>
   );

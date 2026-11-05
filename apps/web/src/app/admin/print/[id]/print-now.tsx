@@ -17,10 +17,10 @@ export function PrintNow({ auto }: { auto: boolean }) {
 
   return (
     <div className="mb-4 flex items-center gap-3 print:hidden">
-      <button type="button" onClick={() => window.print()} className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700">
+      <button type="button" onClick={() => window.print()} className="rounded-lg bg-accent-button px-4 py-2 text-sm font-medium text-on-accent hover:brightness-95">
         Print
       </button>
-      <span className="text-xs text-stone-500">In the print dialog: choose the printer, margins “None”, and turn off headers and footers.</span>
+      <span className="text-xs text-ink-500">In the print dialog: choose the printer, margins “None”, and turn off headers and footers.</span>
     </div>
   );
 }

@@ -1956,10 +1956,12 @@ export type Database = {
       };
       stores: {
         Row: {
+          accent_color: string;
           active: boolean;
           contact: string | null;
           created_at: string;
           id: string;
+          logo_url: string | null;
           name: string;
           slug: string;
           sort_order: number;
@@ -1968,10 +1970,12 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          accent_color?: string;
           active?: boolean;
           contact?: string | null;
           created_at?: string;
           id?: string;
+          logo_url?: string | null;
           name: string;
           slug: string;
           sort_order?: number;
@@ -1979,10 +1983,12 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          accent_color?: string;
           active?: boolean;
           contact?: string | null;
           created_at?: string;
           id?: string;
+          logo_url?: string | null;
           name?: string;
           slug?: string;
           sort_order?: number;

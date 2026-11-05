@@ -63,7 +63,7 @@ const subscribeMinute = (onChange: () => void) => {
 };
 const currentMinute = () => Math.floor(Date.now() / 60_000);
 
-const inputClass = "w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm dark:border-stone-700 dark:bg-stone-950";
+const inputClass = "w-full rounded-lg border border-ink-500 bg-surface px-3 py-2 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/30 dark:border-ink-400 dark:bg-ink-950";
 
 export function CheckoutForm({ data }: { data: CheckoutData }) {
   const router = useRouter();
@@ -256,9 +256,9 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
 
   if (lines.length === 0) {
     return (
-      <div className="rounded-xl border border-stone-200 bg-white p-6 text-center dark:border-stone-800 dark:bg-stone-900">
-        <p className="mb-4 text-stone-600 dark:text-stone-400">Your cart is empty.</p>
-        <Link href={`/s/${data.store.slug}`} className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white">
+      <div className="rounded-xl border border-ink-200 bg-surface p-6 text-center dark:border-ink-800 dark:bg-ink-900">
+        <p className="mb-4 text-muted">Your cart is empty.</p>
+        <Link href={`/s/${data.store.slug}`} className="rounded-lg bg-accent-button px-4 py-2 text-sm font-medium text-on-accent">
           Browse the menu
         </Link>
       </div>
@@ -269,14 +269,14 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
     return <p className="rounded-xl bg-amber-50 p-4 text-amber-900 dark:bg-amber-950 dark:text-amber-200">Online ordering is paused for a while. Please try again later.</p>;
   }
 
-  const section = "mb-5 rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900";
+  const section = "mb-5 rounded-xl border border-ink-200 bg-surface p-4 dark:border-ink-800 dark:bg-ink-900";
 
   return (
     <div>
       {/* Cart */}
       <section className={section}>
         <h2 className="mb-3 font-semibold">Your order</h2>
-        <ul className="divide-y divide-stone-100 dark:divide-stone-800">
+        <ul className="divide-y divide-ink-100 dark:divide-ink-800">
           {lines.map((l) => (
             <CartLineRow key={l.lineId} line={l} item={data.menuItems[l.productId]} cart={cart} onEdit={() => setEditing(l)} />
           ))}
@@ -290,7 +290,7 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
       <section className={section}>
         <h2 className="mb-3 font-semibold">Your details</h2>
         {!data.customer && (
-          <p className="mb-3 rounded-lg bg-orange-50 p-3 text-sm text-orange-900 dark:bg-orange-950 dark:text-orange-200">
+          <p className="mb-3 rounded-lg bg-accent-soft p-3 text-sm text-foreground">
             {data.facebookLogin ? (
               <>
                 <Link href={`/s/${data.store.slug}/login?next=/s/${data.store.slug}/checkout`} className="font-medium underline">
@@ -325,7 +325,7 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
               type="button"
               onClick={() => setFulfillment(f)}
               disabled={f === "delivery" && !data.deliveryReady}
-              className={`rounded-lg border px-3 py-2 text-sm font-medium disabled:opacity-50 ${fulfillment === f ? "border-orange-600 bg-orange-50 text-orange-800 dark:bg-orange-950 dark:text-orange-200" : "border-stone-300 dark:border-stone-700"}`}
+              className={`rounded-lg border px-3 py-2 text-sm font-medium disabled:opacity-50 ${fulfillment === f ? "border-accent-button bg-accent-button text-on-accent" : "border-ink-300 dark:border-ink-700"}`}
             >
               {f === "pickup" ? "Pickup" : "Delivery"}
             </button>
@@ -333,12 +333,12 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
         </div>
 
         {fulfillment === "pickup" && (
-          <p className="text-sm text-stone-600 dark:text-stone-400">
+          <p className="text-sm text-muted">
             Pick up at {data.settings.kitchenAddress ?? `${data.store.name}'s kitchen`}.
             {data.settings.pickupInstructions ? ` ${data.settings.pickupInstructions}` : ""}
           </p>
         )}
-        {data.deliveryEnabled && !data.deliveryReady && <p className="text-xs text-stone-500">Delivery isn&apos;t available yet.</p>}
+        {data.deliveryEnabled && !data.deliveryReady && <p className="text-xs text-muted">Delivery isn&apos;t available yet.</p>}
 
         {fulfillment === "delivery" && (
           <div className="flex flex-col gap-3">
@@ -384,7 +384,7 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
             <div>
               <div className="mb-2 flex items-center justify-between gap-2">
                 <span className="text-sm font-medium">Tap the map to place your pin</span>
-                <button type="button" onClick={useMyLocation} disabled={locating} className="text-sm text-orange-700 underline disabled:opacity-60">
+                <button type="button" onClick={useMyLocation} disabled={locating} className="text-sm underline decoration-ink-400 underline-offset-2 hover:decoration-accent dark:decoration-ink-500 disabled:opacity-60">
                   {locating ? "Locating…" : "Use my location"}
                 </button>
               </div>
@@ -398,7 +398,7 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
                 }}
               />
               <p className="mt-2 text-sm" aria-live="polite">
-                {quote.status === "loading" && <span className="text-stone-500">Checking delivery fee…</span>}
+                {quote.status === "loading" && <span className="text-muted">Checking delivery fee…</span>}
                 {quote.status === "ok" && (
                   <span>
                     Delivery fee <strong>{peso(quote.quote.fee)}</strong> · about {quote.quote.distanceKm} km
@@ -411,7 +411,7 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
 
             {data.customer && savedId === "new" && (
               <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={saveAddress} onChange={(e) => setSaveAddress(e.target.checked)} className="accent-orange-600" />
+                <input type="checkbox" checked={saveAddress} onChange={(e) => setSaveAddress(e.target.checked)} className="accent-accent-button" />
                 Save this address for next time
               </label>
             )}
@@ -423,9 +423,9 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
       <section className={section}>
         <h2 className="mb-3 font-semibold">{fulfillment === "pickup" ? "Pickup time" : "Delivery time"}</h2>
         {!now ? (
-          <p className="text-sm text-stone-500">Loading times…</p>
+          <p className="text-sm text-muted">Loading times…</p>
         ) : days.length === 0 ? (
-          <p className="text-sm text-stone-600 dark:text-stone-400">No times available right now. Please check back during opening hours.</p>
+          <p className="text-sm text-muted">No times available right now. Please check back during opening hours.</p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="flex flex-col gap-1 text-sm">
@@ -451,7 +451,7 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
           </div>
         )}
         {noticeDays > 0 && (
-          <p className="mt-3 text-sm text-pink-800 dark:text-pink-300">
+          <p className="mt-3 rounded-lg bg-accent-soft p-3 text-sm text-foreground">
             {noticeItems.map((l) => l.name).join(", ")} {noticeItems.length === 1 ? "is" : "are"} made to order and need{noticeItems.length === 1 ? "s" : ""}{" "}
             {noticeDays === 1 ? "1 day" : `${noticeDays} days`}&apos; notice, so the whole order comes on that date.
             {noticeItems.length < lines.length && " Want the other food sooner? Place it as a separate order."}
@@ -465,18 +465,18 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
       </section>
 
       {/* Summary */}
-      <section className={section}>
+      <section className="ticket-card mb-5 p-4">
         <h2 className="mb-3 font-semibold">Summary</h2>
         <dl className="flex flex-col gap-1 text-sm">
           <Row label="Subtotal" value={`${isEstimate ? "~" : ""}${peso(subtotal)}`} />
           {discount > 0 && <Row label={data.offer!.name} value={`−${peso(discount)}`} />}
           {data.offer && discount === 0 && data.offer.minOrder !== null && (
-            <p className="text-xs text-stone-500">
+            <p className="text-xs text-muted">
               {data.offer.name} applies from {peso(data.offer.minOrder)}.
             </p>
           )}
           {fulfillment === "delivery" && <Row label="Delivery fee" value={quote.status === "ok" ? peso(deliveryFee) : "—"} />}
-          <div className="mt-2 flex justify-between border-t border-stone-200 pt-2 text-base font-semibold dark:border-stone-700">
+          <div className="mt-2 flex justify-between border-t border-ink-200 pt-2 text-base font-semibold dark:border-ink-700">
             <dt>Total</dt>
             <dd>
               {isEstimate ? "~" : ""}
@@ -484,10 +484,10 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
             </dd>
           </div>
         </dl>
-        <p className="mt-3 text-xs text-stone-500">Payment: GCash, after we confirm your order.</p>
+        <p className="mt-3 text-xs text-muted">Payment: GCash, after we confirm your order.</p>
 
         <label className="mt-4 flex items-start gap-2 text-sm">
-          <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 accent-orange-600" />
+          <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 accent-accent-button" />
           <span>
             I agree to the{" "}
             <Link href={`/privacy?store=${data.store.slug}`} className="underline" target="_blank">
@@ -509,7 +509,7 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
           type="button"
           onClick={submit}
           disabled={pending}
-          className="mt-4 w-full rounded-xl bg-orange-600 px-4 py-3 font-medium text-white hover:bg-orange-700 disabled:opacity-60"
+          className="mt-4 w-full rounded-xl bg-accent-button px-4 py-3 font-medium text-on-accent hover:brightness-95 disabled:opacity-60"
         >
           {pending ? "Placing order…" : `Place order · ${isEstimate ? "~" : ""}${peso(total)}`}
         </button>
@@ -530,7 +530,7 @@ function CartLineRow({ line: l, item, cart, onEdit }: { line: CartEntry; item: M
     <li className="py-3">
       <div className="flex items-start justify-between gap-3">
         <p className="font-medium">
-          {l.qty > 1 && <span className="text-stone-500">{l.qty}× </span>}
+          {l.qty > 1 && <span className="text-muted">{l.qty}× </span>}
           {l.name}
         </p>
         <span className="shrink-0 text-sm font-semibold">
@@ -540,7 +540,7 @@ function CartLineRow({ line: l, item, cart, onEdit }: { line: CartEntry; item: M
       </div>
 
       {options ? (
-        <ul className="mt-1 flex flex-col gap-0.5 text-sm text-stone-600 dark:text-stone-400">
+        <ul className="mt-1 flex flex-col gap-0.5 text-sm text-muted">
           {basis !== null && (
             <li className="flex justify-between gap-3">
               <span>{l.weightKg ? `${l.weightKg} kg` : "Base price"}</span>
@@ -558,9 +558,9 @@ function CartLineRow({ line: l, item, cart, onEdit }: { line: CartEntry; item: M
           ))}
         </ul>
       ) : (
-        l.optionLabels.length > 0 && <p className="mt-1 text-sm text-stone-500">{l.optionLabels.join(" · ")}</p>
+        l.optionLabels.length > 0 && <p className="mt-1 text-sm text-muted">{l.optionLabels.join(" · ")}</p>
       )}
-      {l.notes && <p className="mt-1 whitespace-pre-line text-sm text-stone-500">“{l.notes}”</p>}
+      {l.notes && <p className="mt-1 whitespace-pre-line text-sm text-muted">“{l.notes}”</p>}
       {l.needsAvailability && (
         <span className="mt-1 inline-block">
           <Badge tone="amber">Confirmed before you pay</Badge>
@@ -569,24 +569,24 @@ function CartLineRow({ line: l, item, cart, onEdit }: { line: CartEntry; item: M
 
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3">
-          <div className="flex items-center rounded-lg border border-stone-300 text-sm dark:border-stone-700">
-            <button type="button" className="px-2 py-0.5" onClick={() => cart.setQty(l.lineId, l.qty - 1)} aria-label={`One less ${l.name}`}>
+          <div className="flex items-center rounded-lg border border-ink-300 text-sm dark:border-ink-700">
+            <button type="button" className="flex min-h-11 min-w-11 items-center justify-center" onClick={() => cart.setQty(l.lineId, l.qty - 1)} aria-label={`One less ${l.name}`}>
               −
             </button>
             <span className="w-6 text-center">{l.qty}</span>
-            <button type="button" className="px-2 py-0.5" onClick={() => cart.setQty(l.lineId, l.qty + 1)} aria-label={`One more ${l.name}`}>
+            <button type="button" className="flex min-h-11 min-w-11 items-center justify-center" onClick={() => cart.setQty(l.lineId, l.qty + 1)} aria-label={`One more ${l.name}`}>
               +
             </button>
           </div>
           {l.qty > 1 && (
-            <span className="text-xs text-stone-500">
+            <span className="text-xs text-muted">
               {tilde}
               {peso(l.displayUnitPrice)} each
             </span>
           )}
         </div>
         {item && (
-          <button type="button" onClick={onEdit} className="text-sm font-medium text-orange-700 hover:underline dark:text-orange-400">
+          <button type="button" onClick={onEdit} className="text-sm font-medium underline decoration-ink-400 underline-offset-2 hover:decoration-accent dark:decoration-ink-500">
             {hasAddOns ? (options?.length ? "Change add-ons" : "Add add-ons") : "Edit"}
           </button>
         )}
@@ -598,7 +598,7 @@ function CartLineRow({ line: l, item, cart, onEdit }: { line: CartEntry; item: M
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between">
-      <dt className="text-stone-600 dark:text-stone-400">{label}</dt>
+      <dt className="text-muted">{label}</dt>
       <dd>{value}</dd>
     </div>
   );

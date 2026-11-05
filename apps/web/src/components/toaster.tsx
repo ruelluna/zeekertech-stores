@@ -5,7 +5,7 @@ import { useSyncExternalStore } from "react";
 import { dismissToast, toastStore, type ToastTone } from "@/lib/toast";
 
 const TONES: Record<ToastTone, string> = {
-  info: "border-stone-300 dark:border-stone-600",
+  info: "border-ink-300 dark:border-ink-600",
   success: "border-green-500",
   warning: "border-amber-500",
   error: "border-red-500",
@@ -28,7 +28,7 @@ export function Toaster() {
             <span aria-hidden="true">{ICONS[t.tone]}</span>
             <span className="min-w-0 flex-1">
               <span className="block font-medium">{t.title}</span>
-              {t.body && <span className="block text-stone-600 dark:text-stone-400">{t.body}</span>}
+              {t.body && <span className="block text-muted">{t.body}</span>}
             </span>
           </>
         );
@@ -36,7 +36,7 @@ export function Toaster() {
           <div
             key={t.id}
             role="status"
-            className={`pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl border-l-4 bg-white p-3 text-sm shadow-lg ring-1 ring-black/5 dark:bg-stone-900 ${TONES[t.tone]}`}
+            className={`pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl border-l-4 bg-surface p-3 text-sm ring-1 ring-ink-300 dark:ring-ink-700 dark:bg-ink-900 ${TONES[t.tone]}`}
           >
             {t.href ? (
               <Link href={t.href} className="flex min-w-0 flex-1 items-start gap-3" onClick={() => dismissToast(t.id)}>
@@ -45,7 +45,7 @@ export function Toaster() {
             ) : (
               <div className="flex min-w-0 flex-1 items-start gap-3">{content}</div>
             )}
-            <button type="button" onClick={() => dismissToast(t.id)} className="text-lg leading-none text-stone-400 hover:text-stone-600" aria-label="Dismiss">
+            <button type="button" onClick={() => dismissToast(t.id)} className="text-lg leading-none text-muted hover:text-ink-600" aria-label="Dismiss">
               ×
             </button>
           </div>

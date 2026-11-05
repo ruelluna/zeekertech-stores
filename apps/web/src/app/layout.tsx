@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Yellowtail, Zilla_Slab } from "next/font/google";
 import "./globals.css";
 import { TrackVisitor } from "@/components/presence";
 import { Toaster } from "@/components/toaster";
@@ -15,6 +15,21 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// The kitchen-label voices (DESIGN.md): brush script for store names, stamped slab caps for short facts.
+const yellowtail = Yellowtail({
+  variable: "--font-yellowtail",
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const zillaSlab = Zilla_Slab({
+  variable: "--font-zilla-slab",
+  weight: ["600", "700"],
+  subsets: ["latin"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   // Store pages set their own title and description; this covers shared pages (order status, legal, admin).
   title: "Order online · Zeeker Tech",
@@ -25,7 +40,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${yellowtail.variable} ${zillaSlab.variable} h-full antialiased`}
     >
       <head>
         {/* Public config (Supabase URL, push key…) read at runtime, so the Docker image needs no build variables. */}

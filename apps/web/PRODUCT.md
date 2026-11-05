@@ -46,7 +46,8 @@ What a neighbor can't copy: a home-scale kitchen in Tapilon that cooks seasonal 
 ## Brand Commitments
 
 - Name: **Weekend Food Hub** (written as one phrase; "WEEKEND FOODHUB" appears on current materials).
-- **Orange stays the brand color.** The current site uses stone neutrals with an orange accent.
+- **Orange stays the brand color.** On the site it is Weekend Food Hub's store accent.
+- **Every store shares one theme.** The site is multi-store (Zeeker Tech runs it for independent stores). Each store gets the kitchen-label look from DESIGN.md ("Storefront theme") and picks its own accent colour and, optionally, a logo; Sweet Treats by Yang uses Cabbage Ruby.
 - **The logo must print in one color (black) at small sizes** on thermal order labels.
 - **The brand must leave room for sub-brands** such as Sweet Treats by Yang, as a family of marks.
 - The current logo reads as AI-generated. It is a loose reference only: keep the name and the orange, and nothing else is binding. Any new identity must look deliberately drawn and specific to this kitchen, not generic or machine-made.

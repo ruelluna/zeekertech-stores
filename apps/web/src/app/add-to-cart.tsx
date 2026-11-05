@@ -17,7 +17,7 @@ export function AddToCart({ item, canOrder, store }: { item: MenuItem; canOrder:
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mt-1 self-start rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700"
+        className="mt-1 self-start rounded-lg bg-accent-button px-4 py-2 text-sm font-medium text-on-accent hover:brightness-95"
       >
         Add
       </button>
@@ -114,19 +114,19 @@ export function OptionsSheet({
         aria-modal="true"
         aria-label={item.name}
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-white p-5 shadow-xl sm:rounded-2xl dark:bg-stone-900"
+        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-surface border border-ink-300 p-5 sm:rounded-2xl dark:border-ink-700 dark:bg-ink-900"
       >
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
             <h3 className="text-lg font-semibold">{item.name}</h3>
-            {market && <p className="text-sm text-stone-500">Market price. We confirm the final price before you pay.</p>}
+            {market && <p className="text-sm text-muted">Market price. We confirm the final price before you pay.</p>}
             {item.noticeDays > 0 && (
-              <p className="text-sm text-stone-500">
+              <p className="text-sm text-muted">
                 Made to order. The earliest pickup or delivery is {item.noticeDays === 1 ? "tomorrow" : `${item.noticeDays} days from today`}.
               </p>
             )}
           </div>
-          <button type="button" onClick={onClose} className="text-2xl leading-none text-stone-400" aria-label="Close">
+          <button type="button" onClick={onClose} className="-m-2 flex min-h-11 min-w-11 items-center justify-center text-2xl leading-none text-muted" aria-label="Close">
             ×
           </button>
         </div>
@@ -140,7 +140,7 @@ export function OptionsSheet({
                   key={kg}
                   type="button"
                   onClick={() => setWeightKg(kg)}
-                  className={`rounded-full border px-3 py-1 text-sm ${weightKg === kg ? "border-orange-600 bg-orange-50 text-orange-800 dark:bg-orange-950 dark:text-orange-200" : "border-stone-300 dark:border-stone-700"}`}
+                  className={`min-h-11 rounded-full border px-4 text-sm ${weightKg === kg ? "border-accent-button bg-accent-button text-on-accent" : "border-ink-300 dark:border-ink-700"}`}
                 >
                   {kg} kg
                 </button>
@@ -154,13 +154,13 @@ export function OptionsSheet({
           <fieldset key={g.id} className="mb-4">
             <legend className="mb-2 text-sm font-medium">
               {g.name}
-              <span className="ml-1 font-normal text-stone-500">
+              <span className="ml-1 font-normal text-muted">
                 {g.required ? "(required)" : g.maxSelect > 1 ? `(up to ${g.maxSelect})` : "(optional)"}
               </span>
             </legend>
             <div className="flex flex-col gap-2">
               {g.options.map((o) => (
-                <label key={o.id} className="flex items-center justify-between gap-3 rounded-lg border border-stone-200 px-3 py-2 text-sm dark:border-stone-700">
+                <label key={o.id} className="flex items-center justify-between gap-3 rounded-lg border border-ink-200 px-3 py-2 text-sm dark:border-ink-700">
                   <span className="flex items-center gap-2">
                     <input
                       type={g.maxSelect === 1 ? "radio" : "checkbox"}
@@ -171,11 +171,11 @@ export function OptionsSheet({
                         // Optional single-choice groups can be cleared by tapping the selected option again.
                         if (g.maxSelect === 1 && !g.required && picked[g.id]?.includes(o.id)) setPicked((p) => ({ ...p, [g.id]: [] }));
                       }}
-                      className="accent-orange-600"
+                      className="accent-accent-button"
                     />
                     {o.name}
                   </span>
-                  {o.priceDelta > 0 && <span className="text-stone-500">+{peso(o.priceDelta)}</span>}
+                  {o.priceDelta > 0 && <span className="text-muted">+{peso(o.priceDelta)}</span>}
                 </label>
               ))}
             </div>
@@ -189,26 +189,26 @@ export function OptionsSheet({
             onChange={(e) => setNotes(e.target.value)}
             maxLength={200}
             rows={3}
-            className="resize-y rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-700 dark:bg-stone-950"
+            className="resize-y rounded-lg border border-ink-500 bg-surface px-3 py-2 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30 dark:border-ink-400 dark:bg-ink-950"
           />
-          <span className="self-end text-xs text-stone-500">{notes.length}/200</span>
+          <span className="self-end text-xs text-muted">{notes.length}/200</span>
         </label>
 
         {error && <p className="mb-3 text-sm text-red-700 dark:text-red-400">{error}</p>}
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center rounded-lg border border-stone-300 dark:border-stone-700">
-            <button type="button" className="px-3 py-2" onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Less">
+          <div className="flex items-center rounded-lg border border-ink-300 dark:border-ink-700">
+            <button type="button" className="min-h-11 min-w-11 px-3" onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Less">
               −
             </button>
             <span className="w-8 text-center text-sm" aria-live="polite">
               {qty}
             </span>
-            <button type="button" className="px-3 py-2" onClick={() => setQty((q) => Math.min(50, q + 1))} aria-label="More">
+            <button type="button" className="min-h-11 min-w-11 px-3" onClick={() => setQty((q) => Math.min(50, q + 1))} aria-label="More">
               +
             </button>
           </div>
-          <button type="button" onClick={add} className="flex-1 rounded-lg bg-orange-600 px-4 py-2.5 font-medium text-white hover:bg-orange-700">
+          <button type="button" onClick={add} className="flex-1 rounded-lg bg-accent-button px-4 py-2.5 font-medium text-on-accent hover:brightness-95">
             {initial ? "Update" : "Add"} · {market ? "~" : ""}
             {peso(unit * qty)}
           </button>

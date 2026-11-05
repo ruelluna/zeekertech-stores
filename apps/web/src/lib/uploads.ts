@@ -4,7 +4,7 @@ import { createSupabaseAdminClient } from "./supabase/admin";
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 /** Uploads an image to the public bucket and returns its public URL. */
-export async function uploadPublicImage(file: File, folder: "gcash" | "products"): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+export async function uploadPublicImage(file: File, folder: "gcash" | "products" | "logos"): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
   if (!(file instanceof File) || file.size === 0) return { ok: false, error: "Choose an image" };
   if (file.size > MAX_IMAGE_BYTES) return { ok: false, error: "Image is too big (max 5 MB)" };
   if (!file.type.startsWith("image/")) return { ok: false, error: "That file isn't an image" };

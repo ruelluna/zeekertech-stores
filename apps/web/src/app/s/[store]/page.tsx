@@ -3,9 +3,11 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import Link from "next/link";
 import { ContactLink } from "@/components/contact-link";
+import { StoreHeader } from "@/components/store-header";
+import { StoreTheme } from "@/components/store-theme";
 import { Badge, peso } from "@/components/ui";
 import { getPublicMenu, type MenuItem, type PublicMenu } from "@/lib/menu";
-import { getStore, storePath, type Store } from "@/lib/stores";
+import { getStore, storePath } from "@/lib/stores";
 import { AddToCart } from "../../add-to-cart";
 import { CartBar } from "../../cart-bar";
 import { StoreStatusPill } from "../../store-status";
@@ -18,7 +20,7 @@ export async function generateMetadata({ params }: PageProps<"/s/[store]">): Pro
 export default function StoreHome({ params }: PageProps<"/s/[store]">) {
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-16 pt-10">
-      <Suspense fallback={<p className="text-sm text-stone-500">Loading the menu…</p>}>
+      <Suspense fallback={<p className="text-sm text-muted">Loading the menu…</p>}>
         <Menu params={params} />
       </Suspense>
     </main>
@@ -34,11 +36,18 @@ async function Menu({ params }: { params: PageProps<"/s/[store]">["params"] }) {
   const legal = (path: string) => `${path}?store=${store.slug}`;
 
   return (
-    <>
-      <StoreHeader store={store} />
+    <StoreTheme accent={store.accent_color}>
+      <StoreHeader
+        store={store}
+        aside={
+          <Link href={storePath(store.slug, "/account")} className="inline-flex min-h-11 shrink-0 items-center text-sm text-ink-600 hover:underline hover:decoration-accent dark:text-ink-300">
+            My orders
+          </Link>
+        }
+      />
       <div className="mb-6 flex flex-col gap-3">
         <StoreStatusPill hours={menu.hours} closures={menu.closures} paused={menu.orderingPaused} />
-        <p className="rounded-lg bg-orange-50 p-3 text-sm text-orange-900 dark:bg-orange-950 dark:text-orange-200">
+        <p className="rounded-lg bg-kraft-soft p-3 text-sm text-foreground">
           {menu.deliveryEnabled
             ? `Pickup, or delivery${menu.deliveryArea ? ` in ${menu.deliveryArea}` : ""} from ${peso(menu.baseDeliveryFee)}.`
             : "Pickup only for now."}
@@ -50,56 +59,42 @@ async function Menu({ params }: { params: PageProps<"/s/[store]">["params"] }) {
         </p>
       </div>
 
-      <nav className="sticky top-0 z-10 -mx-4 mb-6 flex gap-2 overflow-x-auto bg-stone-50/95 px-4 py-2 backdrop-blur dark:bg-stone-950/95">
+      <nav className="sticky top-0 z-10 -mx-4 mb-6 flex gap-2 overflow-x-auto bg-background px-4 py-1">
         {menu.categories.map((c) => (
-          <a key={c.id} href={`#${c.id}`} className="shrink-0 rounded-full border border-stone-300 px-3 py-1 text-sm hover:border-orange-500 dark:border-stone-700">
+          <a key={c.id} href={`#${c.id}`} className="stamp inline-flex min-h-11 shrink-0 items-center rounded-full border border-ink-300 px-4 text-xs hover:border-accent hover:bg-accent-soft dark:border-ink-700">
             {c.name}
           </a>
         ))}
       </nav>
 
-      {menu.categories.length === 0 && <p className="mb-10 text-stone-500">The menu is being prepared. Please check back soon.</p>}
+      {menu.categories.length === 0 && <p className="mb-10 text-muted">The menu is being prepared. Please check back soon.</p>}
       {menu.categories.map((c) => (
         <CategorySection key={c.id} category={c} canOrder={!menu.orderingPaused} store={store.slug} />
       ))}
 
-      <footer className="border-t border-stone-200 pt-6 text-sm text-stone-500 dark:border-stone-800">
-        {hasUncertain && <p>🟡 “Subject to availability” items depend on what we can get that day. We confirm before you pay.</p>}
+      <footer className="border-t border-ink-200 pt-6 text-sm text-muted dark:border-ink-800">
+        {hasUncertain && <p>“Subject to availability” items depend on what we can get that day. We confirm before you pay.</p>}
         {store.contact && (
           <p className="mt-2">
             Questions? Contact {store.name}: <ContactLink contact={store.contact} />
           </p>
         )}
         <p className="mt-2">
-          <Link href={legal("/privacy")} className="hover:text-orange-700">Privacy</Link> ·{" "}
-          <Link href={legal("/terms")} className="hover:text-orange-700">Terms</Link> ·{" "}
-          <Link href={legal("/data-deletion")} className="hover:text-orange-700">Data deletion</Link>
+          <Link href={legal("/privacy")} className="inline-block py-2.5 hover:underline hover:decoration-accent">Privacy</Link> ·{" "}
+          <Link href={legal("/terms")} className="inline-block py-2.5 hover:underline hover:decoration-accent">Terms</Link> ·{" "}
+          <Link href={legal("/data-deletion")} className="inline-block py-2.5 hover:underline hover:decoration-accent">Data deletion</Link>
         </p>
       </footer>
       <div className="h-20" />
       <CartBar store={store.slug} />
-    </>
-  );
-}
-
-function StoreHeader({ store }: { store: Store }) {
-  return (
-    <header className="mb-8">
-      <div className="flex items-start justify-between gap-3">
-        <h1 className="text-3xl font-semibold tracking-tight">{store.name}</h1>
-        <Link href={storePath(store.slug, "/account")} className="mt-2 shrink-0 text-sm text-stone-600 hover:text-orange-700 dark:text-stone-400">
-          My orders
-        </Link>
-      </div>
-      {store.tagline && <p className="mt-1 text-stone-600 dark:text-stone-400">{store.tagline}</p>}
-    </header>
+    </StoreTheme>
   );
 }
 
 function CategorySection({ category: c, canOrder, store }: { category: PublicMenu["categories"][number]; canOrder: boolean; store: string }) {
   return (
     <section id={c.id} className="mb-10 scroll-mt-16">
-      <h2 className="mb-3 text-xl font-semibold">{c.name}</h2>
+      <h2 className="stamp mb-3 text-lg font-bold">{c.name}</h2>
       <ul className="grid gap-3 sm:grid-cols-2">
         {c.items.map((item) => (
           <MenuCard key={item.id} item={item} canOrder={canOrder} store={store} />
@@ -115,24 +110,24 @@ function MenuCard({ item, canOrder, store }: { item: MenuItem; canOrder: boolean
   const dimmed = item.badge === "sold_out" || item.badge === "unavailable";
   return (
     <li
-      className={`flex flex-col gap-2 rounded-xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900 ${dimmed ? "opacity-60" : ""}`}
+      className={`ticket-card flex flex-col gap-2 p-4 ${dimmed ? "opacity-60" : ""}`}
     >
       <div className="flex items-start justify-between gap-3">
         <h3 className="font-medium">{item.name}</h3>
         <PriceTag item={item} />
       </div>
-      {item.description && <p className="text-sm text-stone-600 dark:text-stone-400">{item.description}</p>}
+      {item.description && <p className="text-sm text-muted">{item.description}</p>}
       <div className="flex flex-wrap gap-1.5">
         <AvailabilityBadge item={item} />
         {item.type === "frozen" && <Badge>Frozen pack</Badge>}
       </div>
       {item.soldBy === "weight" && item.weightOptionsKg.length > 0 && (
-        <p className="text-xs text-stone-500">Sizes: {item.weightOptionsKg.map((kg) => `${kg} kg`).join(" · ")}</p>
+        <p className="text-xs text-muted">Sizes: {item.weightOptionsKg.map((kg) => `${kg} kg`).join(" · ")}</p>
       )}
       {item.groups
         .filter((g) => g.options.length > 0)
         .map((g) => (
-          <p key={g.id} className="text-xs text-stone-500">
+          <p key={g.id} className="text-xs text-muted">
             {g.name}
             {g.showWhenModifierId && ` (with ${item.groups.flatMap((x) => x.options).find((o) => o.id === g.showWhenModifierId)?.name ?? "add-on"})`}
             : {g.options.map((o) => (o.priceDelta > 0 ? `${o.name} +${peso(o.priceDelta)}` : o.name)).join(" · ")}
@@ -144,7 +139,7 @@ function MenuCard({ item, canOrder, store }: { item: MenuItem; canOrder: boolean
 }
 
 function PriceTag({ item }: { item: MenuItem }) {
-  if (item.badge === "unavailable") return <span className="shrink-0 text-sm text-stone-500">Coming soon</span>;
+  if (item.badge === "unavailable") return <span className="shrink-0 text-sm text-muted">Coming soon</span>;
   if (item.priceMode === "market") {
     return (
       <span className="shrink-0 text-right text-sm">
@@ -155,7 +150,7 @@ function PriceTag({ item }: { item: MenuItem }) {
             {item.soldBy === "weight" ? "/kg" : ""}
           </span>
         )}
-        <span className="block text-xs text-stone-500">{item.price !== null ? "today · " : ""}market price</span>
+        <span className="block text-xs text-muted">{item.price !== null ? "today · " : ""}market price</span>
       </span>
     );
   }
@@ -165,7 +160,7 @@ function PriceTag({ item }: { item: MenuItem }) {
 function AvailabilityBadge({ item }: { item: MenuItem }) {
   switch (item.badge) {
     case "available":
-      if (item.noticeDays > 0) return <Badge tone="pink">Order {noticeText(item.noticeDays)} ahead</Badge>;
+      if (item.noticeDays > 0) return <Badge tone="accent">Order {noticeText(item.noticeDays)} ahead</Badge>;
       return <Badge tone="green">Available today</Badge>;
     case "subject_to_availability":
       return (

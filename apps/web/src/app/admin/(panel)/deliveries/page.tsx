@@ -69,23 +69,23 @@ async function Deliveries() {
       <LiveDeliveries known={Object.fromEntries(deliveries.map((d) => [d.id, d.status]))} />
 
       <div className="mb-6 grid grid-cols-2 gap-3">
-        <div className="rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
-          <p className="text-xs uppercase tracking-wide text-stone-500">Earned today</p>
+        <div className="rounded-xl border border-ink-200 bg-surface p-4 dark:border-ink-800 dark:bg-ink-900">
+          <p className="text-xs uppercase tracking-wide text-muted">Earned today</p>
           <p className="text-2xl font-bold">{peso(sum(doneToday))}</p>
-          <p className="text-xs text-stone-500">
+          <p className="text-xs text-muted">
             {doneToday.length} deliver{doneToday.length === 1 ? "y" : "ies"}
           </p>
         </div>
-        <div className="rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
-          <p className="text-xs uppercase tracking-wide text-stone-500">Not paid out yet</p>
+        <div className="rounded-xl border border-ink-200 bg-surface p-4 dark:border-ink-800 dark:bg-ink-900">
+          <p className="text-xs uppercase tracking-wide text-muted">Not paid out yet</p>
           <p className="text-2xl font-bold">{peso(sum(unpaid))}</p>
-          <p className="text-xs text-stone-500">Paid out by the owner</p>
+          <p className="text-xs text-muted">Paid out by the owner</p>
         </div>
       </div>
 
       <Card title={`On the way (${onTheWay.length})`}>
         {onTheWay.length === 0 ? (
-          <p className="text-sm text-stone-500">No deliveries right now. New ones appear here automatically.</p>
+          <p className="text-sm text-muted">No deliveries right now. New ones appear here automatically.</p>
         ) : (
           <div className="flex flex-col gap-4">
             {onTheWay.map((d) => (
@@ -97,14 +97,14 @@ async function Deliveries() {
 
       <Card title={`Delivered today (${doneToday.length})`}>
         {doneToday.length === 0 ? (
-          <p className="text-sm text-stone-500">None yet.</p>
+          <p className="text-sm text-muted">None yet.</p>
         ) : (
-          <ul className="divide-y divide-stone-100 text-sm dark:divide-stone-800">
+          <ul className="divide-y divide-ink-100 text-sm dark:divide-ink-800">
             {doneToday.map((d) => (
               <li key={d.id} className="flex items-center justify-between gap-3 py-2">
                 <span>
                   <strong>{d.queue_code}</strong> · {d.customer_name} · {d.barangay}
-                  {role === "owner" && d.rider_name ? <span className="text-stone-500"> · {d.rider_name}</span> : null}
+                  {role === "owner" && d.rider_name ? <span className="text-muted"> · {d.rider_name}</span> : null}
                 </span>
                 <span className="font-semibold">{peso(d.rider_pay)}</span>
               </li>
@@ -124,7 +124,7 @@ function DeliveryCard({ d, showRider }: { d: Delivery; showRider: boolean }) {
   const unpaid = d.payment_status !== "confirmed";
 
   return (
-    <article className="rounded-xl border border-stone-200 p-3 dark:border-stone-700">
+    <article className="rounded-xl border border-ink-200 p-3 dark:border-ink-700">
       <header className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <span className="text-2xl font-bold">{d.queue_code}</span>
         <span className="text-sm font-semibold">{formatManilaTime(new Date(d.scheduled_for))}</span>
@@ -133,7 +133,7 @@ function DeliveryCard({ d, showRider }: { d: Delivery; showRider: boolean }) {
 
       <p className="mt-1 text-lg font-semibold">{d.customer_name ?? "Customer"}</p>
       <p>{[address?.streetPurok, d.barangay].filter(Boolean).join(", ")}</p>
-      {address?.landmark && <p className="text-stone-600 dark:text-stone-400">Near {address.landmark}</p>}
+      {address?.landmark && <p className="text-muted">Near {address.landmark}</p>}
       {address?.riderNotes && <p className="mt-1 rounded bg-amber-100 px-2 py-1 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200">{address.riderNotes}</p>}
 
       <div className="my-3 flex flex-wrap gap-2">
@@ -161,7 +161,7 @@ function DeliveryCard({ d, showRider }: { d: Delivery; showRider: boolean }) {
             <li key={i.id}>
               {i.qty}× {i.name}
               {(i.modifiers as ModifierSelection[]).length > 0 && (
-                <span className="text-stone-500"> · {(i.modifiers as ModifierSelection[]).map((m) => m.option).join(", ")}</span>
+                <span className="text-muted"> · {(i.modifiers as ModifierSelection[]).map((m) => m.option).join(", ")}</span>
               )}
             </li>
           ))}
@@ -175,8 +175,8 @@ function DeliveryCard({ d, showRider }: { d: Delivery; showRider: boolean }) {
         ) : (
           <Badge tone="green">Paid</Badge>
         )}
-        {d.rider_pay != null && <span className="text-sm text-stone-500">Your pay: {peso(d.rider_pay)}</span>}
-        {showRider && d.rider_name && <span className="text-sm text-stone-500">· Rider: {d.rider_name}</span>}
+        {d.rider_pay != null && <span className="text-sm text-muted">Your pay: {peso(d.rider_pay)}</span>}
+        {showRider && d.rider_name && <span className="text-sm text-muted">· Rider: {d.rider_name}</span>}
       </div>
 
       <ActionForm action={markDelivered} submitLabel={collect ? `Delivered · ${peso(d.total)} collected` : "Delivered"}>

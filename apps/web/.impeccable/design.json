@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-05T23:30:00+08:00",
+  "generatedAt": "2026-11-06",
   "title": "Design System: Weekend Food Hub",
   "extensions": {
     "colorMeta": {
@@ -116,6 +116,105 @@
         "tonalRamp": [
           "#000000"
         ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink (warm grey ramp)",
+        "canonical": "oklch(28.8% 0.009 67.4)",
+        "tonalRamp": [
+          "oklch(22% 0.008 67.4)",
+          "oklch(28.8% 0.009 67.4)",
+          "oklch(33% 0.009 67.4)",
+          "oklch(39% 0.01 67.4)",
+          "oklch(46% 0.01 67.4)",
+          "oklch(55% 0.01 67.4)",
+          "oklch(71% 0.009 67.4)",
+          "oklch(86.5% 0.007 67.4)",
+          "oklch(92.5% 0.005 67.4)",
+          "oklch(96.5% 0.004 67.4)",
+          "oklch(98.5% 0.003 67.4)"
+        ],
+        "note": "Shipped as --color-ink-50…950 in src/app/globals.css (ramp listed 950 → 50). ink-900 is Ink Charcoal (#2E2A26); ink-950 is the dark-mode page ground."
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "oklch(28.8% 0.009 67.4)",
+          "#FFFFFF"
+        ],
+        "note": "--surface: cards and inputs. White in light mode; ink-900 (oklch(28.8% 0.009 67.4)) in dark mode. Ramp lists dark, light."
+      },
+      "kraft-soft": {
+        "role": "neutral",
+        "displayName": "Kraft Soft",
+        "canonical": "#F4EDE4",
+        "tonalRamp": [
+          "#3A3126",
+          "#F4EDE4"
+        ],
+        "note": "--kraft-soft: ground for a store's standing notes (pickup, delivery, notice). #F4EDE4 light, #3A3126 dark. Ramp lists dark, light."
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Store Accent",
+        "canonical": "#EA580C",
+        "tonalRamp": [
+          "#4F2515",
+          "#EA580C",
+          "#F5621F",
+          "#FFE9DE"
+        ],
+        "note": "--accent: the store's colour as chosen (store.stores.accent_color), default Market Orange #EA580C. Not painted directly: the Tailwind `accent` colour maps to --accent-line, buttons to --accent-button. Ramp lists the defaults of accent-soft-dark, accent, accent-button, accent-soft-light."
+      },
+      "accent-button": {
+        "role": "primary",
+        "displayName": "Accent Button",
+        "canonical": "#F5621F",
+        "tonalRamp": [
+          "#F5621F"
+        ],
+        "note": "--accent-button, picked from --accent-button-light / --accent-button-dark. Light: the accent, or the nearest shade whose ink-or-white label reaches 4.5:1. Dark: the light button, or its nearest shade that is still readable at 4.5:1 and also reaches 3:1 against #2E2A26 and #1F1C19. Default #F5621F in both modes (ink letters at 4.51:1)."
+      },
+      "on-accent": {
+        "role": "neutral",
+        "displayName": "On Accent",
+        "canonical": "#2E2A26",
+        "tonalRamp": [
+          "#2E2A26",
+          "#FFFFFF"
+        ],
+        "note": "--on-accent, picked from --on-accent-light / --on-accent-dark: Ink Charcoal (#2E2A26) or white, whichever contrasts more with the active button field. Default ink in both modes."
+      },
+      "accent-soft": {
+        "role": "primary",
+        "displayName": "Accent Soft",
+        "canonical": "#FFE9DE",
+        "tonalRamp": [
+          "#4F2515",
+          "#FFE9DE"
+        ],
+        "note": "--accent-soft, picked from --accent-soft-light (default #FFE9DE; OKLCH L 0.955, C = min(C, 0.2) x 0.18, accent hue) and --accent-soft-dark (default #4F2515; L 0.32, C = min(C, 0.2) x 0.35). Notes, selected-state grounds, accent badges; always ink or mist letters."
+      },
+      "accent-line": {
+        "role": "primary",
+        "displayName": "Accent Line",
+        "canonical": "#EA580C",
+        "tonalRamp": [
+          "#EA580C"
+        ],
+        "note": "--accent-line, picked per colour scheme from --accent-line-light / --accent-line-dark on :root and .store-theme. Rules (.rule-dotted), borders, focus rings, progress bars, link underlines on hover. The accent, or the nearest same-hue shade reaching 3:1 (LINE_CONTRAST) on both Mist #F7F5EE and white (light), or on both #2E2A26 and #1F1C19 (dark). Tailwind `accent` utilities resolve here. Default orange passes in both modes."
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "canonical": "oklch(46% 0.01 67.4)",
+        "tonalRamp": [
+          "oklch(71% 0.009 67.4)",
+          "oklch(46% 0.01 67.4)"
+        ],
+        "note": "--muted (Tailwind text-muted): all secondary text. ink-600 in light mode (at least 5.5:1 on the page and cards), ink-400 in dark mode. Ramp lists dark, light."
       }
     },
     "typographyMeta": {
@@ -130,11 +229,142 @@
       "caption-caps": {
         "displayName": "Caption Caps",
         "purpose": "Origin and category facts in small, wider-tracked uppercase, separated by middots."
+      },
+      "store-name": {
+        "displayName": "Store Name (Yellowtail 400)",
+        "purpose": "The store's name in the store header only (or the store's uploaded logo instead); --font-yellowtail, Tailwind font-script. 2.75rem (sm: 3.75rem) on the menu page, 2.25rem elsewhere, leading 1."
+      },
+      "stamp": {
+        "displayName": "Stamp (Zilla Slab 600/700)",
+        "purpose": "Short facts via .stamp: Zilla Slab 600, uppercase, 0.08em tracking. Tagline, category chips and category headings (700), badges, the open/closed pill, order codes. --font-zilla-slab."
+      },
+      "ui-text": {
+        "displayName": "UI Text (Geist)",
+        "purpose": "The one UI text face: body, forms, buttons and prices. --font-geist-sans with Arial/Helvetica fallback; Geist Mono is loaded as --font-geist-mono."
       }
     },
     "shadows": [],
     "motion": [],
-    "breakpoints": []
+    "breakpoints": [],
+    "accentTheme": {
+      "source": "packages/shared/src/theme.ts",
+      "function": "accentTheme(hex) / accentStyle(hex)",
+      "constants": {
+        "DEFAULT_ACCENT": "#EA580C",
+        "INK": "#2E2A26",
+        "WHITE": "#FFFFFF",
+        "BUTTON_CONTRAST": 4.5,
+        "LINE_CONTRAST": 3,
+        "LIGHT_GROUNDS": [
+          "#F7F5EE",
+          "#FFFFFF"
+        ],
+        "DARK_GROUNDS": [
+          "#2E2A26",
+          "#1F1C19"
+        ]
+      },
+      "logic": "Invalid input falls back to #EA580C. Every derived colour uses nearestShade(): the accent itself if it passes, else the nearest lighter or darker OKLCH shade (lightness steps of 0.01, hue and chroma kept) that does. Letters on a button are Ink #2E2A26 or white, whichever contrasts more. accentLine: 3:1 against both light grounds. accentLineDark: 3:1 against both dark grounds. accentButton: label reaches 4.5:1. accentButtonDark: starts from accentButton; label reaches 4.5:1 and the fill reaches 3:1 against both dark grounds. accentSoft / accentSoftDark: fixed-lightness tints on the accent's hue.",
+      "cssVariables": [
+        "--accent",
+        "--accent-line-light",
+        "--accent-line-dark",
+        "--accent-button-light",
+        "--accent-button-dark",
+        "--on-accent-light",
+        "--on-accent-dark",
+        "--accent-soft-light",
+        "--accent-soft-dark"
+      ],
+      "activeVariables": "globals.css sets --accent-line, --accent-button, --on-accent and --accent-soft from the -light values on :root and .store-theme, and from the -dark values under prefers-color-scheme: dark (re-declared on .store-theme because var() resolves where it is declared).",
+      "appliedOn": "accentStyle() on the .store-theme wrapper (store pages) and streamed onto :root (admin). globals.css defaults are accentTheme(\"#EA580C\").",
+      "swatches": [
+        {
+          "name": "Market orange",
+          "hex": "#EA580C",
+          "accentLine": "#EA580C",
+          "accentLineDark": "#EA580C",
+          "accentButton": "#F5621F",
+          "onAccent": "#2E2A26",
+          "accentButtonDark": "#F5621F",
+          "onAccentDark": "#2E2A26",
+          "accentSoft": "#FFE9DE",
+          "accentSoftDark": "#4F2515"
+        },
+        {
+          "name": "Cabbage ruby",
+          "hex": "#B21E4B",
+          "accentLine": "#B21E4B",
+          "accentLineDark": "#CE3D61",
+          "accentButton": "#B21E4B",
+          "onAccent": "#FFFFFF",
+          "accentButtonDark": "#CE3D61",
+          "onAccentDark": "#FFFFFF",
+          "accentSoft": "#FFE8EB",
+          "accentSoftDark": "#4E242B"
+        },
+        {
+          "name": "Dill",
+          "hex": "#5C7F4A",
+          "accentLine": "#5C7F4A",
+          "accentLineDark": "#5C7F4A",
+          "accentButton": "#5C7F4A",
+          "onAccent": "#FFFFFF",
+          "accentButtonDark": "#5C7F4A",
+          "onAccentDark": "#FFFFFF",
+          "accentSoft": "#ECF3E8",
+          "accentSoftDark": "#2C3727"
+        },
+        {
+          "name": "Kraft",
+          "hex": "#CDAE86",
+          "accentLine": "#A78962",
+          "accentLineDark": "#CDAE86",
+          "accentButton": "#CDAE86",
+          "onAccent": "#2E2A26",
+          "accentButtonDark": "#CDAE86",
+          "onAccentDark": "#2E2A26",
+          "accentSoft": "#F5EFE8",
+          "accentSoftDark": "#3A3126"
+        },
+        {
+          "name": "Mango",
+          "hex": "#F5B82E",
+          "accentLine": "#BD8200",
+          "accentLineDark": "#F5B82E",
+          "accentButton": "#F5B82E",
+          "onAccent": "#2E2A26",
+          "accentButtonDark": "#F5B82E",
+          "onAccentDark": "#2E2A26",
+          "accentSoft": "#FAEFDB",
+          "accentSoftDark": "#41300D"
+        },
+        {
+          "name": "Sea",
+          "hex": "#1F7A8C",
+          "accentLine": "#1F7A8C",
+          "accentLineDark": "#278092",
+          "accentButton": "#1F7A8C",
+          "onAccent": "#FFFFFF",
+          "accentButtonDark": "#278092",
+          "onAccentDark": "#FFFFFF",
+          "accentSoft": "#E5F3F6",
+          "accentSoftDark": "#20373C"
+        },
+        {
+          "name": "Ube",
+          "hex": "#6B4C9A",
+          "accentLine": "#6B4C9A",
+          "accentLineDark": "#8566B7",
+          "accentButton": "#6B4C9A",
+          "onAccent": "#FFFFFF",
+          "accentButtonDark": "#8566B7",
+          "onAccentDark": "#FFFFFF",
+          "accentSoft": "#F2EDFD",
+          "accentSoftDark": "#362E46"
+        }
+      ]
+    }
   },
   "components": [
     {
@@ -184,6 +414,78 @@
       "description": "Pure black script and caps only, for thermal labels under about 50 mm.",
       "html": "<div class=\"ds-mono\"><p class=\"ds-mono-script\">Weekend</p><p class=\"ds-mono-caps\">FOOD HUB</p></div>",
       "css": ".ds-mono { width: 200px; padding: 12px; background: #FFFFFF; color: #000000; text-align: center; } .ds-mono-script { margin: 0; font: 400 36px/1 Yellowtail, cursive; } .ds-mono-caps { margin: 2px 0 0; font: 700 12px 'Zilla Slab', Rockwell, serif; letter-spacing: 0.22em; }"
+    },
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "buttonClass('primary'): the active --accent-button field (light or dark shade) with --on-accent letters, 4.5:1 via accentTheme; focus ring in --accent-line; 8px radius, no shadow.",
+      "html": "<button class=\"ds-btn-primary\">Place order</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; padding: 8px 16px; font: 500 14px/20px var(--font-geist-sans, Geist), Arial, sans-serif; cursor: pointer; border: 0; background: var(--accent-button, #F5621F); color: var(--on-accent, #2E2A26); } .ds-btn-primary:hover { filter: brightness(0.95); } .ds-btn-primary:focus-visible { outline: 2px solid var(--accent-line, #EA580C); outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.6; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "buttonClass('secondary'): ink-300 outline on surface with charcoal letters; ink-100 ground on hover.",
+      "html": "<button class=\"ds-btn-secondary\">Back to menu</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; padding: 8px 16px; font: 500 14px/20px var(--font-geist-sans, Geist), Arial, sans-serif; cursor: pointer; border: 0; border: 1px solid oklch(86.5% 0.007 67.4); background: var(--surface, #FFFFFF); color: var(--foreground, #2E2A26); } .ds-btn-secondary:hover { background: oklch(96.5% 0.004 67.4); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--accent-line, #EA580C); outline-offset: 2px; } .ds-btn-secondary:disabled { opacity: 0.6; }"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "buttonClass('danger'): deep red field (Tailwind red-700, red-800 on hover) with white letters.",
+      "html": "<button class=\"ds-btn-danger\">Cancel order</button>",
+      "css": ".ds-btn-danger { display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; padding: 8px 16px; font: 500 14px/20px var(--font-geist-sans, Geist), Arial, sans-serif; cursor: pointer; border: 0; background: oklch(50.5% 0.213 27.518); color: #FFFFFF; } .ds-btn-danger:hover { background: oklch(44.4% 0.177 26.899); } .ds-btn-danger:focus-visible { outline: 2px solid var(--accent-line, #EA580C); outline-offset: 2px; } .ds-btn-danger:disabled { opacity: 0.6; }"
+    },
+    {
+      "name": "Badge Tones",
+      "kind": "chip",
+      "refersTo": "badge",
+      "description": "Badge: stamped-caps pill (.stamp, 0.7rem) in five flat tones: neutral ink, semantic green/amber/red, and accent (accent-soft ground, ink letters).",
+      "html": "<div class=\"ds-badges\"><span class=\"ds-badge ds-badge-neutral\">Pickup</span><span class=\"ds-badge ds-badge-green\">Available</span><span class=\"ds-badge ds-badge-amber\">Subject to availability</span><span class=\"ds-badge ds-badge-red\">Sold out</span><span class=\"ds-badge ds-badge-accent\">New</span></div>",
+      "css": ".ds-badges { display: flex; flex-wrap: wrap; gap: 6px; } .ds-badge { display: inline-flex; align-items: center; border-radius: 9999px; padding: 2px 8px; font: 600 11.2px/16px var(--font-zilla-slab, 'Zilla Slab'), Rockwell, serif; text-transform: uppercase; letter-spacing: 0.08em; } .ds-badge-neutral { background: oklch(96.5% 0.004 67.4); color: oklch(33% 0.009 67.4); } .ds-badge-green { background: oklch(96.2% 0.044 156.743); color: oklch(39.3% 0.095 152.535); } .ds-badge-amber { background: oklch(96.2% 0.059 95.617); color: oklch(41.4% 0.112 45.904); } .ds-badge-red { background: oklch(93.6% 0.032 17.717); color: oklch(39.6% 0.141 25.723); } .ds-badge-accent { background: var(--accent-soft, #FFE9DE); color: var(--foreground, #2E2A26); }"
+    },
+    {
+      "name": "Ticket Card",
+      "kind": "card",
+      "refersTo": "ticket-card",
+      "description": ".ticket-card: notched card with concave 12px corner cuts and a 1px ink-300 rule (ink-700 in dark mode) that follows them, painted as background layers (no mask) so dialogs opened inside still cover the page. Menu items, checkout summary, order card.",
+      "html": "<section class=\"ds-ticket\"><h3 class=\"ds-ticket-name\">Chaofan with siomai</h3><p class=\"ds-ticket-desc\">Fried rice, four pork siomai, chili oil.</p><p class=\"ds-ticket-price\">₱180.00</p></section>",
+      "css": ".ds-ticket { width: 300px; padding: 16px; display: flex; flex-direction: column; gap: 8px; border: 1px solid transparent; color: var(--foreground, #2E2A26); font-family: var(--font-geist-sans, Geist), Arial, sans-serif; background: radial-gradient(circle 13px at -1px -1px, #0000 98%, var(--surface, #FFFFFF)) top left / 51% 51% no-repeat padding-box, radial-gradient(circle 13px at calc(100% + 1px) -1px, #0000 98%, var(--surface, #FFFFFF)) top right / 51% 51% no-repeat padding-box, radial-gradient(circle 13px at -1px calc(100% + 1px), #0000 98%, var(--surface, #FFFFFF)) bottom left / 51% 51% no-repeat padding-box, radial-gradient(circle 13px at calc(100% + 1px) calc(100% + 1px), #0000 98%, var(--surface, #FFFFFF)) bottom right / 51% 51% no-repeat padding-box, radial-gradient(circle 12px at 0 0, #0000 98%, oklch(86.5% 0.007 67.4)) top left / 51% 51% no-repeat border-box, radial-gradient(circle 12px at 100% 0, #0000 98%, oklch(86.5% 0.007 67.4)) top right / 51% 51% no-repeat border-box, radial-gradient(circle 12px at 0 100%, #0000 98%, oklch(86.5% 0.007 67.4)) bottom left / 51% 51% no-repeat border-box, radial-gradient(circle 12px at 100% 100%, #0000 98%, oklch(86.5% 0.007 67.4)) bottom right / 51% 51% no-repeat border-box; } .ds-ticket-name { margin: 0; font-size: 16px; font-weight: 600; } .ds-ticket-desc { margin: 0; font-size: 14px; color: var(--muted, oklch(46% 0.01 67.4)); } .ds-ticket-price { margin: 0; font-size: 14px; font-weight: 600; }"
+    },
+    {
+      "name": "Store Header",
+      "kind": "nav",
+      "refersTo": "store-header",
+      "description": "src/components/store-header.tsx: store name in Yellowtail (or the store's logo), tagline in stamped caps (menu page only), then a dotted rule in --accent-line (.rule-dotted: 1.5px dots every 8px, max-width 20rem).",
+      "html": "<header class=\"ds-store-header\"><a class=\"ds-store-name\" href=\"#\">Weekend Food Hub</a><p class=\"ds-store-tagline\">Chaofan · Silog · Paluto · Frozen</p><div class=\"ds-rule-dotted\"></div></header>",
+      "css": ".ds-store-header { color: var(--foreground, #2E2A26); } .ds-store-name { display: block; font: 400 44px/1 var(--font-yellowtail, Yellowtail), cursive; color: inherit; text-decoration: none; } .ds-store-name:focus-visible { outline: 2px solid var(--accent-line, #EA580C); outline-offset: 2px; } .ds-store-tagline { margin: 12px 0 0; font: 600 12px/16px var(--font-zilla-slab, 'Zilla Slab'), Rockwell, serif; text-transform: uppercase; letter-spacing: 0.08em; color: oklch(46% 0.01 67.4); } .ds-rule-dotted { margin-top: 12px; width: 100%; max-width: 320px; height: 4px; background-image: radial-gradient(circle, var(--accent-line, #EA580C) 1.5px, transparent 1.9px); background-size: 8px 4px; background-repeat: repeat-x; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "inputClass: surface ground, 1px ink-500 border (ink-400 in dark mode), 8px radius; on focus the border turns --accent-line with a 2px ring of it at 30%.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Mobile number</span><input class=\"ds-input\" placeholder=\"09xx xxx xxxx\"></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 4px; width: 280px; font: 14px/20px var(--font-geist-sans, Geist), Arial, sans-serif; color: var(--foreground, #2E2A26); } .ds-field-label { font-weight: 500; color: oklch(39% 0.01 67.4); } .ds-input { width: 100%; border: 1px solid oklch(55% 0.01 67.4); border-radius: 8px; background: var(--surface, #FFFFFF); color: inherit; padding: 8px 12px; font: inherit; outline: none; } .ds-input:focus { border-color: var(--accent-line, #EA580C); box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent-line, #EA580C) 30%, transparent); }"
+    },
+    {
+      "name": "Text Link",
+      "kind": "custom",
+      "refersTo": "link",
+      "description": "linkClass: charcoal letters underlined in ink-400 (ink-500 in dark mode); the underline turns --accent-line on hover. The accent is never the letter colour.",
+      "html": "<p class=\"ds-link-p\">Read the <a class=\"ds-link\" href=\"#\">delivery terms</a> before you order.</p>",
+      "css": ".ds-link-p { margin: 0; font: 14px/20px var(--font-geist-sans, Geist), Arial, sans-serif; color: var(--foreground, #2E2A26); } .ds-link { color: inherit; text-decoration: underline; text-decoration-color: oklch(71% 0.009 67.4); text-underline-offset: 2px; } .ds-link:hover { text-decoration-color: var(--accent-line, #EA580C); } .ds-link:focus-visible { outline: 2px solid var(--accent-line, #EA580C); outline-offset: 2px; }"
+    },
+    {
+      "name": "Category Chip",
+      "kind": "chip",
+      "refersTo": "category-chip",
+      "description": "Menu category jump link: stamped caps in a pill, ink-300 border, min-height 44px tap target; on hover the border turns --accent-line over an --accent-soft ground.",
+      "html": "<nav class=\"ds-chips\"><a class=\"ds-chip\" href=\"#\">Chaofan</a><a class=\"ds-chip\" href=\"#\">Silog</a><a class=\"ds-chip\" href=\"#\">Frozen</a></nav>",
+      "css": ".ds-chips { display: flex; gap: 8px; } .ds-chip { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border: 1px solid oklch(86.5% 0.007 67.4); border-radius: 9999px; color: var(--foreground, #2E2A26); text-decoration: none; font: 600 12px/16px var(--font-zilla-slab, 'Zilla Slab'), Rockwell, serif; text-transform: uppercase; letter-spacing: 0.08em; } .ds-chip:hover { border-color: var(--accent-line, #EA580C); background: var(--accent-soft, #FFE9DE); } .ds-chip:focus-visible { outline: 2px solid var(--accent-line, #EA580C); outline-offset: 2px; }"
     }
   ],
   "narrative": {
@@ -205,7 +507,7 @@
       },
       {
         "name": "The One Job Rule",
-        "body": "Dill is sprigs, ruby is the Sweet Treats band. Neither becomes a text, border or background colour elsewhere.",
+        "body": "In the marks, dill is sprigs and ruby is the Sweet Treats band. Neither becomes a text, border or background colour elsewhere. (On the website, ruby is Sweet Treats by Yang's store accent; see \"Storefront theme\".)",
         "section": "colors"
       },
       {
@@ -226,6 +528,21 @@
       {
         "name": "The Printed Matter Rule",
         "body": "Every version must be reproducible by a single-pass printer. If an effect cannot be printed flat, it is not part of the mark.",
+        "section": "elevation"
+      },
+      {
+        "name": "The One Field Rule, on screen",
+        "body": "The accent is a field (buttons, the cart bar, selected chips, progress bars, dotted rules) and never letters. Links are charcoal and underlined, with the accent only as the underline on hover. Admins pick the accent in Hours & settings, which shows a live preview and blocks nothing: the contrast rule adjusts the button shade instead.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Voices Rule, on screen",
+        "body": "Yellowtail is only for the store's name in the store header (or the store's uploaded logo instead). Zilla Slab caps (`.stamp`) are for short facts: tagline, category chips and headings, badges, the open/closed pill, order codes. Body text, forms and prices use Geist, the one UI text face, for reading on phones.",
+        "section": "typography"
+      },
+      {
+        "name": "The Printed Matter Rule, on screen",
+        "body": "No shadows anywhere, including dialogs, menus and toasts: separation comes from borders and grounds.",
         "section": "elevation"
       }
     ],

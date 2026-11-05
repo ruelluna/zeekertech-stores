@@ -26,9 +26,9 @@ export interface AddOnTarget {
 }
 
 const inputClass =
-  "w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm dark:border-stone-700 dark:bg-stone-950";
+  "w-full rounded-lg border border-ink-300 bg-surface px-3 py-2 text-sm dark:border-ink-700 dark:bg-ink-950";
 const section =
-  "mb-5 rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900";
+  "mb-5 rounded-xl border border-ink-200 bg-surface p-4 dark:border-ink-800 dark:bg-ink-900";
 
 const PAYMENTS: { value: Payment; label: string }[] = [
   { value: "cash_now", label: "Cash, paid now" },
@@ -190,7 +190,7 @@ export function ManualOrderForm({
         <h2 className="mb-3 font-semibold">Menu</h2>
         {categories.map((c) => (
           <div key={c.id} className="mb-4">
-            <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500">
+            <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted">
               {c.name}
             </h3>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -204,10 +204,10 @@ export function ManualOrderForm({
                     type="button"
                     disabled={disabled}
                     onClick={() => setAdding(item)}
-                    className="flex flex-col items-start rounded-lg border border-stone-200 p-3 text-left text-sm hover:border-orange-500 disabled:opacity-40 dark:border-stone-700"
+                    className="flex flex-col items-start rounded-lg border border-ink-200 p-3 text-left text-sm hover:border-accent disabled:opacity-40 dark:border-ink-700"
                   >
                     <span className="font-medium">{item.name}</span>
-                    <span className="text-xs text-stone-500">
+                    <span className="text-xs text-muted">
                       {disabled
                         ? item.badge === "sold_out"
                           ? "Sold out"
@@ -227,22 +227,22 @@ export function ManualOrderForm({
         <section className={section}>
           <h2 className="mb-3 font-semibold">Order</h2>
           {lines.length === 0 ? (
-            <p className="text-sm text-stone-500">Tap items on the menu to add them.</p>
+            <p className="text-sm text-muted">Tap items on the menu to add them.</p>
           ) : (
-            <ul className="divide-y divide-stone-100 dark:divide-stone-800">
+            <ul className="divide-y divide-ink-100 dark:divide-ink-800">
               {lines.map((l) => (
                 <li key={l.lineId} className="py-2 text-sm">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="font-medium">{l.name}</p>
                       {l.optionLabels.length > 0 && (
-                        <p className="text-xs text-stone-500">{l.optionLabels.join(" · ")}</p>
+                        <p className="text-xs text-muted">{l.optionLabels.join(" · ")}</p>
                       )}
                     </div>
                     <span>{peso(unitPrice(l) * l.qty)}</span>
                   </div>
                   <div className="mt-1 flex flex-wrap items-center gap-2">
-                    <div className="flex items-center rounded-lg border border-stone-300 dark:border-stone-700">
+                    <div className="flex items-center rounded-lg border border-ink-300 dark:border-ink-700">
                       <button
                         type="button"
                         className="px-2"
@@ -270,7 +270,7 @@ export function ManualOrderForm({
                           step="0.01"
                           value={l.finalUnitPrice}
                           onChange={(e) => updateLine(l.lineId, { finalUnitPrice: e.target.value })}
-                          className="w-24 rounded border border-stone-300 px-2 py-1 dark:border-stone-700 dark:bg-stone-950"
+                          className="w-24 rounded border border-ink-300 px-2 py-1 dark:border-ink-700 dark:bg-ink-950"
                         />
                       </label>
                     )}
@@ -289,7 +289,7 @@ export function ManualOrderForm({
         </section>
 
         {addTo ? (
-          <section className="mb-5 rounded-xl border-2 border-orange-500 bg-orange-50 p-4 text-sm dark:bg-orange-950">
+          <section className="mb-5 rounded-xl border-2 border-accent bg-accent-soft p-4 text-sm">
             <h2 className="font-semibold">Adding to {addTo.queueCode}</h2>
             <p className="mt-1">
               {addTo.customerName ?? "Customer"} ·{" "}
@@ -298,7 +298,7 @@ export function ManualOrderForm({
                 : "Pickup"}{" "}
               · {addTo.when}
             </p>
-            <p className="mt-1 text-xs text-stone-600 dark:text-stone-300">
+            <p className="mt-1 text-xs text-ink-600 dark:text-ink-300">
               Labels print as “ADD-ON to {addTo.queueCode}” so they go in the same bag. No extra
               delivery fee.
             </p>
@@ -313,7 +313,7 @@ export function ManualOrderForm({
                     key={s}
                     type="button"
                     onClick={() => setSource(s)}
-                    className={`rounded-lg border px-2 py-1.5 text-sm ${source === s ? "border-orange-600 bg-orange-50 text-orange-800 dark:bg-orange-950 dark:text-orange-200" : "border-stone-300 dark:border-stone-700"}`}
+                    className={`rounded-lg border px-2 py-1.5 text-sm ${source === s ? "border-accent-button bg-accent-button text-on-accent" : "border-ink-300 dark:border-ink-700"}`}
                   >
                     {s === "walk_in" ? "Walk-in" : s === "phone" ? "Phone" : "Messenger"}
                   </button>
@@ -348,7 +348,7 @@ export function ManualOrderForm({
                     key={f}
                     type="button"
                     onClick={() => setFulfillment(f)}
-                    className={`rounded-lg border px-2 py-1.5 text-sm ${fulfillment === f ? "border-orange-600 bg-orange-50 text-orange-800 dark:bg-orange-950 dark:text-orange-200" : "border-stone-300 dark:border-stone-700"}`}
+                    className={`rounded-lg border px-2 py-1.5 text-sm ${fulfillment === f ? "border-accent-button bg-accent-button text-on-accent" : "border-ink-300 dark:border-ink-700"}`}
                   >
                     {f === "pickup" ? "Pickup" : "Delivery"}
                   </button>
@@ -390,7 +390,7 @@ export function ManualOrderForm({
                     value={riderNotes}
                     onChange={(e) => setRiderNotes(e.target.value)}
                   />
-                  <p className="text-xs text-stone-500">
+                  <p className="text-xs text-muted">
                     Optional: tap the map to calculate the fee.
                   </p>
                   <MapPicker
@@ -398,7 +398,7 @@ export function ManualOrderForm({
                     focus={focus}
                     onChange={setPin}
                     kitchen={kitchen}
-                    className="h-48 w-full overflow-hidden rounded-xl border border-stone-300 dark:border-stone-700"
+                    className="h-48 w-full overflow-hidden rounded-xl border border-ink-300 dark:border-ink-700"
                   />
                   {currentQuote && (
                     <p className="text-xs">
@@ -437,7 +437,7 @@ export function ManualOrderForm({
                 <button
                   type="button"
                   onClick={() => setWhen("asap")}
-                  className={`rounded-lg border px-2 py-1.5 text-sm ${when === "asap" ? "border-orange-600 bg-orange-50 text-orange-800 dark:bg-orange-950 dark:text-orange-200" : "border-stone-300 dark:border-stone-700"}`}
+                  className={`rounded-lg border px-2 py-1.5 text-sm ${when === "asap" ? "border-accent-button bg-accent-button text-on-accent" : "border-ink-300 dark:border-ink-700"}`}
                 >
                   As soon as ready{prep ? ` (~${prep} min)` : ""}
                 </button>
@@ -452,7 +452,7 @@ export function ManualOrderForm({
                       setLater(inAnHour);
                     }
                   }}
-                  className={`rounded-lg border px-2 py-1.5 text-sm ${when === "later" ? "border-orange-600 bg-orange-50 text-orange-800 dark:bg-orange-950 dark:text-orange-200" : "border-stone-300 dark:border-stone-700"}`}
+                  className={`rounded-lg border px-2 py-1.5 text-sm ${when === "later" ? "border-accent-button bg-accent-button text-on-accent" : "border-ink-300 dark:border-ink-700"}`}
                 >
                   Later
                 </button>
@@ -514,12 +514,12 @@ export function ManualOrderForm({
 
           <dl className="mt-4 flex flex-col gap-1 text-sm">
             <div className="flex justify-between">
-              <dt className="text-stone-500">Subtotal</dt>
+              <dt className="text-muted">Subtotal</dt>
               <dd>{peso(subtotal)}</dd>
             </div>
             {fulfillment === "delivery" && (
               <div className="flex justify-between">
-                <dt className="text-stone-500">Delivery</dt>
+                <dt className="text-muted">Delivery</dt>
                 <dd>{peso(fee)}</dd>
               </div>
             )}
@@ -529,7 +529,7 @@ export function ManualOrderForm({
             </div>
             {change !== null && (
               <div className="flex justify-between">
-                <dt className="text-stone-500">Change</dt>
+                <dt className="text-muted">Change</dt>
                 <dd>
                   {change >= 0 ? (
                     <Badge tone="green">{peso(change)}</Badge>
@@ -555,7 +555,7 @@ export function ManualOrderForm({
             type="button"
             onClick={submit}
             disabled={pending}
-            className="mt-4 w-full rounded-xl bg-orange-600 px-4 py-3 font-medium text-white hover:bg-orange-700 disabled:opacity-60"
+            className="mt-4 w-full rounded-xl bg-accent-button px-4 py-3 font-medium text-on-accent hover:brightness-95 disabled:opacity-60"
           >
             {pending ? "Saving…" : `Create order · ${peso(total)}`}
           </button>

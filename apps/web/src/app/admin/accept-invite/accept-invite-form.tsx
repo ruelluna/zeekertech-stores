@@ -56,12 +56,12 @@ export function AcceptInviteForm() {
     });
   }
 
-  if (status.state === "checking") return <p className="text-sm text-stone-500">Checking your invite…</p>;
+  if (status.state === "checking") return <p className="text-sm text-muted">Checking your invite…</p>;
   if (status.state === "invalid") {
     return (
       <div className="flex flex-col gap-3 text-sm">
         <p className="rounded-lg bg-amber-50 p-3 text-amber-900 dark:bg-amber-950 dark:text-amber-200">{status.message}</p>
-        <p className="text-stone-600 dark:text-stone-400">
+        <p className="text-muted">
           Ask the person who invited you for a new invite. If you already set a password,{" "}
           <Link href="/admin/login" className="underline">
             sign in
@@ -75,7 +75,7 @@ export function AcceptInviteForm() {
   return (
     <form onSubmit={submit} className="flex flex-col gap-4">
       {status.email && (
-        <p className="text-sm text-stone-600 dark:text-stone-400">
+        <p className="text-sm text-muted">
           Signing in as <strong>{status.email}</strong>
         </p>
       )}
@@ -89,7 +89,7 @@ export function AcceptInviteForm() {
       <button
         type="submit"
         disabled={pending}
-        className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-60"
+        className="rounded-lg bg-accent-button px-4 py-2 text-sm font-medium text-on-accent hover:brightness-95 disabled:opacity-60"
       >
         {pending ? "Saving…" : "Set password and continue"}
       </button>

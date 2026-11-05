@@ -37,7 +37,7 @@ export function MapPicker({
   const pinIcon = (L: typeof import("leaflet")) =>
     L.divIcon({
       className: "",
-      html: '<div style="width:22px;height:22px;border-radius:50% 50% 50% 0;background:#ea580c;border:3px solid white;transform:rotate(-45deg);box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>',
+      html: '<div style="width:22px;height:22px;border-radius:50% 50% 50% 0;background:var(--accent,#ea580c);border:3px solid white;transform:rotate(-45deg)"></div>',
       iconSize: [22, 22],
       iconAnchor: [11, 22],
     });
@@ -94,5 +94,5 @@ export function MapPicker({
     map.current?.setView([focus.lat, focus.lng], Math.max(map.current.getZoom(), 15));
   }, [focus.lat, focus.lng]);
 
-  return <div ref={container} className={className ?? "h-72 w-full overflow-hidden rounded-xl border border-stone-300 dark:border-stone-700"} />;
+  return <div ref={container} className={className ?? "h-72 w-full overflow-hidden rounded-xl border border-ink-300 dark:border-ink-700"} />;
 }

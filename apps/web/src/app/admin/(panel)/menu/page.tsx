@@ -12,7 +12,7 @@ export default function MenuAdminPage() {
         title="Menu & prices"
         description="Products without a price stay hidden from ordering and show as “coming soon” on the menu."
         actions={
-          <Link href="/admin/menu/new" className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700">
+          <Link href="/admin/menu/new" className="rounded-lg bg-accent-button px-4 py-2 text-sm font-medium text-on-accent hover:brightness-95">
             Add product
           </Link>
         }
@@ -44,18 +44,18 @@ async function MenuList() {
         const items = products.filter((p) => p.category_id === category.id);
         return (
           <Card key={category.id} title={category.name} description={category.active ? undefined : "Hidden from the menu"}>
-            {items.length === 0 && <p className="text-sm text-stone-500">No products yet.</p>}
-            <ul className="divide-y divide-stone-100 dark:divide-stone-800">
+            {items.length === 0 && <p className="text-sm text-muted">No products yet.</p>}
+            <ul className="divide-y divide-ink-100 dark:divide-ink-800">
               {items.map((p) => {
                 const market = p.price_mode === "market";
                 const missingPrice = market ? p.price === null && p.estimated_price === null : p.price === null;
                 return (
                   <li key={p.id} className="flex flex-wrap items-end gap-x-4 gap-y-2 py-3">
                     <div className="min-w-48 flex-1">
-                      <Link href={`/admin/menu/${p.id}`} className="font-medium hover:text-orange-700">
+                      <Link href={`/admin/menu/${p.id}`} className="font-medium hover:underline hover:decoration-accent">
                         {p.name}
                       </Link>
-                      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-stone-500">
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted">
                         <span>{p.sku}</span>
                         {market && <Badge tone="orange">Market price{p.sold_by === "weight" ? " · per kg" : ""}</Badge>}
                         {p.type === "frozen" && <Badge>Frozen</Badge>}
@@ -107,7 +107,7 @@ async function MenuList() {
               </div>
             </ActionForm>
           ))}
-          <ActionForm action={saveCategory} className="flex flex-wrap items-end gap-3 border-t border-stone-100 pt-3 dark:border-stone-800" submitLabel="Add category">
+          <ActionForm action={saveCategory} className="flex flex-wrap items-end gap-3 border-t border-ink-100 pt-3 dark:border-ink-800" submitLabel="Add category">
             <Field label="New category" className="w-48">
               <Input name="name" placeholder="e.g. Drinks" required />
             </Field>

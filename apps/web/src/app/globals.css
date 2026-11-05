@@ -1,26 +1,143 @@
 @import "tailwindcss";
 
+/*
+ * Storefront theme (DESIGN.md "Storefront theme"): the kitchen-label look shared by every store.
+ * Letters are Ink Charcoal on white or Mist (Mist on charcoal in dark mode). Each store has one accent,
+ * set as CSS variables by @wfh/shared accentStyle() on the store's pages; the defaults below are
+ * Weekend Food Hub's Market Orange. The accent is a field (buttons, bars, chips, rules), never letters.
+ */
 :root {
-  --background: #fafaf9; /* stone-50 */
-  --foreground: #1c1917; /* stone-900 */
+  --background: #f7f5ee; /* Mist */
+  --foreground: #2e2a26; /* Ink Charcoal */
+  --surface: #ffffff;
+  --kraft-soft: #f4ede4;
+
+  /* Default accent (Market Orange), as computed by accentTheme("#EA580C"). Each value has a light and dark
+     version; the active one is picked below. Store pages and the admin override the -light/-dark values. */
+  --accent: #ea580c;
+  --accent-line-light: #ea580c;
+  --accent-line-dark: #ea580c;
+  --accent-button-light: #f5621f;
+  --on-accent-light: #2e2a26;
+  --accent-button-dark: #f5621f;
+  --on-accent-dark: #2e2a26;
+  --accent-soft-light: #ffe9de;
+  --accent-soft-dark: #4f2515;
+}
+
+/* Pick the light or dark value of each accent variable (on :root, and again on each store wrapper,
+   because a custom property resolves var() where it is declared). */
+:root,
+.store-theme {
+  --accent-line: var(--accent-line-light);
+  --accent-button: var(--accent-button-light);
+  --on-accent: var(--on-accent-light);
+  --accent-soft: var(--accent-soft-light);
+  /* Secondary text: at least 5.5:1 on the page and on cards. */
+  --muted: oklch(46% 0.01 67.4); /* ink-600 */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: oklch(22% 0.008 67.4);
+    --foreground: #f7f5ee;
+    --surface: oklch(28.8% 0.009 67.4);
+    --kraft-soft: #3a3126;
+  }
+  :root,
+  .store-theme {
+    --accent-line: var(--accent-line-dark);
+    --accent-button: var(--accent-button-dark);
+    --on-accent: var(--on-accent-dark);
+    --accent-soft: var(--accent-soft-dark);
+    --muted: oklch(71% 0.009 67.4); /* ink-400 */
+  }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-muted: var(--muted);
+
+  /* The "accent" utilities (borders, rings, bars, underlines) use the line-safe shade: always 3:1 on the page. */
+  --color-accent: var(--accent-line);
+  --color-accent-button: var(--accent-button);
+  --color-on-accent: var(--on-accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-kraft-soft: var(--kraft-soft);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-script: var(--font-yellowtail);
+  --font-slab: var(--font-zilla-slab);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0c0a09; /* stone-950 */
-    --foreground: #f5f5f4; /* stone-100 */
-  }
+@theme {
+  /* Ink: warm greys on Ink Charcoal's hue; ink-900 is Ink Charcoal itself. */
+  --color-ink-50: oklch(98.5% 0.003 67.4);
+  --color-ink-100: oklch(96.5% 0.004 67.4);
+  --color-ink-200: oklch(92.5% 0.005 67.4);
+  --color-ink-300: oklch(86.5% 0.007 67.4);
+  --color-ink-400: oklch(71% 0.009 67.4);
+  --color-ink-500: oklch(55% 0.01 67.4);
+  --color-ink-600: oklch(46% 0.01 67.4);
+  --color-ink-700: oklch(39% 0.01 67.4);
+  --color-ink-800: oklch(33% 0.009 67.4);
+  --color-ink-900: oklch(28.8% 0.009 67.4);
+  --color-ink-950: oklch(22% 0.008 67.4);
+
+  --color-mist: #f7f5ee;
+  --color-kraft: #cdae86;
+  --color-dill: #5c7f4a;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/*
+ * Notched ticket card (.ticket-card; the print view has its own .ticket for receipts): concave corner cuts with a 1px rule that follows them (DESIGN.md "Shapes").
+ * Painted entirely with background layers on the card itself: the rule-coloured notched shape fills the
+ * border box, and the ground (notch 1px larger, clipped to the padding box inside a 1px transparent border)
+ * sits on top, leaving an even 1px rule. No mask, pseudo-element or stacking context, so dialogs opened from
+ * inside a card still cover the whole page.
+ */
+.ticket-card {
+  --notch: 12px;
+  --ticket-bg: var(--surface);
+  --ticket-rule: var(--color-ink-300);
+  border: 1px solid transparent;
+  background:
+    radial-gradient(circle calc(var(--notch) + 1px) at -1px -1px, #0000 98%, var(--ticket-bg)) top left / 51% 51% no-repeat padding-box,
+    radial-gradient(circle calc(var(--notch) + 1px) at calc(100% + 1px) -1px, #0000 98%, var(--ticket-bg)) top right / 51% 51% no-repeat padding-box,
+    radial-gradient(circle calc(var(--notch) + 1px) at -1px calc(100% + 1px), #0000 98%, var(--ticket-bg)) bottom left / 51% 51% no-repeat padding-box,
+    radial-gradient(circle calc(var(--notch) + 1px) at calc(100% + 1px) calc(100% + 1px), #0000 98%, var(--ticket-bg)) bottom right / 51% 51% no-repeat padding-box,
+    radial-gradient(circle var(--notch) at 0 0, #0000 98%, var(--ticket-rule)) top left / 51% 51% no-repeat border-box,
+    radial-gradient(circle var(--notch) at 100% 0, #0000 98%, var(--ticket-rule)) top right / 51% 51% no-repeat border-box,
+    radial-gradient(circle var(--notch) at 0 100%, #0000 98%, var(--ticket-rule)) bottom left / 51% 51% no-repeat border-box,
+    radial-gradient(circle var(--notch) at 100% 100%, #0000 98%, var(--ticket-rule)) bottom right / 51% 51% no-repeat border-box;
+}
+@media (prefers-color-scheme: dark) {
+  .ticket-card {
+    --ticket-rule: var(--color-ink-700);
+  }
+}
+
+/* Dotted rule in the store's accent (DESIGN.md: rules are evenly spaced round dots). */
+.rule-dotted {
+  height: 4px;
+  background-image: radial-gradient(circle, var(--accent-line) 1.5px, transparent 1.9px);
+  background-size: 8px 4px;
+  background-repeat: repeat-x;
+}
+
+/* Stamped caps: short facts in slab capitals (badges, chips, order codes). */
+.stamp {
+  font-family: var(--font-zilla-slab), Rockwell, serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }

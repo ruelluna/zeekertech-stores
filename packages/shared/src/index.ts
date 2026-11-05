@@ -12,3 +12,4 @@ export * from "./schedule/hours";
 export * from "./webhooks/signing";
 export * from "./webhooks/events";
 export type { Database, Json, Tables, TablesInsert, TablesUpdate } from "./database.types";
+export * from "./theme";

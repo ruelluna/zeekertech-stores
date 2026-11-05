@@ -16,16 +16,16 @@ export function GuestOrders({ store }: { store: string }) {
     [raw, store],
   );
   if (!orders) return null;
-  if (orders.length === 0) return <p className="text-sm text-stone-500">No orders from this device yet.</p>;
+  if (orders.length === 0) return <p className="text-sm text-muted">No orders from this device yet.</p>;
   return (
-    <ul className="divide-y divide-stone-100 dark:divide-stone-800">
+    <ul className="divide-y divide-ink-100 dark:divide-ink-800">
       {orders.map((o) => (
         <li key={o.code} className="flex items-center justify-between py-2 text-sm">
           <span>
             <strong>{o.code}</strong>{" "}
-            <span className="text-stone-500">{new Date(o.placedAt).toLocaleDateString("en-PH", { month: "short", day: "numeric", timeZone: "Asia/Manila" })}</span>
+            <span className="text-muted">{new Date(o.placedAt).toLocaleDateString("en-PH", { month: "short", day: "numeric", timeZone: "Asia/Manila" })}</span>
           </span>
-          <Link href={o.url} className="text-orange-700 hover:underline">
+          <Link href={o.url} className="underline decoration-ink-400 underline-offset-2 hover:decoration-accent dark:decoration-ink-500">
             View
           </Link>
         </li>

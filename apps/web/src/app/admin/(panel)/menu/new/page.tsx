@@ -7,7 +7,7 @@ import { ProductForm } from "../product-form";
 export default function NewProductPage() {
   return (
     <>
-      <Link href="/admin/menu" className="text-sm text-stone-500 hover:text-orange-700">
+      <Link href="/admin/menu" className="text-sm text-muted hover:underline hover:decoration-accent">
         ← Menu & prices
       </Link>
       <div className="mt-2" />

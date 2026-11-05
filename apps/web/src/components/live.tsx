@@ -237,13 +237,13 @@ export function NotifyButton({ token }: { token: string }) {
 
   if (state === "unsupported") return null;
   if (state === "on") return <p className="text-sm text-green-700 dark:text-green-400">🔔 We&apos;ll notify you on this device when your order changes.</p>;
-  if (state === "denied") return <p className="text-xs text-stone-500">Notifications are blocked in your browser. Keep this page open to see updates.</p>;
+  if (state === "denied") return <p className="text-xs text-muted">Notifications are blocked in your browser. Keep this page open to see updates.</p>;
   return (
     <button
       type="button"
       onClick={enable}
       disabled={state === "working"}
-      className="rounded-lg border border-orange-600 px-3 py-2 text-sm font-medium text-orange-700 hover:bg-orange-50 disabled:opacity-60 dark:hover:bg-orange-950"
+      className="rounded-lg border border-accent px-3 py-2 text-sm font-medium text-foreground hover:bg-accent-soft disabled:opacity-60"
     >
       🔔 Notify me about this order
     </button>

@@ -14,6 +14,10 @@ export interface Store {
   tagline: string | null;
   /** How customers reach the store (Facebook Page link or mobile number). */
   contact: string | null;
+  /** The store's one accent colour (hex), see DESIGN.md "Storefront theme". */
+  accent_color: string;
+  /** Optional logo shown instead of the name in script. */
+  logo_url: string | null;
   active: boolean;
 }
 
@@ -26,7 +30,7 @@ export async function listStores(): Promise<Store[]> {
   const { data, error } = await createSupabasePublicClient()
     .schema("store")
     .from("stores")
-    .select("id, slug, name, tagline, contact, active")
+    .select("id, slug, name, tagline, contact, accent_color, logo_url, active")
     .order("sort_order");
   if (error) throw error;
   return data;

@@ -9,7 +9,7 @@ export function PrintButtons({ orderId }: { orderId: string }) {
   return (
     <button
       type="button"
-      className="rounded-lg border border-stone-300 px-3 py-1.5 text-xs font-medium hover:border-orange-500 dark:border-stone-700"
+      className="rounded-lg border border-ink-300 px-3 py-1.5 text-xs font-medium hover:border-accent dark:border-ink-700"
       onClick={() => printOrder(orderId, "labels")}
     >
       🏷 Print labels
@@ -23,7 +23,7 @@ export function AutoPrintToggle() {
   const prefs = useMemo(() => parseAutoPrint(raw), [raw]);
   return (
     <label className="flex items-center gap-2 text-sm">
-      <input type="checkbox" className="accent-orange-600" checked={prefs.labels} onChange={(e) => autoPrintStore.set({ labels: e.target.checked })} />
+      <input type="checkbox" className="accent-accent-button" checked={prefs.labels} onChange={(e) => autoPrintStore.set({ labels: e.target.checked })} />
       <span>
         Auto-print labels on this device when an order reaches the kitchen
       </span>

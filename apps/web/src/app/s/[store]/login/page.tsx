@@ -6,6 +6,8 @@ import { devSignIn, signInWithFacebook } from "./actions";
 import { readServerPublicEnv } from "@/lib/supabase/env";
 import type { Metadata } from "next";
 import { getStore, storePath } from "@/lib/stores";
+import { StoreHeader } from "@/components/store-header";
+import { StoreTheme } from "@/components/store-theme";
 
 export async function generateMetadata({ params }: PageProps<"/s/[store]/login">): Promise<Metadata> {
   const store = await getStore((await params).store);
@@ -15,7 +17,7 @@ export async function generateMetadata({ params }: PageProps<"/s/[store]/login">
 export default function LoginPage({ params, searchParams }: PageProps<"/s/[store]/login">) {
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-16">
-      <div className="w-full max-w-sm rounded-xl border border-stone-200 bg-white p-6 shadow-sm dark:border-stone-800 dark:bg-stone-900">
+      <div className="w-full max-w-sm rounded-xl border border-ink-200 bg-surface p-6 dark:border-ink-800 dark:bg-ink-900">
         <Suspense>
           <LoginOptions params={params} searchParams={searchParams} />
         </Suspense>
@@ -30,7 +32,7 @@ export default function LoginPage({ params, searchParams }: PageProps<"/s/[store
 async function PrivacyLine({ params }: { params: PageProps<"/s/[store]/login">["params"] }) {
   const { store } = await params;
   return (
-    <p className="mt-6 text-xs text-stone-500">
+    <p className="mt-6 text-xs text-muted">
       By logging in you agree to our{" "}
       <Link href={`/privacy?store=${store}`} className="underline">
         privacy notice
@@ -54,10 +56,11 @@ async function LoginOptions({
   const dev = process.env.NODE_ENV !== "production";
 
   return (
-    <div className="flex flex-col gap-5">
+    <StoreTheme accent={store.accent_color} className="flex flex-col gap-5">
+      <StoreHeader store={store} size="sm" />
       <div>
-        <h1 className="text-xl font-semibold">Log in to {store.name}</h1>
-        <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
+        <h1 className="text-xl font-semibold">Log in</h1>
+        <p className="mt-1 text-sm text-muted">
           Save your details and addresses, see your orders, and get a welcome discount on your first order.
         </p>
       </div>
@@ -73,12 +76,12 @@ async function LoginOptions({
           </button>
         </form>
       ) : (
-        <p className="rounded-lg bg-stone-100 p-3 text-sm text-stone-600 dark:bg-stone-800 dark:text-stone-300">Facebook login is coming soon.</p>
+        <p className="rounded-lg bg-ink-100 p-3 text-sm text-ink-600 dark:bg-ink-800 dark:text-ink-300">Facebook login is coming soon.</p>
       )}
 
       {dev && (
-        <div className="border-t border-dashed border-stone-300 pt-4 dark:border-stone-700">
-          <p className="mb-3 text-xs font-medium uppercase tracking-wide text-stone-500">Local testing only</p>
+        <div className="border-t border-dashed border-ink-300 pt-4 dark:border-ink-700">
+          <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted">Local testing only</p>
           <ActionForm action={devSignIn} submitLabel="Sign in as test customer">
             <input type="hidden" name="next" value={next} />
             <input type="hidden" name="store" value={store.slug} />
@@ -91,6 +94,6 @@ async function LoginOptions({
           </ActionForm>
         </div>
       )}
-    </div>
+    </StoreTheme>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useActionState, type ReactNode } from "react";
 import type { ActionState } from "@/lib/action-state";
+import { buttonClass, type ButtonVariant } from "./ui";
 
 /** A form bound to a Server Action, with a pending state and a success/error message. */
 export function ActionForm({
@@ -10,29 +11,25 @@ export function ActionForm({
   submitLabel = "Save",
   className,
   danger = false,
+  variant,
 }: {
   action: (prev: ActionState, formData: FormData) => Promise<ActionState>;
   children?: ReactNode;
   submitLabel?: string;
   className?: string;
   danger?: boolean;
+  variant?: ButtonVariant;
 }) {
   const [state, formAction, pending] = useActionState(action, null);
   return (
     <form action={formAction} className={className ?? "flex flex-col gap-4"}>
       {children}
       <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="submit"
-          disabled={pending}
-          className={`rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-60 ${
-            danger ? "bg-red-600 hover:bg-red-700" : "bg-orange-600 hover:bg-orange-700"
-          }`}
-        >
+        <button type="submit" disabled={pending} className={buttonClass(variant ?? (danger ? "danger" : "primary"))}>
           {pending ? "Saving…" : submitLabel}
         </button>
         {state && !pending && (
-          <span role="status" className={`text-sm ${state.ok ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}>
+          <span role="status" className={`text-sm ${state.ok ? "text-green-800 dark:text-green-300" : "text-red-700 dark:text-red-300"}`}>
             {state.message}
           </span>
         )}

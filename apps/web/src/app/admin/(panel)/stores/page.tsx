@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { DEFAULT_ACCENT } from "@wfh/shared";
+import { AccentPicker } from "@/components/accent-picker";
 import { ActionForm } from "@/components/action-form";
 import { Badge, Card, Checkbox, Field, Input, Loading, PageHeader } from "@/components/ui";
 import { requireSuperAdmin } from "@/lib/auth";
@@ -40,7 +42,7 @@ async function Stores() {
           <Card key={s.id} title={s.name} description={s.tagline ?? undefined}>
             <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
               <span className="flex flex-wrap items-center gap-2">
-                <Link href={`/s/${s.slug}`} className="text-orange-700 underline">
+                <Link href={`/s/${s.slug}`} className="underline decoration-ink-400 underline-offset-2 hover:decoration-accent dark:decoration-ink-500">
                   /s/{s.slug}
                 </Link>
                 {s.active ? <Badge tone="green">Live</Badge> : <Badge tone="red">Hidden</Badge>}
@@ -52,14 +54,14 @@ async function Stores() {
             </div>
 
             <div className="mt-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-stone-500">Owners</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted">Owners</p>
               {storeOwners.length === 0 ? (
-                <p className="text-sm text-stone-500">No owner yet. Super admins can manage it meanwhile.</p>
+                <p className="text-sm text-muted">No owner yet. Super admins can manage it meanwhile.</p>
               ) : (
                 <ul className="text-sm">
                   {storeOwners.map((o) => (
                     <li key={o.user_id}>
-                      <strong>{o.display_name}</strong> <span className="text-stone-500">· {emails.get(o.user_id)}</span>
+                      <strong>{o.display_name}</strong> <span className="text-muted">· {emails.get(o.user_id)}</span>
                       {!o.active && (
                         <>
                           {" "}
@@ -73,8 +75,8 @@ async function Stores() {
             </div>
 
             <details className="mt-3">
-              <summary className="cursor-pointer text-sm text-orange-700">Invite an owner</summary>
-              <p className="mt-2 text-xs text-stone-500">They get an email with a link to set their own password, then sign in at /admin and see only this store.</p>
+              <summary className="cursor-pointer text-sm underline decoration-ink-400 underline-offset-2 hover:decoration-accent dark:decoration-ink-500">Invite an owner</summary>
+              <p className="mt-2 text-xs text-muted">They get an email with a link to set their own password, then sign in at /admin and see only this store.</p>
               <ActionForm action={addStoreOwner} submitLabel="Send invite" className="mt-3 flex flex-wrap items-end gap-3">
                 <input type="hidden" name="storeId" value={s.id} />
                 <Field label="Name" className="w-44">
@@ -115,6 +117,7 @@ async function Stores() {
               label="Same delivery area as Weekend Food Hub (mainland Daanbantayan barangays and map). Leave unticked for a store elsewhere."
             />
           </div>
+          <AccentPicker defaultValue={DEFAULT_ACCENT} storeName="" />
         </ActionForm>
       </Card>
     </>

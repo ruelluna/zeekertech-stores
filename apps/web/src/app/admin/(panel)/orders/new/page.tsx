@@ -10,7 +10,7 @@ import { ManualOrderForm, type AddOnTarget } from "./manual-order-form";
 export default function NewOrderPage({ searchParams }: PageProps<"/admin/orders/new">) {
   return (
     <>
-      <Link href="/admin/orders" className="text-sm text-stone-500 hover:text-orange-700">
+      <Link href="/admin/orders" className="text-sm text-muted hover:underline hover:decoration-accent">
         ← Orders
       </Link>
       <div className="mt-2" />
