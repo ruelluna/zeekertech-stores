@@ -29,3 +29,11 @@ supabase/.temp/
 Thumbs.db
 .vscode/*
 !.vscode/extensions.json
+
+# Impeccable design skill: keep only the shared records (design tokens, surface briefs, config)
+**/.impeccable/*
+!**/.impeccable/design.json
+!**/.impeccable/surfaces/
+!**/.impeccable/config.json
+# Its Copilot hook hard-codes paths to one machine's user folder
+.github/hooks/impeccable.json
