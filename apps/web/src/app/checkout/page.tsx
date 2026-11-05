@@ -6,6 +6,7 @@ import { Loading } from "@/components/ui";
 import { DAANBANTAYAN_CENTER, fetchCatalog } from "@/lib/catalog";
 import { getCurrentCustomer } from "@/lib/customer";
 import { welcomeOfferFor } from "@/lib/discounts";
+import { getPublicMenu } from "@/lib/menu";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { CheckoutForm, type CheckoutData } from "./checkout-form";
 import { readServerPublicEnv } from "@/lib/supabase/env";
@@ -29,7 +30,7 @@ export default function CheckoutPage() {
 async function Checkout() {
   // Request time only: the build must not reach Supabase (the Docker image is built without its address).
   await connection();
-  const [catalog, customer] = await Promise.all([fetchCatalog(), getCurrentCustomer()]);
+  const [catalog, customer, menu] = await Promise.all([fetchCatalog(), getCurrentCustomer(), getPublicMenu()]);
   const offer = await welcomeOfferFor(customer);
 
   let savedAddresses: CheckoutData["savedAddresses"] = [];
@@ -56,6 +57,7 @@ async function Checkout() {
     customer: customer ? { name: customer.name, phone: customer.phone } : null,
     facebookLogin: readServerPublicEnv().facebookLogin,
     offer,
+    menuItems: Object.fromEntries(menu.categories.flatMap((c) => c.items).map((i) => [i.id, i])),
     savedAddresses,
     barangays: catalog.barangays.map((b) => ({ id: b.id, name: b.name, center: b.center })),
     kitchen: catalog.delivery.kitchen,

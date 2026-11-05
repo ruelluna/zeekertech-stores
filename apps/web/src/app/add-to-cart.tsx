@@ -26,14 +26,41 @@ export function AddToCart({ item, canOrder }: { item: MenuItem; canOrder: boolea
   );
 }
 
-/** Options, size, notes and quantity for one item. Used by the menu (cart) and the admin manual order. */
-export function OptionsSheet({ item, onClose, onAdd }: { item: MenuItem; onClose: () => void; onAdd: (entry: CartEntry) => void }) {
-  const [qty, setQty] = useState(1);
-  const [weightKg, setWeightKg] = useState<number | null>(item.soldBy === "weight" ? (item.weightOptionsKg[0] ?? null) : null);
+/**
+ * Options, size, notes and quantity for one item. Used by the menu (cart), checkout (editing a line,
+ * pre-filled from `initial`) and the admin manual order.
+ */
+export function OptionsSheet({
+  item,
+  onClose,
+  onAdd,
+  initial,
+}: {
+  item: MenuItem;
+  onClose: () => void;
+  onAdd: (entry: CartEntry) => void;
+  initial?: CartEntry;
+}) {
+  const [qty, setQty] = useState(initial?.qty ?? 1);
+  const [weightKg, setWeightKg] = useState<number | null>(() => {
+    if (item.soldBy !== "weight") return null;
+    return initial?.weightKg !== null && initial?.weightKg !== undefined && item.weightOptionsKg.includes(initial.weightKg)
+      ? initial.weightKg
+      : (item.weightOptionsKg[0] ?? null);
+  });
   const [picked, setPicked] = useState<Record<string, string[]>>(() =>
-    Object.fromEntries(item.groups.map((g) => [g.id, g.required && g.maxSelect === 1 && g.options[0] ? [g.options[0].id] : []])),
+    Object.fromEntries(
+      item.groups.map((g) => [
+        g.id,
+        initial
+          ? g.options.filter((o) => initial.modifierIds.includes(o.id)).map((o) => o.id)
+          : g.required && g.maxSelect === 1 && g.options[0]
+            ? [g.options[0].id]
+            : [],
+      ]),
+    ),
   );
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState(initial?.notes ?? "");
   const [error, setError] = useState<string | null>(null);
 
   // Conditional groups (e.g. Egg style after Add egg) show only once their option is picked.
@@ -62,7 +89,7 @@ export function OptionsSheet({ item, onClose, onAdd }: { item: MenuItem; onClose
       if (count < min) return setError(`Choose ${g.name.toLowerCase()}`);
     }
     onAdd({
-      lineId: crypto.randomUUID(),
+      lineId: initial?.lineId ?? crypto.randomUUID(),
       productId: item.id,
       qty,
       weightKg,
@@ -180,7 +207,7 @@ export function OptionsSheet({ item, onClose, onAdd }: { item: MenuItem; onClose
             </button>
           </div>
           <button type="button" onClick={add} className="flex-1 rounded-lg bg-orange-600 px-4 py-2.5 font-medium text-white hover:bg-orange-700">
-            Add · {market ? "~" : ""}
+            {initial ? "Update" : "Add"} · {market ? "~" : ""}
             {peso(unit * qty)}
           </button>
         </div>

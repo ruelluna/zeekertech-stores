@@ -15,9 +15,11 @@ import {
 } from "@wfh/shared";
 import { MapPicker } from "@/components/map-picker";
 import { Badge, peso } from "@/components/ui";
-import { cart, cartSubtotal, useCart } from "@/lib/cart-store";
+import { cart, cartSubtotal, useCart, type CartEntry } from "@/lib/cart-store";
 import { rememberOrder } from "@/lib/recent-orders";
 import type { WelcomeOffer } from "@/lib/discounts";
+import type { MenuItem } from "@/lib/menu";
+import { OptionsSheet } from "../add-to-cart";
 import { placeOrder } from "./actions";
 
 type LatLng = { lat: number; lng: number };
@@ -26,6 +28,8 @@ export interface CheckoutData {
   customer: { name: string; phone: string | null } | null;
   facebookLogin: boolean;
   offer: WelcomeOffer | null;
+  /** Current menu items by product id, for each line's price breakdown and editing its options. */
+  menuItems: Record<string, MenuItem>;
   savedAddresses: { id: string; label: string; barangayId: string; streetPurok: string; landmark: string; riderNotes: string; lat: number; lng: number }[];
   barangays: { id: string; name: string; center: LatLng | null }[];
   kitchen: LatLng | null;
@@ -62,6 +66,7 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
   const lines = useCart();
   const [pending, startTransition] = useTransition();
   const [errors, setErrors] = useState<string[]>([]);
+  const [editing, setEditing] = useState<CartEntry | null>(null);
 
   const minute = useSyncExternalStore(subscribeMinute, currentMinute, () => null);
   const now = useMemo(() => (minute === null ? null : new Date(minute * 60_000)), [minute]);
@@ -127,8 +132,9 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
         noticeDays,
       });
       if (slots.length) {
-        const label =
-          i === 0 ? "Today" : i === 1 ? "Tomorrow" : new Date(`${key}T12:00:00+08:00`).toLocaleDateString("en-PH", { weekday: "short", month: "short", day: "numeric", timeZone: "Asia/Manila" });
+        // e.g. "Tomorrow · Fri, Nov 6", "Sat, Nov 7"
+        const date = new Date(`${key}T12:00:00+08:00`).toLocaleDateString("en-PH", { weekday: "short", month: "short", day: "numeric", timeZone: "Asia/Manila" });
+        const label = i === 0 ? `Today · ${date}` : i === 1 ? `Tomorrow · ${date}` : date;
         result.push({ dateKey: key, label, slots });
       }
     }
@@ -266,31 +272,12 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
         <h2 className="mb-3 font-semibold">Your order</h2>
         <ul className="divide-y divide-stone-100 dark:divide-stone-800">
           {lines.map((l) => (
-            <li key={l.lineId} className="flex items-start justify-between gap-3 py-2">
-              <div className="min-w-0">
-                <p className="font-medium">{l.name}</p>
-                {l.optionLabels.length > 0 && <p className="text-xs text-stone-500">{l.optionLabels.join(" · ")}</p>}
-                {l.notes && <p className="text-xs text-stone-500">“{l.notes}”</p>}
-                {l.needsAvailability && <Badge tone="amber">Confirmed before you pay</Badge>}
-              </div>
-              <div className="flex shrink-0 flex-col items-end gap-1">
-                <span className="text-sm font-medium">
-                  {l.isEstimate ? "~" : ""}
-                  {peso(l.displayUnitPrice * l.qty)}
-                </span>
-                <div className="flex items-center rounded-lg border border-stone-300 text-sm dark:border-stone-700">
-                  <button type="button" className="px-2 py-0.5" onClick={() => cart.setQty(l.lineId, l.qty - 1)} aria-label={`One less ${l.name}`}>
-                    −
-                  </button>
-                  <span className="w-6 text-center">{l.qty}</span>
-                  <button type="button" className="px-2 py-0.5" onClick={() => cart.setQty(l.lineId, l.qty + 1)} aria-label={`One more ${l.name}`}>
-                    +
-                  </button>
-                </div>
-              </div>
-            </li>
+            <CartLineRow key={l.lineId} line={l} item={data.menuItems[l.productId]} onEdit={() => setEditing(l)} />
           ))}
         </ul>
+        {editing && data.menuItems[editing.productId] && (
+          <OptionsSheet item={data.menuItems[editing.productId]!} initial={editing} onClose={() => setEditing(null)} onAdd={cart.replace} />
+        )}
       </section>
 
       {/* Customer */}
@@ -522,6 +509,83 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
         </button>
       </section>
     </div>
+  );
+}
+
+/** One cart line: base price, each add-on with its price, notes, quantity and an edit button. */
+function CartLineRow({ line: l, item, onEdit }: { line: CartEntry; item: MenuItem | undefined; onEdit: () => void }) {
+  const tilde = l.isEstimate ? "~" : "";
+  // Add-ons priced from the current menu; items no longer on the menu fall back to the saved labels.
+  const options = item?.groups.flatMap((g) => g.options).filter((o) => l.modifierIds.includes(o.id));
+  const basis = item ? (item.priceMode === "market" ? (item.price ?? item.estimatedPrice) : item.price) : null;
+  const hasAddOns = item?.groups.some((g) => g.options.length > 0) ?? false;
+
+  return (
+    <li className="py-3">
+      <div className="flex items-start justify-between gap-3">
+        <p className="font-medium">
+          {l.qty > 1 && <span className="text-stone-500">{l.qty}× </span>}
+          {l.name}
+        </p>
+        <span className="shrink-0 text-sm font-semibold">
+          {tilde}
+          {peso(l.displayUnitPrice * l.qty)}
+        </span>
+      </div>
+
+      {options ? (
+        <ul className="mt-1 flex flex-col gap-0.5 text-sm text-stone-600 dark:text-stone-400">
+          {basis !== null && (
+            <li className="flex justify-between gap-3">
+              <span>{l.weightKg ? `${l.weightKg} kg` : "Base price"}</span>
+              <span>
+                {tilde}
+                {peso(basis * (l.weightKg ?? 1))}
+              </span>
+            </li>
+          )}
+          {options.map((o) => (
+            <li key={o.id} className="flex justify-between gap-3">
+              <span>+ {o.name}</span>
+              <span>{o.priceDelta > 0 ? `+${peso(o.priceDelta)}` : "free"}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        l.optionLabels.length > 0 && <p className="mt-1 text-sm text-stone-500">{l.optionLabels.join(" · ")}</p>
+      )}
+      {l.notes && <p className="mt-1 text-sm text-stone-500">“{l.notes}”</p>}
+      {l.needsAvailability && (
+        <span className="mt-1 inline-block">
+          <Badge tone="amber">Confirmed before you pay</Badge>
+        </span>
+      )}
+
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center rounded-lg border border-stone-300 text-sm dark:border-stone-700">
+            <button type="button" className="px-2 py-0.5" onClick={() => cart.setQty(l.lineId, l.qty - 1)} aria-label={`One less ${l.name}`}>
+              −
+            </button>
+            <span className="w-6 text-center">{l.qty}</span>
+            <button type="button" className="px-2 py-0.5" onClick={() => cart.setQty(l.lineId, l.qty + 1)} aria-label={`One more ${l.name}`}>
+              +
+            </button>
+          </div>
+          {l.qty > 1 && (
+            <span className="text-xs text-stone-500">
+              {tilde}
+              {peso(l.displayUnitPrice)} each
+            </span>
+          )}
+        </div>
+        {item && (
+          <button type="button" onClick={onEdit} className="text-sm font-medium text-orange-700 hover:underline dark:text-orange-400">
+            {hasAddOns ? (options?.length ? "Change add-ons" : "Add add-ons") : "Edit"}
+          </button>
+        )}
+      </div>
+    </li>
   );
 }
 

@@ -69,6 +69,10 @@ export const cart = {
   setQty(lineId: string, qty: number) {
     write(qty <= 0 ? read().filter((l) => l.lineId !== lineId) : read().map((l) => (l.lineId === lineId ? { ...l, qty: Math.min(qty, 50) } : l)));
   },
+  /** Swaps a line for its edited version, keeping its place in the cart. */
+  replace(entry: CartEntry) {
+    write(read().map((l) => (l.lineId === entry.lineId ? entry : l)));
+  },
   remove(lineId: string) {
     write(read().filter((l) => l.lineId !== lineId));
   },
