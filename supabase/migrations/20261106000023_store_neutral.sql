@@ -5,9 +5,11 @@
 -- store.delivery_settings.area_name  Where the store delivers, in words ("mainland Daanbantayan"). Shown on the
 --                                 menu and in the "outside our delivery area" message.
 
-alter table store.stores add column contact text check (char_length(contact) <= 200);
+-- "if not exists": production got these columns by hand before this migration was recorded, so it must be
+-- safe to run again.
+alter table store.stores add column if not exists contact text check (char_length(contact) <= 200);
 
-alter table store.delivery_settings add column area_name text check (char_length(area_name) <= 80);
+alter table store.delivery_settings add column if not exists area_name text check (char_length(area_name) <= 80);
 
 -- Both existing stores were set up on Weekend Food Hub's Daanbantayan barangays and service area.
 update store.delivery_settings set area_name = 'mainland Daanbantayan'
