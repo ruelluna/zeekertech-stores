@@ -184,12 +184,14 @@ export function OptionsSheet({
 
         <label className="mb-4 flex flex-col gap-1 text-sm">
           <span className="font-medium">{item.notePrompt ?? "Notes"} (optional)</span>
-          <input
+          <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             maxLength={200}
-            className="rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-700 dark:bg-stone-950"
+            rows={3}
+            className="resize-y rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-700 dark:bg-stone-950"
           />
+          <span className="self-end text-xs text-stone-500">{notes.length}/200</span>
         </label>
 
         {error && <p className="mb-3 text-sm text-red-700 dark:text-red-400">{error}</p>}

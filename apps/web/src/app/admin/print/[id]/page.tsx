@@ -132,7 +132,7 @@ async function Print({ params, searchParams }: { params: PageProps<"/admin/print
                 </div>
                 {i.brand && <div style={{ paddingLeft: "3mm" }}>[{i.brand}]</div>}
                 {options(i).length > 0 && <div style={{ paddingLeft: "3mm" }}>{options(i).join(", ")}</div>}
-                {i.notes && <div style={{ paddingLeft: "3mm", fontWeight: 700 }}>** {i.notes} **</div>}
+                {i.notes && <div style={{ paddingLeft: "3mm", fontWeight: 700, whiteSpace: "pre-line" }}>** {i.notes} **</div>}
               </div>
             ))}
             {order.notes && (
@@ -171,7 +171,7 @@ async function Print({ params, searchParams }: { params: PageProps<"/admin/print
                   </div>
                   {i.brand && <div style={{ fontSize: "7pt" }}>{i.brand}</div>}
                   {options(i).length > 0 && <div>{options(i).join(", ")}</div>}
-                  {i.notes && <div>“{i.notes}”</div>}
+                  {i.notes && <div style={{ whiteSpace: "pre-line" }}>“{i.notes}”</div>}
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "7pt" }}>
                     <span>{when(order.scheduled_for)}</span>
                     {settings.print_labels_per_unit && i.qty > 1 && (

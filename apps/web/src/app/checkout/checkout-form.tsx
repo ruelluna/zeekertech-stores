@@ -554,7 +554,7 @@ function CartLineRow({ line: l, item, onEdit }: { line: CartEntry; item: MenuIte
       ) : (
         l.optionLabels.length > 0 && <p className="mt-1 text-sm text-stone-500">{l.optionLabels.join(" · ")}</p>
       )}
-      {l.notes && <p className="mt-1 text-sm text-stone-500">“{l.notes}”</p>}
+      {l.notes && <p className="mt-1 whitespace-pre-line text-sm text-stone-500">“{l.notes}”</p>}
       {l.needsAvailability && (
         <span className="mt-1 inline-block">
           <Badge tone="amber">Confirmed before you pay</Badge>

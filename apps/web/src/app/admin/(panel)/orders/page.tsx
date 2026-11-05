@@ -354,7 +354,7 @@ function OrderCard({ o, children, canCancel, links }: { o: Order; children?: Rea
                   )}
                   {mods.length > 0 && <p className="text-sm text-stone-600 dark:text-stone-300">{mods.join(" · ")}</p>}
                   {i.notes && (
-                    <p className="mt-0.5 inline-block rounded bg-amber-100 px-1.5 text-sm font-medium text-amber-900 dark:bg-amber-950 dark:text-amber-200">“{i.notes}”</p>
+                    <p className="mt-0.5 inline-block whitespace-pre-line rounded bg-amber-100 px-1.5 text-sm font-medium text-amber-900 dark:bg-amber-950 dark:text-amber-200">“{i.notes}”</p>
                   )}
                 </div>
               </li>
