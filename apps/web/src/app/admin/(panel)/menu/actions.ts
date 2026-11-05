@@ -28,6 +28,21 @@ export async function updatePrice(_prev: ActionState, formData: FormData): Promi
   return ok();
 }
 
+const ActiveInput = z.object({ id: z.uuid(), active: form.bool });
+
+/** Quick show/hide from the menu list. Hidden products can't be ordered. */
+export async function setProductActive(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const parsed = ActiveInput.safeParse(formObject(formData));
+  if (!parsed.success) return fail(zodMessage(parsed.error));
+
+  const { supabase } = await requireOwner();
+  const { error } = await supabase.schema("store").from("products").update({ active: parsed.data.active }).eq("id", parsed.data.id);
+  if (error) return fail(error.message);
+
+  menuChanged();
+  return ok(parsed.data.active ? "Shown on the menu" : "Hidden");
+}
+
 const ProductInput = z
   .object({
     id: z.uuid().optional().or(z.literal("").transform(() => undefined)),

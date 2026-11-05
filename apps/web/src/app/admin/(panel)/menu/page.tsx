@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { ActionForm } from "@/components/action-form";
 import { Badge, Card, Checkbox, Field, Input, Loading, PageHeader, PesoInput, Select } from "@/components/ui";
 import { requireOwner } from "@/lib/auth";
-import { saveBrand, saveCategory, updatePrice } from "./actions";
+import { saveBrand, saveCategory, setProductActive, updatePrice } from "./actions";
 
 export default function MenuAdminPage() {
   return (
@@ -80,6 +80,10 @@ async function MenuList() {
                         </Field>
                       )}
                       {!market && <input type="hidden" name="estimated_price" value={p.estimated_price ?? ""} />}
+                    </ActionForm>
+                    <ActionForm action={setProductActive} className="flex items-end" submitLabel={p.active ? "Hide" : "Show"} danger={p.active}>
+                      <input type="hidden" name="id" value={p.id} />
+                      <input type="hidden" name="active" value={p.active ? "false" : "true"} />
                     </ActionForm>
                   </li>
                 );
