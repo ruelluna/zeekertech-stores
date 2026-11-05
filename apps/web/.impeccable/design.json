@@ -1,0 +1,249 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-05T23:30:00+08:00",
+  "title": "Design System: Weekend Food Hub",
+  "extensions": {
+    "colorMeta": {
+      "ink-charcoal": {
+        "role": "neutral",
+        "displayName": "Ink Charcoal",
+        "canonical": "oklch(28.8% 0.009 67.4)",
+        "tonalRamp": [
+          "#0D0B09",
+          "#272320",
+          "#433F3B",
+          "#615D58",
+          "#847F7A",
+          "#A8A49F",
+          "#CDCAC7",
+          "#EFEEED"
+        ]
+      },
+      "brand-orange": {
+        "role": "primary",
+        "displayName": "Market Orange",
+        "canonical": "oklch(64.6% 0.194 41.1)",
+        "tonalRamp": [
+          "#3A0E00",
+          "#5F1A00",
+          "#892800",
+          "#AF3A00",
+          "#DA4800",
+          "#F37F53",
+          "#FDB89E",
+          "#FFE9E1"
+        ]
+      },
+      "kraft-label": {
+        "role": "neutral",
+        "displayName": "Kraft Label",
+        "canonical": "oklch(76.8% 0.065 73.7)",
+        "tonalRamp": [
+          "#150800",
+          "#361E00",
+          "#543A13",
+          "#745832",
+          "#987B54",
+          "#BD9F77",
+          "#DDC7AB",
+          "#F4EDE4"
+        ]
+      },
+      "dill-sprig": {
+        "role": "secondary",
+        "displayName": "Dill Sprig",
+        "canonical": "oklch(55.6% 0.088 135.6)",
+        "tonalRamp": [
+          "#060E03",
+          "#18290F",
+          "#2E481F",
+          "#476935",
+          "#6B8B5B",
+          "#96AD8A",
+          "#C2D0BB",
+          "#ECF0EA"
+        ]
+      },
+      "dill-sprig-on-dark": {
+        "role": "secondary",
+        "displayName": "Pale Dill",
+        "canonical": "oklch(76.3% 0.090 133.7)",
+        "tonalRamp": [
+          "#021000",
+          "#0F2C00",
+          "#2B4911",
+          "#486831",
+          "#6A8C53",
+          "#8EB177",
+          "#BBD4AC",
+          "#E9F1E5"
+        ]
+      },
+      "cabbage-ruby": {
+        "role": "tertiary",
+        "displayName": "Cabbage Ruby",
+        "canonical": "oklch(50.1% 0.182 10.2)",
+        "tonalRamp": [
+          "#1D0106",
+          "#470619",
+          "#76102F",
+          "#A81B46",
+          "#C7556C",
+          "#DC8996",
+          "#EEBBC2",
+          "#FAEAEB"
+        ]
+      },
+      "mist": {
+        "role": "neutral",
+        "displayName": "Mist",
+        "canonical": "oklch(97.0% 0.010 93.6)",
+        "tonalRamp": [
+          "#0C0B07",
+          "#25241F",
+          "#41403A",
+          "#5F5E58",
+          "#82807A",
+          "#A6A59E",
+          "#CCCAC4",
+          "#F0EEE7"
+        ]
+      },
+      "thermal-black": {
+        "role": "neutral",
+        "displayName": "Thermal Black",
+        "canonical": "oklch(0% 0 0)",
+        "tonalRamp": [
+          "#000000"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "script-name": {
+        "displayName": "Script Name",
+        "purpose": "Brand and sub-brand names only, set large; outlined to paths in the logo files."
+      },
+      "stamped-caps": {
+        "displayName": "Stamped Caps",
+        "purpose": "Second line of the name (FOOD HUB, BY YANG): uppercase, wide-tracked, between the sprigs."
+      },
+      "caption-caps": {
+        "displayName": "Caption Caps",
+        "purpose": "Origin and category facts in small, wider-tracked uppercase, separated by middots."
+      }
+    },
+    "shadows": [],
+    "motion": [],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Square Icon",
+      "kind": "custom",
+      "refersTo": "app-icon",
+      "description": "Notched orange square with inset charcoal rule and charcoal script W; no swash.",
+      "html": "<svg class=\"ds-icon\" viewBox=\"0 0 512 512\" role=\"img\" aria-label=\"Weekend Food Hub\"><path d=\"M64 0 H448 A64 64 0 0 0 512 64 V448 A64 64 0 0 0 448 512 H64 A64 64 0 0 0 0 448 V64 A64 64 0 0 0 64 0 Z\" fill=\"#EA580C\"/><path d=\"M72 30 H440 A42 42 0 0 0 482 72 V440 A42 42 0 0 0 440 482 H72 A42 42 0 0 0 30 440 V72 A42 42 0 0 0 72 30 Z\" fill=\"none\" stroke=\"#2E2A26\" stroke-width=\"7\"/><path d=\"M380.00 154.23L372.18 155.76Q370.49 155.76 370.49 153.46Q370.49 151.16 371.80 150.47Q373.10 149.78 376.24 148.17Q379.38 146.56 380.61 146.03Q381.84 145.49 384.44 144.27Q387.05 143.04 388.66 142.58Q390.27 142.12 392.56 141.35L392.56 141.35Q396.40 140.28 402.14 140.28Q407.89 140.28 413.95 144.27Q420.00 148.25 420.00 154.69L420.00 154.69Q420.00 168.02 408.35 190.02Q396.70 212.01 378.46 235.77Q360.22 259.53 337.54 284.05Q314.86 308.57 293.24 327.88Q271.63 347.20 252.55 359.46Q233.47 371.72 223.20 371.72L223.20 371.72Q201.44 371.72 201.44 351.95L201.44 351.95Q201.44 324.21 232.86 271.79L232.86 271.79Q171.70 344.13 130.47 365.13L130.47 365.13Q119.74 370.65 114.07 370.65Q108.40 370.65 100.20 363.67Q92 356.70 92 349.96L92 349.96Q92 311.79 145.03 243.13L145.03 243.13Q165.26 216.92 195.46 184.58L195.46 184.58Q169.10 207.41 155.30 207.41L155.30 207.41Q147.94 207.41 144.42 200.21L144.42 200.21Q141.20 195.00 141.20 190.32Q141.20 185.65 147.33 180.13Q153.46 174.61 154.53 174.61Q155.61 174.61 156.53 175.38Q157.45 176.15 157.45 176.76L157.45 176.76Q155.30 179.06 155.30 179.75Q155.30 180.44 157.14 180.44Q158.98 180.44 187.79 162.89Q216.61 145.34 219.37 145.34L219.37 145.34Q227.34 145.34 234.70 149.71Q242.05 154.07 242.05 157.06Q242.05 160.05 238.99 164.96Q235.92 169.86 202.51 213.01Q169.10 256.15 153.92 278.30Q138.75 300.45 131.70 314.63Q124.65 328.80 124.65 331.87Q124.65 334.93 125.57 334.93L125.57 334.93Q132.00 334.93 171.62 296.08Q211.24 257.23 247.11 219.29Q282.98 181.36 286.12 177.22Q289.26 173.08 292.94 171.32Q296.62 169.56 303.97 169.56L303.97 169.56Q324.51 169.56 324.51 177.37L324.51 177.37Q324.51 180.59 315.55 191.01Q306.58 201.44 302.90 206.19L302.90 206.19Q283.74 230.56 260.21 274.85Q236.69 319.15 236.69 331.56L236.69 331.56Q236.69 334.93 238.91 334.93Q241.13 334.93 252.09 326.27Q263.05 317.61 280.98 300.37Q298.92 283.13 321.75 257.69Q344.59 232.24 365.36 201.21Q386.13 170.17 386.13 162.20Q386.13 154.23 380.00 154.23L380.00 154.23Z\" fill=\"#2E2A26\"/></svg>",
+      "css": ".ds-icon { width: 128px; height: 128px; display: block; transition: transform 0.2s; } .ds-icon:hover { transform: rotate(-2deg); }"
+    },
+    {
+      "name": "Avatar",
+      "kind": "custom",
+      "refersTo": "avatar",
+      "description": "Full-bleed orange with the charcoal W, cropped round by the platform; no notch, rule or swash.",
+      "html": "<svg class=\"ds-avatar\" viewBox=\"0 0 512 512\" role=\"img\" aria-label=\"Weekend Food Hub\"><rect width=\"512\" height=\"512\" fill=\"#EA580C\"/><path d=\"M380.00 154.23L372.18 155.76Q370.49 155.76 370.49 153.46Q370.49 151.16 371.80 150.47Q373.10 149.78 376.24 148.17Q379.38 146.56 380.61 146.03Q381.84 145.49 384.44 144.27Q387.05 143.04 388.66 142.58Q390.27 142.12 392.56 141.35L392.56 141.35Q396.40 140.28 402.14 140.28Q407.89 140.28 413.95 144.27Q420.00 148.25 420.00 154.69L420.00 154.69Q420.00 168.02 408.35 190.02Q396.70 212.01 378.46 235.77Q360.22 259.53 337.54 284.05Q314.86 308.57 293.24 327.88Q271.63 347.20 252.55 359.46Q233.47 371.72 223.20 371.72L223.20 371.72Q201.44 371.72 201.44 351.95L201.44 351.95Q201.44 324.21 232.86 271.79L232.86 271.79Q171.70 344.13 130.47 365.13L130.47 365.13Q119.74 370.65 114.07 370.65Q108.40 370.65 100.20 363.67Q92 356.70 92 349.96L92 349.96Q92 311.79 145.03 243.13L145.03 243.13Q165.26 216.92 195.46 184.58L195.46 184.58Q169.10 207.41 155.30 207.41L155.30 207.41Q147.94 207.41 144.42 200.21L144.42 200.21Q141.20 195.00 141.20 190.32Q141.20 185.65 147.33 180.13Q153.46 174.61 154.53 174.61Q155.61 174.61 156.53 175.38Q157.45 176.15 157.45 176.76L157.45 176.76Q155.30 179.06 155.30 179.75Q155.30 180.44 157.14 180.44Q158.98 180.44 187.79 162.89Q216.61 145.34 219.37 145.34L219.37 145.34Q227.34 145.34 234.70 149.71Q242.05 154.07 242.05 157.06Q242.05 160.05 238.99 164.96Q235.92 169.86 202.51 213.01Q169.10 256.15 153.92 278.30Q138.75 300.45 131.70 314.63Q124.65 328.80 124.65 331.87Q124.65 334.93 125.57 334.93L125.57 334.93Q132.00 334.93 171.62 296.08Q211.24 257.23 247.11 219.29Q282.98 181.36 286.12 177.22Q289.26 173.08 292.94 171.32Q296.62 169.56 303.97 169.56L303.97 169.56Q324.51 169.56 324.51 177.37L324.51 177.37Q324.51 180.59 315.55 191.01Q306.58 201.44 302.90 206.19L302.90 206.19Q283.74 230.56 260.21 274.85Q236.69 319.15 236.69 331.56L236.69 331.56Q236.69 334.93 238.91 334.93Q241.13 334.93 252.09 326.27Q263.05 317.61 280.98 300.37Q298.92 283.13 321.75 257.69Q344.59 232.24 365.36 201.21Q386.13 170.17 386.13 162.20Q386.13 154.23 380.00 154.23L380.00 154.23Z\" fill=\"#2E2A26\" transform=\"translate(51 51) scale(0.8)\"/></svg>",
+      "css": ".ds-avatar { width: 96px; height: 96px; border-radius: 50%; display: block; }"
+    },
+    {
+      "name": "Kitchen Label",
+      "kind": "card",
+      "refersTo": "kitchen-label",
+      "description": "Notched kraft ticket: origin caption row, dotted rule, script name over stamped caps between sprigs, dotted rule, category row.",
+      "html": "<div class=\"ds-label\"><div class=\"ds-label-inner\"><p class=\"ds-label-cap\">TAPILON · DAANBANTAYAN · CEBU</p><hr class=\"ds-label-dots\"><p class=\"ds-label-script\">Weekend</p><p class=\"ds-label-caps\"><span class=\"ds-sprig\"></span>FOOD HUB<span class=\"ds-sprig\"></span></p><hr class=\"ds-label-dots\"><p class=\"ds-label-cap\">CHAOFAN · SILOG · PALUTO · FROZEN</p></div></div>",
+      "css": ".ds-label { width: 360px; padding: 10px; background: #CDAE86; color: #2E2A26; -webkit-mask: radial-gradient(circle at 0 0, transparent 18px, #000 18.5px) top left / 51% 51% no-repeat, radial-gradient(circle at 100% 0, transparent 18px, #000 18.5px) top right / 51% 51% no-repeat, radial-gradient(circle at 0 100%, transparent 18px, #000 18.5px) bottom left / 51% 51% no-repeat, radial-gradient(circle at 100% 100%, transparent 18px, #000 18.5px) bottom right / 51% 51% no-repeat; mask: radial-gradient(circle at 0 0, transparent 18px, #000 18.5px) top left / 51% 51% no-repeat, radial-gradient(circle at 100% 0, transparent 18px, #000 18.5px) top right / 51% 51% no-repeat, radial-gradient(circle at 0 100%, transparent 18px, #000 18.5px) bottom left / 51% 51% no-repeat, radial-gradient(circle at 100% 100%, transparent 18px, #000 18.5px) bottom right / 51% 51% no-repeat; } .ds-label-inner { border: 1.5px solid #2E2A26; padding: 14px 18px; text-align: center; } .ds-label-cap { margin: 0; font: 600 9px 'Zilla Slab', Rockwell, serif; letter-spacing: 0.3em; } .ds-label-dots { border: 0; height: 4px; margin: 8px 0; color: #2E2A26; background: radial-gradient(circle, currentColor 1.2px, transparent 1.6px) 0 50% / 7px 4px repeat-x; } .ds-label-script { margin: 4px 0 0; font: 400 52px/1 Yellowtail, cursive; } .ds-label-caps { margin: 0; font: 700 18px/1.2 'Zilla Slab', Rockwell, serif; letter-spacing: 0.22em; display: flex; align-items: center; justify-content: center; gap: 10px; } .ds-sprig { width: 22px; height: 3px; border-radius: 3px; background: #5C7F4A; }"
+    },
+    {
+      "name": "Sub-brand Label",
+      "kind": "card",
+      "refersTo": "kitchen-label-sweet-treats",
+      "description": "Sweet Treats by Yang: the same kraft ticket with a cabbage-ruby band. Demonstration pending owner approval.",
+      "html": "<div class=\"ds-sub\"><div class=\"ds-sub-inner\"><div class=\"ds-sub-band\"></div><p class=\"ds-sub-script\">Sweet Treats</p><p class=\"ds-sub-caps\"><span class=\"ds-sub-sprig\"></span>BY YANG<span class=\"ds-sub-sprig\"></span></p><hr class=\"ds-sub-dots\"><p class=\"ds-sub-cap\">WEEKEND FOOD HUB · TAPILON</p></div></div>",
+      "css": ".ds-sub { width: 320px; padding: 9px; background: #CDAE86; color: #2E2A26; -webkit-mask: radial-gradient(circle at 0 0, transparent 18px, #000 18.5px) top left / 51% 51% no-repeat, radial-gradient(circle at 100% 0, transparent 18px, #000 18.5px) top right / 51% 51% no-repeat, radial-gradient(circle at 0 100%, transparent 18px, #000 18.5px) bottom left / 51% 51% no-repeat, radial-gradient(circle at 100% 100%, transparent 18px, #000 18.5px) bottom right / 51% 51% no-repeat; mask: radial-gradient(circle at 0 0, transparent 18px, #000 18.5px) top left / 51% 51% no-repeat, radial-gradient(circle at 100% 0, transparent 18px, #000 18.5px) top right / 51% 51% no-repeat, radial-gradient(circle at 0 100%, transparent 18px, #000 18.5px) bottom left / 51% 51% no-repeat, radial-gradient(circle at 100% 100%, transparent 18px, #000 18.5px) bottom right / 51% 51% no-repeat; } .ds-sub-inner { border: 1.5px solid #2E2A26; padding: 0 0 12px; text-align: center; } .ds-sub-band { height: 12px; margin-top: 10px; background: #B21E4B; } .ds-sub-script { margin: 10px 0 0; font: 400 40px/1 Yellowtail, cursive; } .ds-sub-caps { margin: 6px 0 0; font: 700 16px 'Zilla Slab', Rockwell, serif; letter-spacing: 0.22em; display: flex; align-items: center; justify-content: center; gap: 10px; } .ds-sub-sprig { width: 20px; height: 3px; border-radius: 3px; background: #5C7F4A; } .ds-sub-dots { border: 0; height: 4px; width: 50%; margin: 8px auto; color: #2E2A26; background: radial-gradient(circle, currentColor 1.2px, transparent 1.6px) 0 50% / 7px 4px repeat-x; } .ds-sub-cap { margin: 0; font: 600 8px 'Zilla Slab', Rockwell, serif; letter-spacing: 0.3em; }"
+    },
+    {
+      "name": "Reverse Lockup",
+      "kind": "custom",
+      "refersTo": "lockup-reverse",
+      "description": "Mist script and caps, pale dill sprigs and an orange dotted rule on charcoal.",
+      "html": "<div class=\"ds-rev\"><p class=\"ds-rev-script\">Weekend</p><p class=\"ds-rev-caps\"><span class=\"ds-rev-sprig\"></span>FOOD HUB<span class=\"ds-rev-sprig\"></span></p><hr class=\"ds-rev-dots\"><p class=\"ds-rev-cap\">TAPILON · DAANBANTAYAN</p></div>",
+      "css": ".ds-rev { width: 320px; padding: 20px; background: #2E2A26; color: #F7F5EE; text-align: center; } .ds-rev-script { margin: 0; font: 400 52px/1 Yellowtail, cursive; } .ds-rev-caps { margin: 4px 0 0; font: 700 18px 'Zilla Slab', Rockwell, serif; letter-spacing: 0.22em; display: flex; align-items: center; justify-content: center; gap: 10px; } .ds-rev-sprig { width: 22px; height: 3px; border-radius: 3px; background: #9BBF84; } .ds-rev-dots { border: 0; height: 4px; width: 60%; margin: 10px auto; color: #EA580C; background: radial-gradient(circle, currentColor 1.2px, transparent 1.6px) 0 50% / 7px 4px repeat-x; } .ds-rev-cap { margin: 0; font: 600 9px 'Zilla Slab', Rockwell, serif; letter-spacing: 0.3em; }"
+    },
+    {
+      "name": "Thermal Mono Compact",
+      "kind": "custom",
+      "refersTo": "lockup-mono",
+      "description": "Pure black script and caps only, for thermal labels under about 50 mm.",
+      "html": "<div class=\"ds-mono\"><p class=\"ds-mono-script\">Weekend</p><p class=\"ds-mono-caps\">FOOD HUB</p></div>",
+      "css": ".ds-mono { width: 200px; padding: 12px; background: #FFFFFF; color: #000000; text-align: center; } .ds-mono-script { margin: 0; font: 400 36px/1 Yellowtail, cursive; } .ds-mono-caps { margin: 2px 0 0; font: 700 12px 'Zilla Slab', Rockwell, serif; letter-spacing: 0.22em; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Hand-Marked Kitchen Label",
+    "overview": "The brand is the label a cook writes on a jar, a frozen pack or tonight's order: a connected brush-script name over stamped, wide-tracked slab capitals, finished with a drawn swash, two dill sprigs and a dotted rule. It is meant to read as made by hand in a real kitchen in Tapilon, and it lives where the kitchen's work already lives: the Facebook Page avatar, the site header and the sticker printed on every order bag.\n\nThe system is two voices and one saturated field. Every letter is charcoal ink (or mist on dark, or pure black on thermal paper). Brand orange is the one loud colour, used as a full field (icon, avatar, Android background) or as a fine dotted rule, never as letters. Kraft is the label ground; dill is only ever the sprigs; cabbage ruby belongs to the Sweet Treats by Yang band alone. Depth is flat print: no gradients, no shadows, no texture overlays.\n\nThe identity rejects the round food-stall badge with spoon, fork and ribbon. A round crop exists only because platforms mask the avatar that way; it carries no emblem furniture.",
+    "keyCharacteristics": [
+      "Brush-script name (Yellowtail) over stamped slab caps (Zilla Slab), both outlined to paths in every logo file.",
+      "The d's exit stroke becomes a tapered swash that sweeps back under the whole of \"Weekend\" and runs clear of the capitals below.",
+      "Paired dill leaf sprigs flank the stamped caps.",
+      "Notched ticket corners (concave quarter-circle cuts) on the label and the square icon, with an inset rule that follows the notch.",
+      "Dotted rules and middot-separated rows of stamped facts.",
+      "Black-only versions that survive a 203 dpi thermal printer."
+    ],
+    "rules": [
+      {
+        "name": "The One Field Rule",
+        "body": "Orange appears as a whole ground or as a hairline dotted rule, never as type. Letters on orange are charcoal; kraft or mist on orange falls near 2:1 and is not used.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Job Rule",
+        "body": "Dill is sprigs, ruby is the Sweet Treats band. Neither becomes a text, border or background colour elsewhere.",
+        "section": "colors"
+      },
+      {
+        "name": "The Black Means Black Rule",
+        "body": "One-colour versions are pure black, not charcoal, so thermal printers render them solid.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Voices Rule",
+        "body": "Script is for names; slab caps are for facts. No third face, no script facts, no slab names.",
+        "section": "typography"
+      },
+      {
+        "name": "The Feeling Not Schedule Rule",
+        "body": "\"Weekend\" is always set as a name in script, never paired with days or times in the mark.",
+        "section": "typography"
+      },
+      {
+        "name": "The Printed Matter Rule",
+        "body": "Every version must be reproducible by a single-pass printer. If an effect cannot be printed flat, it is not part of the mark.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** set every letter in Ink Charcoal on white, kraft or orange, in Mist on charcoal, and in pure black in one-colour versions.",
+      "**Do** use the compact lockup for headers, mono-compact for thermal labels under about 50 mm, and icon-small below 64 px.",
+      "**Do** keep the swash clear of the stamped caps; it sweeps under the script and stops short of the capitals.",
+      "**Do** give a sub-brand its own name in script and its own band colour on the kraft label, while keeping charcoal letters, dill sprigs and the notched ticket shared.",
+      "**Do** separate facts in a caption or category row with middots."
+    ],
+    "donts": [
+      "**Don't** set letters in orange, or put kraft or mist letters on orange.",
+      "**Don't** use dill for anything but the sprigs, or ruby for anything but the Sweet Treats band.",
+      "**Don't** add a swash, notch or inset rule to the avatar or other platform-masked icons.",
+      "**Don't** build a round emblem badge with spoon, fork or ribbon; the round avatar is a platform crop, not a badge.",
+      "**Don't** add shadows, gradients or textures to any version of the mark.",
+      "**Don't** run the swash through FOOD HUB with a knockout; it was tested and cost legibility at the 44 px header size.",
+      "**Don't** lift the label's caption row into web pages as a small-caps eyebrow over sections; it belongs to the printed label."
+    ]
+  }
+}
