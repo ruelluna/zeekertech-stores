@@ -26,7 +26,8 @@ export async function proxy(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const { pathname } = request.nextUrl;
 
-  if (pathname.startsWith("/admin") && !data?.claims && pathname !== "/admin/login") {
+  // The invite page signs the person in itself (from the link), so it's open like the sign-in page.
+  if (pathname.startsWith("/admin") && !data?.claims && pathname !== "/admin/login" && pathname !== "/admin/accept-invite") {
     const url = request.nextUrl.clone();
     url.pathname = "/admin/login";
     url.search = pathname === "/admin" ? "" : `?next=${encodeURIComponent(pathname)}`;

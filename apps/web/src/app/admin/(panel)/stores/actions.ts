@@ -5,7 +5,7 @@ import { z } from "zod";
 import { fail, form, formObject, ok, zodMessage, type ActionState } from "@/lib/action-state";
 import { requireSuperAdmin } from "@/lib/auth";
 import { menuChanged } from "@/lib/menu-tag";
-import { addStaffLogin } from "@/lib/staff-accounts";
+import { inviteStaff } from "@/lib/staff-accounts";
 import { DEFAULT_STORE_SLUG } from "@/lib/stores";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
@@ -91,7 +91,7 @@ export async function createStore(_prev: ActionState, formData: FormData): Promi
   }
 
   menuChanged();
-  return ok(`${fields.name} created at /s/${fields.slug}. Add its owner below.`);
+  return ok(`${fields.name} created at /s/${fields.slug}. Invite its owner below.`);
 }
 
 const ActiveInput = z.object({ id: z.uuid(), active: form.bool });
@@ -115,21 +115,28 @@ const OwnerInput = z.object({
   storeId: z.uuid(),
   displayName: z.string().trim().min(1, "Enter a name").max(60),
   email: z.email("Enter a valid email"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
-/** Gives someone owner access to one store (a new login, or an existing one). */
+/**
+ * Invites someone by email to own one store: they get a link to set their password. Someone who
+ * already has a login just gets owner access.
+ */
 export async function addStoreOwner(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const parsed = OwnerInput.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Check the details");
   await requireSuperAdmin();
 
-  const result = await addStaffLogin({ ...parsed.data, role: "owner" });
+  const site = process.env.SITE_URL ?? "http://localhost:3100";
+  const result = await inviteStaff({ ...parsed.data, role: "owner", redirectTo: `${site}/admin/accept-invite` });
   if (!result.ok) return fail(result.error);
   refresh();
-  return ok(
-    result.existed
-      ? `${parsed.data.email} already had a login: owner access added (their password didn't change)`
-      : `${parsed.data.displayName} can now sign in at /admin`,
-  );
+  const { email } = parsed.data;
+  switch (result.outcome) {
+    case "emailed":
+      return ok(`Invite sent to ${email}. They set their password from the email, then sign in at /admin.`);
+    case "existing":
+      return ok(`${email} already had a login: owner access added. They sign in at /admin with their current password.`);
+    case "link":
+      return ok(`The email couldn't be sent. Send ${email} this invite link yourself (it works once): ${result.link}`);
+  }
 }

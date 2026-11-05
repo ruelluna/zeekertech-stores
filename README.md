@@ -54,16 +54,27 @@ pnpm --filter @wfh/web dev --port 3100  # http://localhost:3100
   - The admin Orders page listens to order changes, protected by row-level security.
   - Both reload instantly, with a 60-second fallback.
 
-### Make a real account the owner
+### Stores and owners
 
-Staff access is controlled by `ops.staff_users`. On a real deployment, create the user in Supabase Studio (Authentication → Add user), then run this in the SQL editor:
+Each store (e.g. `/s/weekendfoodhub`, `/s/treatsbyyang`) has its own menu, settings, customers, orders and staff. Staff access is per store, in `ops.staff_users`; super admins (`ops.super_admins`) manage every store and create stores and their owners at Admin → Stores. To make a real account a super admin, create the user in Supabase Studio (Authentication → Add user), then run this in the SQL editor:
 
 ```sql
-insert into ops.staff_users (user_id, display_name, role)
-select id, 'Owner', 'owner' from auth.users where email = 'you@example.com';
+insert into ops.super_admins (user_id) select id from auth.users where email = 'you@example.com';
 ```
 
-Roles: `owner`, `verifier`, `kitchen`, `counter` (PLAN.md §4.1).
+Roles within a store: `owner`, `verifier`, `kitchen`, `counter`, `rider` (PLAN.md §4.1).
+
+## Deploying
+
+Coolify builds the `Dockerfile` on every push to `main`. When the new container starts, `apps/web/scripts/migrate.mjs` runs before the site:
+
+1. If `DATABASE_URL` is set and there are migrations in `supabase/migrations` the database hasn't run yet, it saves a full backup (every store) to the private Storage bucket `db-backups`, keeping the last 10.
+2. It applies each pending migration in its own transaction and records it in `supabase_migrations.schema_migrations`.
+3. If the backup or a migration fails, nothing changes and the new version doesn't start; the old one keeps running. The reason is in the container's logs.
+
+Without `DATABASE_URL`, migrations aren't run (apply them by hand in the SQL editor).
+
+To restore a backup: download it from Studio → Storage → `db-backups`, copy it to the server, and run `pg_restore --clean --if-exists --no-owner -d "<DATABASE_URL>" backup.dump`.
 
 ## Everyday commands
 

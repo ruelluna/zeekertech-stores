@@ -73,17 +73,15 @@ async function Stores() {
             </div>
 
             <details className="mt-3">
-              <summary className="cursor-pointer text-sm text-orange-700">Add an owner</summary>
-              <ActionForm action={addStoreOwner} submitLabel="Add owner" className="mt-3 flex flex-wrap items-end gap-3">
+              <summary className="cursor-pointer text-sm text-orange-700">Invite an owner</summary>
+              <p className="mt-2 text-xs text-stone-500">They get an email with a link to set their own password, then sign in at /admin and see only this store.</p>
+              <ActionForm action={addStoreOwner} submitLabel="Send invite" className="mt-3 flex flex-wrap items-end gap-3">
                 <input type="hidden" name="storeId" value={s.id} />
                 <Field label="Name" className="w-44">
                   <Input name="displayName" required />
                 </Field>
-                <Field label="Email" className="w-56">
+                <Field label="Email" className="w-64">
                   <Input name="email" type="email" required />
-                </Field>
-                <Field label="Password" hint="At least 8 characters. Ignored if they already have a login." className="w-56">
-                  <Input name="password" type="password" minLength={8} required />
                 </Field>
               </ActionForm>
             </details>
