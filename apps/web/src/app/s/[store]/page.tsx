@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import Link from "next/link";
+import { nextServiceDay, openDaysLabel } from "@wfh/shared";
 import { ContactLink } from "@/components/contact-link";
 import { StoreHeader } from "@/components/store-header";
 import { StoreTheme } from "@/components/store-theme";
@@ -34,6 +35,10 @@ async function Menu({ params }: { params: PageProps<"/s/[store]">["params"] }) {
   const menu = await getPublicMenu(store.id);
   const hasUncertain = menu.categories.some((c) => c.items.some((i) => i.badge === "subject_to_availability"));
   const legal = (path: string) => `${path}?store=${store.slug}`;
+  // Badges and the note follow the opening hours: "today" only when the store hands out orders today.
+  const service = nextServiceDay({ now: new Date(), hours: menu.hours, closures: menu.closures });
+  const openDays = openDaysLabel(menu.hours);
+  const handoff = menu.deliveryEnabled ? "pickup or delivery" : "pickup";
 
   return (
     <StoreTheme accent={store.accent_color}>
@@ -53,9 +58,11 @@ async function Menu({ params }: { params: PageProps<"/s/[store]">["params"] }) {
             : "Pickup only for now."}
           {menu.noticeDays > 0
             ? ` Made to order: please order at least ${noticeText(menu.noticeDays)} before your pickup${menu.deliveryEnabled ? " or delivery" : ""} date.`
-            : menu.allowPreorders
-              ? " Closed? You can still pre-order for later."
-              : ""}
+            : openDays && openDays !== "every day"
+              ? ` Open ${openDays}.${menu.allowPreorders ? ` Order anytime for ${handoff} on those days.` : ""}`
+              : menu.allowPreorders
+                ? " Closed? You can still pre-order for later."
+                : ""}
         </p>
       </div>
 
@@ -69,7 +76,7 @@ async function Menu({ params }: { params: PageProps<"/s/[store]">["params"] }) {
 
       {menu.categories.length === 0 && <p className="mb-10 text-muted">The menu is being prepared. Please check back soon.</p>}
       {menu.categories.map((c) => (
-        <CategorySection key={c.id} category={c} canOrder={!menu.orderingPaused} store={store.slug} />
+        <CategorySection key={c.id} category={c} canOrder={!menu.orderingPaused} store={store.slug} when={{ service, preorders: menu.allowPreorders }} />
       ))}
 
       <footer className="border-t border-ink-200 pt-6 text-sm text-muted dark:border-ink-800">
@@ -91,13 +98,16 @@ async function Menu({ params }: { params: PageProps<"/s/[store]">["params"] }) {
   );
 }
 
-function CategorySection({ category: c, canOrder, store }: { category: PublicMenu["categories"][number]; canOrder: boolean; store: string }) {
+/** When an orderable item can be handed out: today, or the store's next open day. */
+type ServiceWhen = { service: ReturnType<typeof nextServiceDay>; preorders: boolean };
+
+function CategorySection({ category: c, canOrder, store, when }: { category: PublicMenu["categories"][number]; canOrder: boolean; store: string; when: ServiceWhen }) {
   return (
     <section id={c.id} className="mb-10 scroll-mt-16">
       <h2 className="stamp mb-3 text-lg font-bold">{c.name}</h2>
       <ul className="grid gap-3 sm:grid-cols-2">
         {c.items.map((item) => (
-          <MenuCard key={item.id} item={item} canOrder={canOrder} store={store} />
+          <MenuCard key={item.id} item={item} canOrder={canOrder} store={store} when={when} />
         ))}
       </ul>
     </section>
@@ -106,7 +116,7 @@ function CategorySection({ category: c, canOrder, store }: { category: PublicMen
 
 const noticeText = (days: number) => (days === 1 ? "1 day" : `${days} days`);
 
-function MenuCard({ item, canOrder, store }: { item: MenuItem; canOrder: boolean; store: string }) {
+function MenuCard({ item, canOrder, store, when }: { item: MenuItem; canOrder: boolean; store: string; when: ServiceWhen }) {
   const dimmed = item.badge === "sold_out" || item.badge === "unavailable";
   return (
     <li
@@ -118,7 +128,7 @@ function MenuCard({ item, canOrder, store }: { item: MenuItem; canOrder: boolean
       </div>
       {item.description && <p className="text-sm text-muted">{item.description}</p>}
       <div className="flex flex-wrap gap-1.5">
-        <AvailabilityBadge item={item} />
+        <AvailabilityBadge item={item} when={when} />
         {item.type === "frozen" && <Badge>Frozen pack</Badge>}
       </div>
       {item.soldBy === "weight" && item.weightOptionsKg.length > 0 && (
@@ -157,11 +167,14 @@ function PriceTag({ item }: { item: MenuItem }) {
   return <span className="shrink-0 font-semibold">{peso(item.price)}</span>;
 }
 
-function AvailabilityBadge({ item }: { item: MenuItem }) {
+function AvailabilityBadge({ item, when }: { item: MenuItem; when: ServiceWhen }) {
   switch (item.badge) {
     case "available":
       if (item.noticeDays > 0) return <Badge tone="accent">Order {noticeText(item.noticeDays)} ahead</Badge>;
-      return <Badge tone="green">Available today</Badge>;
+      if (!when.service) return <Badge>Not taking orders</Badge>;
+      if (when.service.isToday) return <Badge tone="green">Available today</Badge>;
+      // Closed today: say when it can be picked up or delivered, never "today".
+      return when.preorders ? <Badge tone="green">Order now for {when.service.weekday}</Badge> : <Badge>Available {when.service.weekday}</Badge>;
     case "subject_to_availability":
       return (
         <Badge tone="amber">

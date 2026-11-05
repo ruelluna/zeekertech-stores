@@ -207,3 +207,45 @@ export function listSlots(input: {
   }
   return slots;
 }
+
+const SHORT_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+/**
+ * The next day the store hands out orders (pickup or delivery): today if it is still open today, else
+ * its next open day. Null if it has no open day in the next two weeks.
+ */
+export function nextServiceDay(input: { now: Date; hours: StoreHoursDay[]; closures: string[] }): {
+  dateKey: string;
+  isToday: boolean;
+  /** "Fri" */
+  weekday: string;
+} | null {
+  const status = storeStatus({ ...input, paused: false });
+  const at = status.state === "open" ? input.now : status.state === "closed" ? status.opensAt : null;
+  if (!at) return null;
+  const day = manilaParts(at);
+  return { dateKey: day.dateKey, isToday: day.dateKey === manilaParts(input.now).dateKey, weekday: SHORT_DAYS[day.dayOfWeek]! };
+}
+
+/**
+ * The days a store is open, for the menu: "every day", "Fri–Sun", "Mon–Wed, Sat", or null if none.
+ * Runs of consecutive days are joined with a dash, wrapping past Sunday (Sat–Mon).
+ */
+export function openDaysLabel(hours: StoreHoursDay[]): string | null {
+  const open = [0, 1, 2, 3, 4, 5, 6].map((d) => hours.some((h) => h.dayOfWeek === d && h.isOpen));
+  const count = open.filter(Boolean).length;
+  if (count === 0) return null;
+  if (count === 7) return "every day";
+
+  // Start just after a closed day, so a run that wraps past Sunday stays in one piece.
+  const firstClosed = open.indexOf(false);
+  const runs: [number, number][] = [];
+  for (let i = 1; i <= 7; i++) {
+    const day = (firstClosed + i) % 7;
+    if (!open[day]) continue;
+    const last = runs[runs.length - 1];
+    if (last && (last[1] + 1) % 7 === day) last[1] = day;
+    else runs.push([day, day]);
+  }
+  return runs.map(([a, b]) => (a === b ? SHORT_DAYS[a] : `${SHORT_DAYS[a]}–${SHORT_DAYS[b]}`)).join(", ");
+}
