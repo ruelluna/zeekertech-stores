@@ -41,6 +41,8 @@ export interface MenuItem {
   groups: MenuGroup[];
   /** Calendar days of advance notice (made-to-order cakes etc.); 0 = same day. */
   noticeDays: number;
+  /** Most that can be booked for one pickup/delivery day; null = no limit. */
+  dailyLimit: number | null;
   /** Label for the notes field, e.g. "Message on the cake". */
   notePrompt: string | null;
 }
@@ -87,6 +89,7 @@ export async function getPublicMenu(storeId: string): Promise<PublicMenu> {
       badge: p.badge,
       confirmWaitMinutes: p.confirmWaitMinutes,
       noticeDays: p.noticeDays,
+      dailyLimit: p.dailyLimit,
       notePrompt: p.notePrompt,
       groups: p.groups.map((g) => ({
         id: g.id,

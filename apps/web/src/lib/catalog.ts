@@ -18,6 +18,8 @@ export interface CatalogProduct extends PricingProduct {
   confirmWaitMinutes: number | null;
   /** Label for the notes field, e.g. "Message on the cake". */
   notePrompt: string | null;
+  /** Most that can be booked for one pickup/delivery day; null = no limit. */
+  dailyLimit: number | null;
 }
 
 export interface Catalog {
@@ -66,7 +68,7 @@ export async function fetchCatalog(storeId: string): Promise<Catalog> {
       .from("products")
       .select(
         `id, sku, name, description, category_id, type, price_mode, sold_by, price, estimated_price, weight_options_kg,
-         prep_minutes, stock_tracked, stock_qty, sold_out, active, image_url, sort_order, notice_days, note_prompt,
+         prep_minutes, stock_tracked, stock_qty, sold_out, active, image_url, sort_order, notice_days, note_prompt, daily_limit,
          product_ingredients(is_key, ingredients(id, availability_mode, default_wait_minutes)),
          product_modifier_groups(sort_order, show_when_modifier_id, modifier_groups(id, name, required, min_select, max_select,
            modifiers(id, name, price_delta, requires_cooking, active, sort_order)))`,
@@ -122,6 +124,7 @@ export async function fetchCatalog(storeId: string): Promise<Catalog> {
         prepMinutes: p.prep_minutes,
         noticeDays: p.notice_days ?? s.notice_days,
         notePrompt: p.note_prompt,
+        dailyLimit: p.daily_limit,
         badge: menuBadge({
           active: p.active,
           hasPrice,

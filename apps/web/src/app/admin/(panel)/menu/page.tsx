@@ -31,7 +31,7 @@ async function MenuList() {
     store.from("categories").select("id, name, sort_order, active").eq("store_id", storeId).order("sort_order"),
     store
       .from("products")
-      .select("id, sku, name, category_id, type, price_mode, sold_by, price, estimated_price, stock_tracked, active, sort_order, notice_days")
+      .select("id, sku, name, category_id, type, price_mode, sold_by, price, estimated_price, stock_tracked, active, sort_order, notice_days, daily_limit")
       .eq("store_id", storeId)
       .order("sort_order"),
     store.from("store_settings").select("notice_days").eq("store_id", storeId).single(),
@@ -63,6 +63,7 @@ async function MenuList() {
                         {(p.notice_days ?? settings.notice_days) > 0 && (
                           <Badge tone="pink">Order {p.notice_days ?? settings.notice_days} day(s) ahead</Badge>
                         )}
+                        {p.daily_limit !== null && <Badge>Max {p.daily_limit}/day</Badge>}
                         {!p.active && <Badge tone="red">Inactive</Badge>}
                         {missingPrice && <Badge tone="amber">No price yet</Badge>}
                       </div>

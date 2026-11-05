@@ -70,6 +70,7 @@ const ProductInput = z
     }),
     prep_minutes: form.int.pipe(z.number().int().nonnegative().nullable()),
     notice_days: form.int.pipe(z.number().int().min(0).max(60, "At most 60 days").nullable()),
+    daily_limit: form.int.pipe(z.number().int().min(1, "Max per day: at least 1, or leave it blank").max(10000).nullable()),
     note_prompt: form.optText,
     sort_order: form.int.pipe(z.number().int().nullable()).transform((n) => n ?? 0),
     stock_tracked: form.bool,

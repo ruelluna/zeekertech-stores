@@ -6,10 +6,13 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useSyncExternalStore, useTransition } from "react";
 import {
   calculateDiscount,
+  dailyLimitShortfalls,
   formatManilaTime,
   listSlots,
   manilaParts,
   requiredLeadMinutes,
+  shortfallMessage,
+  type BookedQty,
   type ClockTime,
   type DeliveryQuote,
   type StoreHoursDay,
@@ -32,6 +35,8 @@ export interface CheckoutData {
   offer: WelcomeOffer | null;
   /** Current menu items by product id, for each line's price breakdown and editing its options. */
   menuItems: Record<string, MenuItem>;
+  /** Booked quantity per SKU per Manila date, for products with a daily limit. */
+  booked: BookedQty;
   savedAddresses: { id: string; label: string; barangayId: string; streetPurok: string; landmark: string; riderNotes: string; lat: number; lng: number }[];
   barangays: { id: string; name: string; center: LatLng | null }[];
   kitchen: LatLng | null;
@@ -119,12 +124,24 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
     bufferMinutes: data.settings.deliveryBufferMinutes,
   });
 
-  // Dates with at least one bookable slot (today only when pre-orders are off, unless items need notice).
-  const days = useMemo(() => {
-    if (!now) return [];
+  // Dates with at least one bookable slot (today only when pre-orders are off, unless items need notice),
+  // leaving out days where a product in the cart is over its daily limit. When days are full, the search
+  // goes up to 3 weeks further, until it offers as many days as it would have (a booked-out weekend still
+  // offers the next one).
+  const { days, fullDays, overLimit } = useMemo(() => {
     const result: { dateKey: string; label: string; slots: Date[] }[] = [];
+    const full: { label: string; reason: string }[] = [];
+    const limited = lines.flatMap((l) => {
+      const item = data.menuItems[l.productId];
+      return item?.dailyLimit ? [{ sku: item.sku, name: l.name, qty: l.qty, dailyLimit: item.dailyLimit }] : [];
+    });
+    // More than a whole day's limit never fits on any day: say so instead of listing full days.
+    const over = dailyLimitShortfalls(limited, {}, "any");
+    if (!now || over.length) return { days: result, fullDays: full, overLimit: over };
     const dayCount = noticeDays > 0 ? noticeDays + 7 : data.settings.allowPreorders ? 7 : 1;
-    for (let i = 0; i < dayCount; i++) {
+    let openDaysInWindow = 0;
+    for (let i = 0; i < dayCount + 21; i++) {
+      if (i >= dayCount && result.length >= openDaysInWindow) break;
       const key = manilaParts(new Date(now.getTime() + i * 86_400_000)).dateKey;
       const slots = listSlots({
         dateKey: key,
@@ -139,14 +156,17 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
         noticeDays,
       });
       if (slots.length) {
+        if (i < dayCount) openDaysInWindow++;
         // e.g. "Tomorrow · Fri, Nov 6", "Sat, Nov 7"
         const date = new Date(`${key}T12:00:00+08:00`).toLocaleDateString("en-PH", { weekday: "short", month: "short", day: "numeric", timeZone: "Asia/Manila" });
         const label = i === 0 ? `Today · ${date}` : i === 1 ? `Tomorrow · ${date}` : date;
-        result.push({ dateKey: key, label, slots });
+        const short = dailyLimitShortfalls(limited, data.booked, key);
+        if (short.length) full.push({ label: date, reason: shortfallMessage(short, date) });
+        else result.push({ dateKey: key, label, slots });
       }
     }
-    return result;
-  }, [now, lead, hasUncertain, noticeDays, data]);
+    return { days: result, fullDays: full, overLimit: over };
+  }, [now, lead, hasUncertain, noticeDays, data, lines]);
 
   // The chosen date/time, falling back to the first valid one as lead time and the clock change.
   const day = days.find((d) => d.dateKey === dateKey) ?? days[0];
@@ -459,10 +479,18 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
       {/* Time */}
       <section className={section}>
         <h2 className="mb-3 font-semibold">{fulfillment === "pickup" ? "Pickup time" : "Delivery time"}</h2>
-        {!now ? (
+        {overLimit.length > 0 ? (
+          <p className="rounded-lg bg-kraft-soft p-3 text-sm text-foreground">
+            {overLimit.map((o) => `We make at most ${o.left} ${o.name} a day. Please order ${o.left} or fewer.`).join(" ")}
+          </p>
+        ) : !now ? (
           <p className="text-sm text-muted">Loading times…</p>
         ) : days.length === 0 ? (
-          <p className="text-sm text-muted">No times available right now. Please check back during opening hours.</p>
+          <p className="text-sm text-muted">
+            {fullDays.length > 0
+              ? "Your order is fully booked on every day we can offer right now. Try fewer pieces, or check back later."
+              : "No times available right now. Please check back during opening hours."}
+          </p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="flex flex-col gap-1 text-sm">
@@ -486,6 +514,16 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
               </select>
             </label>
           </div>
+        )}
+        {fullDays.length > 0 && (
+          <p className="mt-3 rounded-lg bg-kraft-soft p-3 text-sm text-foreground">
+            Not offered because they&apos;re fully booked:{" "}
+            {fullDays
+              .slice(0, 3)
+              .map((d) => d.reason)
+              .join(". ")}
+            {fullDays.length > 3 ? `, and ${fullDays.length - 3} more day${fullDays.length - 3 === 1 ? "" : "s"}` : ""}.
+          </p>
         )}
         {noticeDays > 0 && (
           <p className="mt-3 rounded-lg bg-accent-soft p-3 text-sm text-foreground">

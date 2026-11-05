@@ -15,3 +15,4 @@ export * from "./webhooks/events";
 export type { Database, Json, Tables, TablesInsert, TablesUpdate } from "./database.types";
 export * from "./theme";
 export * from "./links";
+export * from "./daily-limits";

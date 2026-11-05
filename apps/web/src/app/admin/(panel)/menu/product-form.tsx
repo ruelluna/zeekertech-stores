@@ -99,6 +99,9 @@ export function ProductForm({ product: p, storeNoticeDays, categories, ingredien
           <Field label="Advance notice (days)" hint={`Made-to-order items. Blank = the store's notice (${storeNoticeDays === 1 ? "1 day" : `${storeNoticeDays} days`}).`}>
             <Input name="notice_days" type="number" min="0" max="60" defaultValue={p?.notice_days ?? ""} />
           </Field>
+          <Field label="Max per day" hint="The most you make for one pickup/delivery day. Website, walk-in and phone orders all count. Blank = no limit.">
+            <Input name="daily_limit" type="number" min="1" max="10000" defaultValue={p?.daily_limit ?? ""} />
+          </Field>
           <Field label="Notes label" hint="Replaces “Notes” when adding to cart, e.g. Message on the cake" className="sm:col-span-2">
             <Input name="note_prompt" defaultValue={p?.note_prompt ?? ""} placeholder="Notes" />
           </Field>

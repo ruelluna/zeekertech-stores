@@ -1568,6 +1568,7 @@ export type Database = {
           active: boolean;
           category_id: string;
           created_at: string;
+          daily_limit: number | null;
           description: string | null;
           estimated_price: number | null;
           id: string;
@@ -1594,6 +1595,7 @@ export type Database = {
           active?: boolean;
           category_id: string;
           created_at?: string;
+          daily_limit?: number | null;
           description?: string | null;
           estimated_price?: number | null;
           id?: string;
@@ -1619,6 +1621,7 @@ export type Database = {
           active?: boolean;
           category_id?: string;
           created_at?: string;
+          daily_limit?: number | null;
           description?: string | null;
           estimated_price?: number | null;
           id?: string;
@@ -2196,7 +2199,14 @@ export type Database = {
       };
     };
     Functions: {
-      [_ in never]: never;
+      booked_qty: {
+        Args: { p_from: string; p_store: string; p_to: string };
+        Returns: {
+          day: string;
+          qty: number;
+          sku: string;
+        }[];
+      };
     };
     Enums: {
       availability_mode: "always" | "subject_to_availability";

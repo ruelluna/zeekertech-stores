@@ -5,6 +5,7 @@ import { serviceAreaCenter } from "@wfh/shared";
 import { Loading } from "@/components/ui";
 import { DAANBANTAYAN_CENTER, fetchCatalog } from "@/lib/catalog";
 import { getCurrentCustomer } from "@/lib/customer";
+import { fetchBookedQty } from "@/lib/daily-limits";
 import { welcomeOfferFor } from "@/lib/discounts";
 import { getPublicMenu } from "@/lib/menu";
 import { getStore } from "@/lib/stores";
@@ -33,7 +34,12 @@ async function Checkout({ params }: { params: PageProps<"/s/[store]/checkout">["
   // Request time only: the build must not reach Supabase (the Docker image is built without its address).
   await connection();
   const store = await getStore((await params).store);
-  const [catalog, customer, menu] = await Promise.all([fetchCatalog(store.id), getCurrentCustomer(store.id), getPublicMenu(store.id)]);
+  const [catalog, customer, menu, booked] = await Promise.all([
+    fetchCatalog(store.id),
+    getCurrentCustomer(store.id),
+    getPublicMenu(store.id),
+    fetchBookedQty(store.id),
+  ]);
   const offer = await welcomeOfferFor(customer, store.id);
 
   let savedAddresses: CheckoutData["savedAddresses"] = [];
@@ -63,6 +69,7 @@ async function Checkout({ params }: { params: PageProps<"/s/[store]/checkout">["
     facebookLogin: readServerPublicEnv().facebookLogin,
     offer,
     menuItems: Object.fromEntries(menu.categories.flatMap((c) => c.items).map((i) => [i.id, i])),
+    booked,
     savedAddresses,
     barangays: catalog.barangays.map((b) => ({ id: b.id, name: b.name, center: b.center })),
     kitchen: catalog.delivery.kitchen,

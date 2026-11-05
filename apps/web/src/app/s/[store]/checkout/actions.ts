@@ -3,15 +3,18 @@
 import {
   WebOrder,
   checkSlot,
+  dailyLimitShortfalls,
   manilaParts,
   normalizePhMobile,
   priceCart,
   requiredLeadMinutes,
+  shortfallMessage,
   storeStatus,
   type DeliveryQuote,
 } from "@wfh/shared";
 import { fetchCatalog, type CatalogProduct } from "@/lib/catalog";
 import { getCurrentCustomer } from "@/lib/customer";
+import { fetchBookedQty } from "@/lib/daily-limits";
 import { quoteDelivery } from "@/lib/delivery";
 import { discountAmount, duplicateDiscountFlag, welcomeOfferFor } from "@/lib/discounts";
 import { listStores } from "@/lib/stores";
@@ -99,6 +102,21 @@ export async function placeOrder(raw: unknown): Promise<PlaceOrderResult> {
     noticeDays: priced.noticeDays,
   });
   if (!slotCheck.ok) return { ok: false, errors: [SLOT_ERRORS[slotCheck.reason]] };
+
+  // Daily limits: the most of each product the store makes for one pickup/delivery day.
+  const limited = priced.lines.map((l) => ({
+    sku: l.item.sku,
+    name: l.item.name,
+    qty: l.item.qty,
+    dailyLimit: catalog.products.find((p) => p.sku === l.item.sku)?.dailyLimit ?? null,
+  }));
+  if (limited.some((l) => l.dailyLimit !== null)) {
+    const short = dailyLimitShortfalls(limited, await fetchBookedQty(store.id, 90), manilaParts(slot).dateKey);
+    if (short.length) {
+      const dayLabel = slot.toLocaleDateString("en-PH", { weekday: "short", month: "short", day: "numeric", timeZone: "Asia/Manila" });
+      return { ok: false, errors: [`${shortfallMessage(short, dayLabel)}. Please pick another day or order fewer.`] };
+    }
+  }
 
   // Welcome discount (logged-in customers only)
   const offer = await welcomeOfferFor(customer, store.id);

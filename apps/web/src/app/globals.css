@@ -126,6 +126,45 @@ body {
   }
 }
 
+/*
+ * Product photo faintly behind a ticket card's content. The strengths are set so text stays readable on
+ * any photo, even pure black or white: main text stays above 6:1 and secondary text (one step stronger on
+ * these cards) above 4.5:1. The notched mask is on the image alone, so the card stays free of masks and
+ * stacking contexts and its dialog can still cover the page.
+ */
+.ticket-photo {
+  position: absolute;
+  inset: 1px;
+  width: calc(100% - 2px);
+  height: calc(100% - 2px);
+  object-fit: cover;
+  opacity: 0.25;
+  pointer-events: none;
+  --notch-in: calc(var(--notch) + 1px);
+  -webkit-mask:
+    radial-gradient(circle var(--notch-in) at -1px -1px, #0000 98%, #000) top left / 51% 51% no-repeat,
+    radial-gradient(circle var(--notch-in) at calc(100% + 1px) -1px, #0000 98%, #000) top right / 51% 51% no-repeat,
+    radial-gradient(circle var(--notch-in) at -1px calc(100% + 1px), #0000 98%, #000) bottom left / 51% 51% no-repeat,
+    radial-gradient(circle var(--notch-in) at calc(100% + 1px) calc(100% + 1px), #0000 98%, #000) bottom right / 51% 51% no-repeat;
+  mask:
+    radial-gradient(circle var(--notch-in) at -1px -1px, #0000 98%, #000) top left / 51% 51% no-repeat,
+    radial-gradient(circle var(--notch-in) at calc(100% + 1px) -1px, #0000 98%, #000) top right / 51% 51% no-repeat,
+    radial-gradient(circle var(--notch-in) at -1px calc(100% + 1px), #0000 98%, #000) bottom left / 51% 51% no-repeat,
+    radial-gradient(circle var(--notch-in) at calc(100% + 1px) calc(100% + 1px), #0000 98%, #000) bottom right / 51% 51% no-repeat;
+}
+.ticket-card-photo {
+  position: relative;
+  --muted: oklch(39% 0.01 67.4); /* ink-700 */
+}
+@media (prefers-color-scheme: dark) {
+  .ticket-photo {
+    opacity: 0.2;
+  }
+  .ticket-card-photo {
+    --muted: oklch(86.5% 0.007 67.4); /* ink-300 */
+  }
+}
+
 /* Dotted rule in the store's accent (DESIGN.md: rules are evenly spaced round dots). */
 .rule-dotted {
   height: 4px;
