@@ -75,7 +75,8 @@ export async function fetchCatalog(storeId: string): Promise<Catalog> {
       )
       .eq("store_id", storeId)
       .eq("active", true)
-      .order("sort_order"),
+      .order("sort_order")
+      .order("name"),
     store.from("ingredient_availability_today").select("ingredient_id, status"),
     store.from("store_hours").select("day_of_week, opens_at, closes_at, is_open").eq("store_id", storeId),
     store.from("store_closures").select("date").eq("store_id", storeId),

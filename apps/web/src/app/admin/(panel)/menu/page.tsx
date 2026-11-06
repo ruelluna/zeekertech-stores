@@ -4,13 +4,14 @@ import { ActionForm } from "@/components/action-form";
 import { Badge, Card, Checkbox, Field, Input, Loading, PageHeader, PesoInput } from "@/components/ui";
 import { requireOwner } from "@/lib/auth";
 import { saveCategory, setProductActive, updatePrice } from "./actions";
+import { SortableProducts } from "./sortable-products";
 
 export default function MenuAdminPage() {
   return (
     <>
       <PageHeader
         title="Menu & prices"
-        description="Products without a price stay hidden from ordering and show as “coming soon” on the menu."
+        description="Drag the handle beside a product to change its place in the category. Products without a price stay hidden from ordering and show as “coming soon” on the menu."
         actions={
           <Link href="/admin/menu/new" className="rounded-lg bg-accent-button px-4 py-2 text-sm font-medium text-on-accent hover:brightness-95">
             Add product
@@ -33,7 +34,8 @@ async function MenuList() {
       .from("products")
       .select("id, sku, name, category_id, type, price_mode, sold_by, price, estimated_price, stock_tracked, active, sort_order, notice_days, daily_limit")
       .eq("store_id", storeId)
-      .order("sort_order"),
+      .order("sort_order")
+      .order("name"),
     store.from("store_settings").select("notice_days").eq("store_id", storeId).single(),
   ]);
   if (catError || prodError || settingsError) throw catError ?? prodError ?? settingsError;
@@ -45,49 +47,54 @@ async function MenuList() {
         return (
           <Card key={category.id} title={category.name} description={category.active ? undefined : "Hidden from the menu"}>
             {items.length === 0 && <p className="text-sm text-muted">No products yet.</p>}
-            <ul className="divide-y divide-ink-100 dark:divide-ink-800">
-              {items.map((p) => {
+            <SortableProducts
+              categoryId={category.id}
+              products={items.map((p) => {
                 const market = p.price_mode === "market";
                 const missingPrice = market ? p.price === null && p.estimated_price === null : p.price === null;
-                return (
-                  <li key={p.id} className="flex flex-wrap items-end gap-x-4 gap-y-2 py-3">
-                    <div className="min-w-48 flex-1">
-                      <Link href={`/admin/menu/${p.id}`} className="font-medium hover:underline hover:decoration-accent">
-                        {p.name}
-                      </Link>
-                      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted">
-                        <span>{p.sku}</span>
-                        {market && <Badge tone="orange">Market price{p.sold_by === "weight" ? " · per kg" : ""}</Badge>}
-                        {p.type === "frozen" && <Badge>Frozen</Badge>}
-                        {p.stock_tracked && <Badge>Stock counted</Badge>}
-                        {(p.notice_days ?? settings.notice_days) > 0 && (
-                          <Badge tone="pink">Order {p.notice_days ?? settings.notice_days} day(s) ahead</Badge>
-                        )}
-                        {p.daily_limit !== null && <Badge>Max {p.daily_limit}/day</Badge>}
-                        {!p.active && <Badge tone="red">Inactive</Badge>}
-                        {missingPrice && <Badge tone="amber">No price yet</Badge>}
+                return {
+                  id: p.id,
+                  name: p.name,
+                  row: (
+                    <div className="flex flex-wrap items-end gap-x-4 gap-y-2 py-3">
+                      <div className="min-w-48 flex-1">
+                        <Link href={`/admin/menu/${p.id}`} className="font-medium hover:underline hover:decoration-accent">
+                          {p.name}
+                        </Link>
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted">
+                          <span>{p.sku}</span>
+                          {market && <Badge tone="orange">Market price{p.sold_by === "weight" ? " · per kg" : ""}</Badge>}
+                          {p.type === "frozen" && <Badge>Frozen</Badge>}
+                          {p.stock_tracked && <Badge>Stock counted</Badge>}
+                          {(p.notice_days ?? settings.notice_days) > 0 && (
+                            <Badge tone="pink">Order {p.notice_days ?? settings.notice_days} day(s) ahead</Badge>
+                          )}
+                          {p.daily_limit !== null && <Badge>Max {p.daily_limit}/day</Badge>}
+                          {!p.active && <Badge tone="red">Inactive</Badge>}
+                          {missingPrice && <Badge tone="amber">No price yet</Badge>}
+                        </div>
                       </div>
-                    </div>
-                    <ActionForm action={updatePrice} className="flex flex-wrap items-end gap-2" submitLabel="Save">
-                      <input type="hidden" name="id" value={p.id} />
-                      <Field label={market ? (p.sold_by === "weight" ? "Price per kg (today)" : "Price (today)") : "Price"} className="w-36">
-                        <PesoInput name="price" defaultValue={p.price} />
-                      </Field>
-                      {market && (
-                        <Field label={p.sold_by === "weight" ? "Estimate per kg" : "Estimate shown"} className="w-36">
-                          <PesoInput name="estimated_price" defaultValue={p.estimated_price} />
+                      <ActionForm action={updatePrice} className="flex flex-wrap items-end gap-2" submitLabel="Save">
+                        <input type="hidden" name="id" value={p.id} />
+                        <Field label={market ? (p.sold_by === "weight" ? "Price per kg (today)" : "Price (today)") : "Price"} className="w-36">
+                          <PesoInput name="price" defaultValue={p.price} />
                         </Field>
-                      )}
-                      {!market && <input type="hidden" name="estimated_price" value={p.estimated_price ?? ""} />}
-                    </ActionForm>
-                    <ActionForm action={setProductActive} className="flex items-end" submitLabel={p.active ? "Hide" : "Show"} danger={p.active}>
-                      <input type="hidden" name="id" value={p.id} />
-                      <input type="hidden" name="active" value={p.active ? "false" : "true"} />
-                    </ActionForm>
-                  </li>
-                );
+                        {market && (
+                          <Field label={p.sold_by === "weight" ? "Estimate per kg" : "Estimate shown"} className="w-36">
+                            <PesoInput name="estimated_price" defaultValue={p.estimated_price} />
+                          </Field>
+                        )}
+                        {!market && <input type="hidden" name="estimated_price" value={p.estimated_price ?? ""} />}
+                      </ActionForm>
+                      <ActionForm action={setProductActive} className="flex items-end" submitLabel={p.active ? "Hide" : "Show"} danger={p.active}>
+                        <input type="hidden" name="id" value={p.id} />
+                        <input type="hidden" name="active" value={p.active ? "false" : "true"} />
+                      </ActionForm>
+                    </div>
+                  ),
+                };
               })}
-            </ul>
+            />
           </Card>
         );
       })}

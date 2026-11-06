@@ -48,6 +48,44 @@ export async function setProductActive(_prev: ActionState, formData: FormData): 
   return ok(parsed.data.active ? "Shown on the menu" : "Hidden");
 }
 
+const ReorderInput = z.object({ categoryId: z.uuid(), productIds: z.array(z.uuid()).min(1) });
+
+/** Saves a category's product order from the menu list's drag and drop. */
+export async function reorderProducts(categoryId: string, productIds: string[]): Promise<ActionState> {
+  const parsed = ReorderInput.safeParse({ categoryId, productIds });
+  if (!parsed.success) return fail(zodMessage(parsed.error));
+
+  const { supabase, storeId } = await requireOwner();
+  const store = supabase.schema("store");
+  const { data: current, error } = await store
+    .from("products")
+    .select("id, sort_order")
+    .eq("store_id", storeId)
+    .eq("category_id", parsed.data.categoryId);
+  if (error) return fail(error.message);
+
+  // Another tab or person may have added or moved a product since this list loaded; show them the current list.
+  const currentOrder = new Map(current.map((p) => [p.id, p.sort_order]));
+  const ids = parsed.data.productIds;
+  if (new Set(ids).size !== currentOrder.size || ids.some((id) => !currentOrder.has(id))) {
+    menuChanged();
+    return fail("This category changed while you were sorting. Check the list and try again.");
+  }
+
+  const results = await Promise.all(
+    ids.flatMap((id, i) =>
+      currentOrder.get(id) === i + 1
+        ? []
+        : [store.from("products").update({ sort_order: i + 1 }).eq("id", id).eq("store_id", storeId)],
+    ),
+  );
+
+  // Refresh even after a failure: some rows may have saved, and the list should show what's really stored.
+  menuChanged();
+  const failed = results.find((r) => r.error);
+  return failed ? fail(failed.error!.message) : ok("Order saved");
+}
+
 const ProductInput = z
   .object({
     id: z.uuid().optional().or(z.literal("").transform(() => undefined)),
