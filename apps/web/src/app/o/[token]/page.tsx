@@ -5,6 +5,7 @@ import { TERMINAL_ORDER_STATUSES, formatManilaTime, manilaParts, type OrderStatu
 import { ActionForm } from "@/components/action-form";
 import { ContactLink } from "@/components/contact-link";
 import { FacebookPrompt } from "@/components/facebook-prompt";
+import { GcashQr } from "@/components/gcash-qr";
 import { StoreHeader } from "@/components/store-header";
 import { StoreTheme } from "@/components/store-theme";
 import { Badge, Loading, peso } from "@/components/ui";
@@ -156,15 +157,14 @@ async function Order({ params }: { params: PageProps<"/o/[token]">["params"] }) 
           )}
           <div className="my-3 flex flex-col items-center gap-2">
             {settings.gcashQrUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={settings.gcashQrUrl} alt="GCash QR code" className="w-56 rounded-lg border border-ink-200" />
+              <GcashQr src={settings.gcashQrUrl} />
             ) : (
               <p className="text-sm text-muted">The GCash QR will appear here. Please message us for payment details.</p>
             )}
             {settings.gcashAccountName && <p className="text-sm">Account name: {settings.gcashAccountName}</p>}
           </div>
           <ol className="mb-3 list-decimal pl-5 text-sm text-muted">
-            <li>Scan the QR in GCash and pay exactly {peso(row.total)}.</li>
+            <li>Scan the QR in GCash and pay exactly {peso(row.total)}. On this phone? Save the QR, then upload it in GCash&apos;s QR screen.</li>
             <li>Copy the reference number from the GCash receipt.</li>
             <li>Send it below. A screenshot helps us confirm faster.</li>
           </ol>
