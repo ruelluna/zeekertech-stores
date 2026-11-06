@@ -4,9 +4,10 @@ import { refresh } from "next/cache";
 import { z } from "zod";
 import { riderPay } from "@wfh/shared";
 import { fail, form, ok, type ActionState } from "@/lib/action-state";
-import { requireStaff } from "@/lib/auth";
+import { requireOwner, requireStaff } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { flushOutboxes } from "@/lib/webhooks/outbox";
+import { isFinished, owesRider } from "./order-status";
 
 // Staff actions on orders. Status changes on web orders reach the customer through the ops outbox
 // (database triggers); flushing right away makes the customer's page update within seconds.
@@ -171,6 +172,61 @@ export async function staffCancelOrder(_prev: ActionState, formData: FormData): 
     .eq("store_id", storeId);
   if (error) return fail(error.message);
   return done("Order cancelled");
+}
+
+/**
+ * Owner only: permanently removes a finished order, on both the staff side and the website, so the customer's
+ * order link and "My orders" entry go too. Active orders must be cancelled first, so a customer is never left
+ * waiting on an order that vanished. The website side goes first: if a step fails, the order stays on this
+ * page and removing it again finishes the job.
+ */
+export async function removeOrder(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const orderId = z.uuid().safeParse(formData.get("orderId"));
+  if (!orderId.success) return fail("Invalid order");
+  const { storeId } = await requireOwner();
+
+  const admin = createSupabaseAdminClient();
+  const ops = admin.schema("ops");
+  const store = admin.schema("store");
+
+  const { data: order, error: readError } = await ops
+    .from("orders")
+    .select("status, external_id, payment_proof_path, rider_id, rider_pay, rider_paid_out_at")
+    .eq("id", orderId.data)
+    .eq("store_id", storeId)
+    .maybeSingle();
+  if (readError) return fail(readError.message);
+  if (!order) return fail("This order was already removed");
+  if (!isFinished(order.status)) return fail("Cancel this order first");
+  if (owesRider(order)) return fail("Pay the rider for this delivery first (Staff page)");
+
+  const code = order.external_id;
+  if (code) {
+    // Updates still waiting to be sent would fail and retry against an order that no longer exists.
+    const aboutThisOrder = `payload->>orderId.eq.${code},payload->order->>orderId.eq.${code}`;
+    const { error: opsOutboxError } = await ops.from("webhook_outbox").delete().eq("status", "pending").or(aboutThisOrder);
+    if (opsOutboxError) return fail(opsOutboxError.message);
+    const { error: webOutboxError } = await store.from("webhook_outbox").delete().eq("status", "pending").or(aboutThisOrder);
+    if (webOutboxError) return fail(webOutboxError.message);
+
+    const { data: webOrder, error: webReadError } = await store.from("web_orders").select("id").eq("order_code", code).eq("store_id", storeId).maybeSingle();
+    if (webReadError) return fail(webReadError.message);
+    if (webOrder) {
+      const { error: redemptionError } = await store.from("promotion_redemptions").delete().eq("web_order_id", webOrder.id);
+      if (redemptionError) return fail(redemptionError.message);
+      const { error: webDeleteError } = await store.from("web_orders").delete().eq("id", webOrder.id);
+      if (webDeleteError) return fail(webDeleteError.message);
+    }
+  }
+
+  const { error } = await ops.from("orders").delete().eq("id", orderId.data).eq("store_id", storeId);
+  if (error) return fail(error.message);
+
+  if (order.payment_proof_path) {
+    const { error: proofError } = await admin.storage.from("payment-proofs").remove([order.payment_proof_path]);
+    if (proofError) console.error("[orders] remove proof", proofError);
+  }
+  return done("Order removed");
 }
 
 /** For "pay on pickup/delivery" orders: record the cash collected at handover. */

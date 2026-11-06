@@ -4,12 +4,14 @@ import { ActionForm } from "@/components/action-form";
 import { LiveOrders } from "@/components/live";
 import { PhoneAlerts } from "@/components/phone-alerts";
 import { AutoPrintToggle, PrintButtons } from "@/components/print-controls";
-import { Badge, Card, Field, Input, Loading, PageHeader, PesoInput, Select, peso } from "@/components/ui";
+import { Badge, Card, Field, Input, Loading, PageHeader, PesoInput, Select, linkClass, peso } from "@/components/ui";
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
 import { loadInventory } from "@/lib/inventory";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { advanceOrder, markPaid, reviewPayment, staffCancelOrder, submitAvailability } from "./actions";
+import { RemoveOrder, StatusBadge } from "./order-bits";
+import { PAYMENT_LABEL, STATUS_BADGE, finishedCutoff, isFinished, owesRider } from "./order-status";
 
 export default function OrdersPage() {
   return (
@@ -39,15 +41,10 @@ const FLAG_TEXT: Record<string, string> = {
   collect_payment: "Collect payment",
 };
 
-/** ISO time N hours ago (runs per request: the page is dynamic). */
-function hoursAgo(hours: number): string {
-  return new Date(Date.now() - hours * 3600_000).toISOString();
-}
-
 async function Orders() {
   const { supabase, role, storeId } = await requireStaff();
   const ops = supabase.schema("ops");
-  const since = hoursAgo(24);
+  const since = finishedCutoff();
 
   const { data: orders, error } = await ops
     .from("orders")
@@ -55,6 +52,7 @@ async function Orders() {
       `id, queue_code, external_id, source, status, payment_status, fulfillment, scheduled_for, customer_name, customer_phone,
        barangay, address, distance_km, delivery_fee, subtotal, discount_amount, total, is_estimate, flags, rider_name, notes,
        payment_reference_no, payment_sender_name, payment_amount_claimed, payment_proof_path, created_at, updated_at, parent_order_id,
+       rider_id, rider_pay, rider_paid_out_at,
        order_items(id, name, qty, unit_price, estimated_unit_price, weight_kg, modifiers, notes, needs_availability, price_mode, item_status, sort_order,
          order_item_availability(status, final_unit_price, note))`,
     )
@@ -95,7 +93,7 @@ async function Orders() {
   const waiting = orders.filter((o) => (o.status === "pending_payment" && o.payment_status !== "submitted") || o.status === "awaiting_customer");
   const kitchen = by(["queued", "preparing"]);
   const dispatch = by(["ready", "out_for_delivery"]);
-  const finished = by(["delivered", "picked_up", "completed", "denied", "rejected", "cancelled", "expired"]);
+  const finished = orders.filter((o) => isFinished(o.status));
   const canReview = role === "owner" || role === "verifier";
   const canCancel = role !== "kitchen";
   // Add-on orders (items added later) and the orders they belong to.
@@ -234,9 +232,15 @@ async function Orders() {
 
       <Section title="Finished (last 24 hours)" empty="None yet.">
         {finished.map((o) => (
-          <OrderCard key={o.id} o={o} canCancel={canCancel} links={links} />
+          <OrderCard key={o.id} o={o} canCancel={canCancel} canRemove={role === "owner"} links={links} />
         ))}
       </Section>
+
+      {role === "owner" && (
+        <Link href="/admin/orders/past" className={`${linkClass} inline-flex min-h-11 items-center text-sm`}>
+          See past orders
+        </Link>
+      )}
     </>
   );
 }
@@ -262,6 +266,9 @@ type Order = {
   is_estimate: boolean;
   flags: string[];
   rider_name: string | null;
+  rider_id: string | null;
+  rider_pay: number | null;
+  rider_paid_out_at: string | null;
   parent_order_id: string | null;
   notes: string | null;
   order_items: {
@@ -287,14 +294,14 @@ function Section({ title, description, empty, children }: { title: string; descr
   );
 }
 
-function OrderCard({ o, children, canCancel, links }: { o: Order; children?: React.ReactNode; canCancel: boolean; links: OrderLinks }) {
+function OrderCard({ o, children, canCancel, canRemove = false, links }: { o: Order; children?: React.ReactNode; canCancel: boolean; canRemove?: boolean; links: OrderLinks }) {
   const parentCode = o.parent_order_id ? (links.codes.get(o.parent_order_id) ?? "an earlier order") : null;
   const addOnCodes = links.addOns.get(o.id) ?? [];
   const canAddItems = !["out_for_delivery", "delivered", "picked_up", "completed", "denied", "rejected", "cancelled", "expired"].includes(o.status);
   const slot = new Date(o.scheduled_for);
   const today = manilaParts(slot).dateKey === manilaParts(new Date()).dateKey;
   const address = o.address as { streetPurok?: string; landmark?: string; riderNotes?: string; lat?: number; lng?: number } | null;
-  const terminal = ["delivered", "picked_up", "completed", "denied", "rejected", "cancelled", "expired"].includes(o.status);
+  const terminal = isFinished(o.status);
   const delivery = o.fulfillment === "delivery";
   const items = [...o.order_items].sort((a, b) => a.sort_order - b.sort_order);
   const payment = PAYMENT_LABEL[o.payment_status] ?? { label: o.payment_status, tone: "neutral" as const };
@@ -441,44 +448,21 @@ function OrderCard({ o, children, canCancel, links }: { o: Order; children?: Rea
               </ActionForm>
             </details>
           )}
+          {canRemove &&
+            (owesRider(o) ? (
+              <p className="text-sm text-muted">
+                To remove this order, first pay the rider on the{" "}
+                <Link href="/admin/staff" className={linkClass}>
+                  Staff page
+                </Link>
+                .
+              </p>
+            ) : (
+              <RemoveOrder orderId={o.id} queueCode={o.queue_code} />
+            ))}
         </div>
       </footer>
     </article>
-  );
-}
-
-const PAYMENT_LABEL: Record<string, { label: string; tone: "neutral" | "green" | "amber" | "red" | "orange" }> = {
-  not_requested: { label: "Pays after confirmation", tone: "neutral" },
-  awaiting_payment: { label: "Not paid yet", tone: "amber" },
-  submitted: { label: "Payment sent: check GCash", tone: "amber" },
-  partial: { label: "Partly paid", tone: "red" },
-  confirmed: { label: "Paid", tone: "green" },
-  rejected: { label: "Payment rejected", tone: "red" },
-};
-
-const STATUS_BADGE: Record<string, { label: string; tone: "neutral" | "green" | "amber" | "red" | "orange"; border?: string }> = {
-  awaiting_availability: { label: "Checking availability", tone: "amber" },
-  awaiting_customer: { label: "Waiting for customer", tone: "neutral" },
-  pending_payment: { label: "Awaiting payment", tone: "amber" },
-  queued: { label: "In queue", tone: "orange" },
-  preparing: { label: "Preparing", tone: "orange" },
-  ready: { label: "Ready", tone: "green" },
-  out_for_delivery: { label: "Out for delivery", tone: "orange" },
-  picked_up: { label: "✓ Picked up", tone: "green", border: "border-ink-200 border-l-green-600 dark:border-ink-700 dark:border-l-green-500" },
-  delivered: { label: "✓ Delivered", tone: "green", border: "border-ink-200 border-l-green-600 dark:border-ink-700 dark:border-l-green-500" },
-  completed: { label: "✓ Completed", tone: "green", border: "border-ink-200 border-l-green-600 dark:border-ink-700 dark:border-l-green-500" },
-  cancelled: { label: "✕ Cancelled", tone: "red", border: "border-ink-200 border-l-red-600 dark:border-ink-700 dark:border-l-red-500" },
-  expired: { label: "✕ Expired", tone: "red", border: "border-ink-200 border-l-red-600 dark:border-ink-700 dark:border-l-red-500" },
-  denied: { label: "✕ Couldn't source", tone: "red", border: "border-ink-200 border-l-red-600 dark:border-ink-700 dark:border-l-red-500" },
-  rejected: { label: "✕ Payment rejected", tone: "red", border: "border-ink-200 border-l-red-600 dark:border-ink-700 dark:border-l-red-500" },
-};
-
-function StatusBadge({ status }: { status: string }) {
-  const b = STATUS_BADGE[status] ?? { label: status.replaceAll("_", " "), tone: "neutral" as const };
-  return (
-    <span className="text-sm">
-      <Badge tone={b.tone}>{b.label}</Badge>
-    </span>
   );
 }
 
