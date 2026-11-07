@@ -23,7 +23,7 @@ Weekend Food Hub is a small food business in Purok Molmol, Tapilon, Daanbantayan
 
 ## Positioning
 
-"Weekend" is a feeling, not a schedule. It's treat-day food: hearty chaofan, silog and made-to-order seafood paluto you'd have on a day off, available every day from 1 to 9 PM. Brand work must not suggest the store is only open on weekends.
+"Weekend" is literal: the kitchen takes orders on Saturdays and Sundays only, 1 to 9 PM. It's treat-day food: hearty chaofan, silog and made-to-order seafood paluto you'd have on a day off. Brand work must never suggest the store is open on weekdays or every day; "order daily" is false. Established 2021 (shown as "EST. 2021").
 
 What a neighbor can't copy: a home-scale kitchen in Tapilon that cooks seasonal seafood (crab, shrimp) to order at market price, checks that the seafood can actually be bought before taking payment, and delivers across mainland Daanbantayan.
 
@@ -31,7 +31,7 @@ What a neighbor can't copy: a home-scale kitchen in Tapilon that cooks seasonal 
 
 - Orders come from the website, the Facebook Page (Messenger), phone calls and walk-ins.
 - Payment is GCash QR to the owner's account, confirmed by a person. Customers pay only after availability and price are confirmed. Cash is accepted for walk-ins.
-- Ordering hours are 1:00–9:00 PM every day; pickup and delivery run 2:00–8:00 PM. Hours are editable per day in the admin.
+- Ordering hours are 1:00–9:00 PM on Saturday and Sunday (Monday to Friday closed, as set in the admin on 2026-11-06); pickup and delivery run 2:00–8:00 PM. Hours are editable per day in the admin.
 - Delivery covers 19 mainland barangays. Carnaza and Malapascua are excluded. The fee comes from road distance: ₱30 for the first 2 km, then ₱10/km.
 - Each order gets a printed label (configurable printer: thermal label printers, browser printing).
 - SMS and push notifications update customers; the store name in texts is "Weekend Food Hub".
@@ -63,6 +63,6 @@ What a neighbor can't copy: a home-scale kitchen in Tapilon that cooks seasonal 
 
 1. Honest about availability and price. Seafood is "subject to availability" and market-priced, and the product says so before anyone pays.
 2. Local first. Tapilon, Daanbantayan and Cebuano/Filipino food names are part of the identity, not something to hide.
-3. Treat-day warmth, every day. The brand feels like a day off without promising a weekend-only schedule.
+3. Treat-day warmth, on the weekend. The brand feels like a day off, and it is honest that the kitchen cooks on Saturdays and Sundays only.
 4. Phone-first and data-light. Most customers order on a phone, often on mobile data.
 5. One kitchen, several brands. Shared ordering and fulfillment, with room for sub-brands to have their own identity.

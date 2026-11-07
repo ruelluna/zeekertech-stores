@@ -116,7 +116,7 @@ Both faces are outlined to paths in every logo file, so the marks do not depend 
 ### Named Rules
 **The Two Voices Rule.** Script is for names; slab caps are for facts. No third face, no script facts, no slab names.
 
-**The Feeling Not Schedule Rule.** "Weekend" is always set as a name in script, never paired with days or times in the mark.
+**The Name Not Timetable Rule.** "Weekend" is always set as a name in script, and days and times never go inside the mark. Opening days and hours go on a separate tag (as on the Facebook cover), so the mark stays the same when the hours change.
 
 ## Layout
 
@@ -126,12 +126,13 @@ The system ships as sized cuts rather than one scalable mark:
 - **Primary lockup** (`logo.svg`, 1000 x 400): the full mark with sprigs, orange dotted rule and origin line. Also `logo-2000.png`.
 - **Compact lockup** (`logo-compact.svg`, 1000 x 300): script, swash, caps and sprigs; no rule or origin line. For site headers.
 - **Reverse lockup** (`logo-reverse.svg`): mist letters, pale dill sprigs and orange dotted rule, for charcoal grounds.
-- **Label lockup** (`logo-label.svg`, 1120 x 600): the mark inside the kraft label, with an origin caption row above the top dotted rule and a category row below the bottom one. Also `logo-label-2240.png`.
+- **Label lockup** (`logo-label.svg`, 1120 x 600): the mark inside the kraft label, with a caption row above the top dotted rule ("EST. 2021 · TAPILON · DAANBANTAYAN · CEBU") and a category row below the bottom one. Also `logo-label-2240.png`.
 - **Mono** (`logo-mono.svg`): pure black, sprigs kept, solid rule in place of dots. Also `logo-mono-1000.png`.
 - **Mono compact** (`logo-mono-compact.svg`): black script, swash and caps only; no sprigs, rule or origin line. For thermal labels under about 50 mm.
 - **Icon** (`icon.svg`, 512): notched orange square with inset charcoal rule and charcoal script W.
 - **Icon small** (`icon-small.svg`, also `src/app/icon.svg`): the notched square without the inset rule and with a larger W, below 64 px.
 - **Avatar** (`avatar.svg`, `avatar-1024.png`): full-bleed orange square with the W, for round or rounded platform masks.
+- **Facebook Page** (`facebook/`): `facebook-profile-2048.png`, the avatar with a larger W (about 58% of the width) for the round crop; `facebook-cover-3280.png`, a 16:9 cover (see Components).
 
 On the Android adaptive icon the W stays within about 0.21 of the canvas from centre so the launcher mask never clips it.
 
@@ -161,13 +162,19 @@ Rules are dotted (evenly spaced small round dots) in colour and solid bars in bl
 
 ### Kitchen Label
 - **Shape:** notched kraft ticket with a charcoal inset rule.
-- **Content:** origin caption row (Tapilon, Daanbantayan, Cebu), charcoal dotted rule, the lockup, charcoal dotted rule, category row.
+- **Content:** caption row (EST. 2021, Tapilon, Daanbantayan, Cebu; figures set as lining numerals, not Zilla Slab's default old-style), charcoal dotted rule, the lockup, charcoal dotted rule, category row.
 - **Colour:** kraft ground, charcoal letters and rules, dill sprigs. No orange on kraft.
 
 ### Sub-brand Label (Sweet Treats by Yang, demonstration)
 - **Shape:** the same notched kraft ticket, with a cabbage-ruby band across the top inside the inset rule.
 - **Content:** sub-brand name in script, "BY YANG" in stamped caps between dill sprigs, dotted rule, and the parent line "WEEKEND FOOD HUB · TAPILON".
 - **Status:** drawn as a demonstration only, pending owner approval.
+
+### Facebook Cover
+- **Size:** 1640 x 924 drawn, exported at 3280 x 1848. Phones show all of it; desktop shows the middle band (y 150-774), so the label and tag sit inside that band. The profile picture covers the bottom-left corner, so nothing there matters.
+- **Content:** orange field; the Kitchen Label at 76%; a mist hang tag tucked over its right edge, turned 4°, with the opening days and hours ("SAT & SUN", "1–9 PM"), "PICKUP · DELIVERY" and the store link.
+- **Food:** menu dishes only (crab and shrimp for paluto, a silog plate, chaofan in a bowl, a wok over a flame, a frozen pack, calamansi, green chili, garlic, rice grains, spring onion). Each is drawn as charcoal line with a flat palette fill set a few units off the line, like a two-pass screen print. Dishes tuck under the label's edges rather than running off the top and bottom, so desktop still shows them.
+- **Keep it true:** the tag's days and hours must match the store hours set in the admin. Rebuild the cover whenever they change.
 
 ## Do's and Don'ts
 

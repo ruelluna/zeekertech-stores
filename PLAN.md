@@ -22,7 +22,7 @@ An online storefront plus an Android staff app for **Weekend Food Hub**, a food 
 | Delivery area | **Mainland Daanbantayan only.** 19 barangays. **Carnaza and Malapascua are excluded** |
 | Kitchen | **Tapilon, Purok Molmol** (exact map pin set during setup) |
 | Delivery fee | Calculated from road distance at ordering time. **₱30 covers the first 2 km, then ₱10/km**, rounded up to ₱5. Staff can override |
-| Ordering hours | **1:00 PM – 9:00 PM, every day** (weekdays and weekends, despite the name). **Pickup/delivery times run 2:00–8:00 PM** (opening + 1 hour to closing − 1 hour, both adjustable in the admin). Editable per day in the admin |
+| Ordering hours | **1:00 PM – 9:00 PM, Saturday and Sunday only** (Monday to Friday closed in the admin since 2026-11-06; never advertise it as daily). **Pickup/delivery times run 2:00–8:00 PM** (opening + 1 hour to closing − 1 hour, both adjustable in the admin). Editable per day in the admin |
 | Uncertain ingredients | Crabs, shrimp, etc. are **subject to availability**. Staff mark **Ready to cook** or **Can't source**, then the customer continues or cancels |
 | Market pricing | **Yes.** Seasonal items have an estimated price on the menu, and the final price is confirmed before payment |
 | Labels | Printer is **configurable** (connection, language, label size) |
@@ -119,7 +119,7 @@ supabase/         migrations (store + ops schemas), seed data, RLS policies
 Live updates: Checking availability → Awaiting payment → Payment confirmed → Preparing → Ready / Out for delivery → Picked up / Delivered (or Denied / Cancelled / Expired, with a reason).
 
 ### 3.6 Store hours
-- Open **every day, 1:00 PM – 9:00 PM** (default for all 7 days). Hours can be changed **per day of the week** in the admin.
+- Open **Saturday and Sunday, 1:00 PM – 9:00 PM** (weekdays switched off in the admin). Hours can be changed **per day of the week** in the admin.
 - **Closed dates** (holidays, market days off) and a **Pause ordering** switch (also in the Android app) for busy or short-staffed moments.
 - **Outside hours or paused:** the menu stays browsable and shows *"We're closed. Ordering opens at 1:00 PM."* Customers can **pre-order** for a time slot when the store is open.
 - **Pre-orders:** stay in a *Scheduled* list and enter Sourcing/Payment Review when the store opens. Customer decision and unpaid timers only start counting during open hours.
