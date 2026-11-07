@@ -10,6 +10,7 @@ import { requireStaff } from "@/lib/auth";
 import { loadInventory } from "@/lib/inventory";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { advanceOrder, markPaid, reviewPayment, staffCancelOrder, submitAvailability } from "./actions";
+import { CopyOrderLink } from "./copy-order-link";
 import { RemoveOrder, StatusBadge } from "./order-bits";
 import { PAYMENT_LABEL, STATUS_BADGE, finishedCutoff, isFinished, owesRider } from "./order-status";
 
@@ -97,7 +98,19 @@ async function Orders() {
   const canReview = role === "owner" || role === "verifier";
   const canCancel = role !== "kitchen";
   // Add-on orders (items added later) and the orders they belong to.
-  const links: OrderLinks = { codes: new Map(orders.map((o) => [o.id, o.queue_code])), addOns: new Map() };
+  const links: OrderLinks = { codes: new Map(orders.map((o) => [o.id, o.queue_code])), addOns: new Map(), customerTokens: new Map() };
+  // The customer's order page link opens their order to anyone holding it, so only the people who deal with customers get it. Walk-ins have none.
+  const webCodes = orders.flatMap((o) => o.external_id ?? []);
+  if (canReview && webCodes.length) {
+    const { data: webOrders, error: webError } = await supabase
+      .schema("store")
+      .from("web_orders")
+      .select("order_code, access_token")
+      .eq("store_id", storeId)
+      .in("order_code", webCodes);
+    if (webError) throw webError;
+    for (const w of webOrders) links.customerTokens.set(w.order_code, w.access_token);
+  }
   for (const o of orders) {
     if (o.parent_order_id) links.addOns.set(o.parent_order_id, [...(links.addOns.get(o.parent_order_id) ?? []), o.queue_code]);
   }
@@ -245,7 +258,7 @@ async function Orders() {
   );
 }
 
-type OrderLinks = { codes: Map<string, string>; addOns: Map<string, string[]> };
+type OrderLinks = { codes: Map<string, string>; addOns: Map<string, string[]>; customerTokens: Map<string, string> };
 
 type Order = {
   id: string;
@@ -297,6 +310,7 @@ function Section({ title, description, empty, children }: { title: string; descr
 function OrderCard({ o, children, canCancel, canRemove = false, links }: { o: Order; children?: React.ReactNode; canCancel: boolean; canRemove?: boolean; links: OrderLinks }) {
   const parentCode = o.parent_order_id ? (links.codes.get(o.parent_order_id) ?? "an earlier order") : null;
   const addOnCodes = links.addOns.get(o.id) ?? [];
+  const customerToken = o.external_id ? links.customerTokens.get(o.external_id) : undefined;
   const canAddItems = !["out_for_delivery", "delivered", "picked_up", "completed", "denied", "rejected", "cancelled", "expired"].includes(o.status);
   const slot = new Date(o.scheduled_for);
   const today = manilaParts(slot).dateKey === manilaParts(new Date()).dateKey;
@@ -375,6 +389,11 @@ function OrderCard({ o, children, canCancel, canRemove = false, links }: { o: Or
               <a href={`tel:${o.customer_phone}`} className="underline decoration-ink-400 underline-offset-2 hover:decoration-accent dark:decoration-ink-500">
                 {o.customer_phone}
               </a>
+            )}
+            {customerToken && (
+              <div>
+                <CopyOrderLink token={customerToken} />
+              </div>
             )}
           </div>
           {delivery && address && (

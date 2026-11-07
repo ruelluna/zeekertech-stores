@@ -83,9 +83,13 @@ export function MapPicker({
     }
   }
 
-  // Follow the pin.
+  // Follow the pin, and take it off the map when it's cleared.
   useEffect(() => {
     if (value && leaflet.current) placeMarker(leaflet.current, value);
+    if (!value) {
+      marker.current?.remove();
+      marker.current = null;
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value?.lat, value?.lng]);
 

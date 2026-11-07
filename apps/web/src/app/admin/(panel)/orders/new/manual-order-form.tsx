@@ -361,8 +361,12 @@ export function ManualOrderForm({
                     value={barangayId}
                     onChange={(e) => {
                       setBarangayId(e.target.value);
-                      const c = barangays.find((b) => b.id === e.target.value)?.center;
-                      if (c) setFocus(c);
+                      const barangay = barangays.find((b) => b.id === e.target.value);
+                      if (!barangay) return;
+                      // The fee comes from the pin, so it moves with the barangay.
+                      setPin(barangay.center);
+                      if (barangay.center) setFocus(barangay.center);
+                      else if (!feeEdited) setDeliveryFee("");
                     }}
                   >
                     <option value="">Barangay…</option>
@@ -391,7 +395,7 @@ export function ManualOrderForm({
                     onChange={(e) => setRiderNotes(e.target.value)}
                   />
                   <p className="text-xs text-muted">
-                    Optional: tap the map to calculate the fee.
+                    The fee is worked out from the pin. Choosing a barangay puts it in the middle; tap the map for the exact spot.
                   </p>
                   <MapPicker
                     value={pin}

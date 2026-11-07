@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { formatManilaTime } from "@wfh/shared";
 import { Badge, Card, Loading, PageHeader, linkClass, peso } from "@/components/ui";
 import { requireOwner } from "@/lib/auth";
+import { CopyOrderLink } from "../copy-order-link";
 import { RemoveOrder, StatusBadge } from "../order-bits";
 import { FINISHED_STATUSES, PAYMENT_LABEL, finishedCutoff, owesRider } from "../order-status";
 
@@ -66,10 +67,21 @@ async function PastOrders({ searchParams }: { searchParams: PageProps<"/admin/or
     .range(start, start + PAGE_SIZE - 1);
   if (error) throw error;
 
+  // Links to the customers' order pages. Walk-ins have none.
+  const { data: webOrders, error: webError } = await supabase
+    .schema("store")
+    .from("web_orders")
+    .select("order_code, access_token")
+    .eq("store_id", storeId)
+    .in("order_code", orders.flatMap((o) => o.external_id ?? []));
+  if (webError) throw webError;
+  const customerTokens = new Map(webOrders.map((w) => [w.order_code, w.access_token]));
+
   return (
     <Card>
       <ul className="divide-y divide-ink-100 dark:divide-ink-800">
         {orders.map((o) => {
+          const customerToken = o.external_id ? customerTokens.get(o.external_id) : undefined;
           const slot = new Date(o.scheduled_for);
           const payment = PAYMENT_LABEL[o.payment_status] ?? { label: o.payment_status, tone: "neutral" as const };
           const items = o.order_items
@@ -90,6 +102,11 @@ async function PastOrders({ searchParams }: { searchParams: PageProps<"/admin/or
                 {o.external_id && <span className="text-muted"> · {o.external_id}</span>}
               </p>
               {items && <p className="text-sm text-muted">{items}</p>}
+              {customerToken && (
+                <div>
+                  <CopyOrderLink token={customerToken} />
+                </div>
+              )}
               {owesRider(o) ? (
                 <p className="text-sm text-muted">
                   To remove this order, first pay the rider on the{" "}

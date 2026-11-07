@@ -216,8 +216,17 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
 
   function chooseBarangay(id: string) {
     setBarangayId(id);
-    const center = data.barangays.find((b) => b.id === id)?.center;
-    if (center) setFocus(center);
+    const barangay = data.barangays.find((b) => b.id === id);
+    if (!barangay) return;
+    // The fee comes from the pin, so it has to move with the barangay. Without a known centre, an old pin would quote the wrong place.
+    if (savedId !== "new") setSavedId("new");
+    setPin(barangay.center);
+    if (barangay.center) setFocus(barangay.center);
+    setLocationNote(
+      barangay.center
+        ? `We put the pin in the middle of ${barangay.name}. Move it to your exact spot so the rider can find you.`
+        : `Tap the map to place your pin in ${barangay.name}.`,
+    );
   }
 
   function useMyLocation() {
@@ -451,6 +460,7 @@ export function CheckoutForm({ data }: { data: CheckoutData }) {
                 kitchen={data.kitchen}
                 onChange={(p) => {
                   setPin(p);
+                  setLocationNote(null);
                   if (savedId !== "new") setSavedId("new");
                 }}
               />
